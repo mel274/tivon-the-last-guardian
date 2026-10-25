@@ -743,4 +743,274 @@ const cinemaLobby: InteriorSet = {
   },
 };
 
-export const INTERIORS: Record<string, InteriorSet> = { restaurant, print, camera, pilates, paint, chocolate, pharmacy, flowers, alhakav, cinemaLobby };
+// ——— group 3: street food, services and community ———
+const COKE = '#e41e2b', DRINK = [COKE, '#2a2a2a', '#f2f0e8', '#3f8f4a', '#e8a02a', '#2f6fb0'];
+/** Glass-door drinks fridge facing +z: open frame, lit header, shelves of bottles seen through the glass. */
+function drinkFridge(r: Room, lx: number, lz: number, w: number, brand = 'COCA-COLA', cols = DRINK) {
+  const d = .75; if (!r.claim(lx, lz, w, d, 2.1)) return false;
+  const fr = '#d8dadb', M = MAT.metal;
+  r.box(lx, 1.0, lz - d / 2 + .02, w, 2.0, .04, '#bfc3c4', M); r.box(lx, .06, lz, w, .12, d, fr, M); r.box(lx, 2.0, lz, w, .04, d, fr, M);
+  for (const e of [-1, 1]) r.box(lx + e * (w / 2 - .02), 1.0, lz, .04, 2.0, d, fr, M);
+  for (let k = 0; k < 5; k++) {
+    const y = .3 + k * .38; r.box(lx, y, lz, w - .08, .02, d - .1, '#e4e6e6', M);
+    const n = Math.floor((w - .12) / .1);
+    for (let i = 0; i < n; i++) for (let j = 0; j < 2; j++) { const c = cols[(i + k * 2 + j) % cols.length], x = lx - w / 2 + .08 + (i + .5) * (w - .16) / n, z = lz + d / 2 - .14 - j * .17; r.prim(PRIMS.cyl6, MAT.gloss, x, y + .13, z, .033, .22, .033, c); r.prim(PRIMS.cyl6, MAT.matte, x, y + .27, z, .014, .06, .014, c); }
+  }
+  r.glow(lx, 1.95, lz + d / 2 - .1, w - .1, .02, .04);
+  r.glass(lx, 1.0, lz + d / 2 + .005, w - .06, 1.84, .015); r.box(lx, 1.0, lz + d / 2 + .02, .03, 1.86, .02, '#9a9c9a', M); r.box(lx + w / 2 - .12, 1.05, lz + d / 2 + .03, .02, .5, .03, '#2a2a2a', M);
+  r.box(lx, 2.12, lz, w + .02, .2, d + .02, COKE, MAT.gloss); r.sign(lx, 2.12, lz + d / 2 + .02, w - .06, .16, brand, { bg: COKE, fg: '#ffffff', weight: 900, glow: .4 });
+  return true;
+}
+const falafel: InteriorSet = {
+  name: 'falafel', he: 'פלאפל הכיכר', en: 'FALAFEL', size: [5, 6],
+  floor: '#b9a98f', floorMat: MAT.tiles, wall: '#f1e2c4', light: '#ffe2b0', sign: { bg: '#e8a02a', fg: '#2b1a0a' }, look: { shirt: '#f4f1ea', pants: '#2b2b2b', apron: '#e8a02a' },
+  counter: r => ({ lx: (r.x0 + r.x1) / 2 + (r.door.lx > 0 ? -.2 : .2), lz: r.zb + 1.7, w: Math.min(3.4, r.w - 1.4), color: '#c9a06a', top: '#e8e4dc', mat: MAT.wood }),
+  furnish(r) {
+    const c = r.counter!, { x0, x1, zb, zf } = r, SAL = ['#c8302a', '#3f8f4a', '#e8c84a', '#7a3a8a', '#d9d2a0', '#e88a2b', '#8fb34a', '#a0522d'];
+    // The Coca-Cola fridge stands in the back corner away from the door; then the tiled back-splash with its red stripes.
+    drinkFridge(r, r.door.lx > 0 ? x1 - .55 : x0 + .55, zb + .45, 1) || drinkFridge(r, r.door.lx > 0 ? x0 + .55 : x1 - .55, zb + .45, 1);
+    r.box(0, .9, zb + .015, r.w - .4, 1.8, .02, '#f4f1ea', MAT.tiles); r.box(0, 1.15, zb + .03, r.w - .4, .1, .01, '#c8302a'); r.box(0, 1.65, zb + .03, r.w - .4, .1, .01, '#c8302a');
+    // Counter top: sneeze guard, tubs of salads and pickles, tahini, fresh falafel, pita stack.
+    r.glass(c.lx, c.h + .27, c.lz + c.d / 2 - .06, c.w - .1, .46, .015); r.box(c.lx, c.h + .51, c.lz + c.d / 2 - .06, c.w - .06, .03, .05, '#b9bcbd', MAT.metal);
+    const n = Math.floor((c.w - .8) / .3);
+    for (let i = 0; i < n; i++) { const x = c.lx - c.w / 2 + .35 + i * .3; r.box(x, c.h + .045, c.lz + .07, .27, .09, .3, '#c9cbcc', MAT.metal); r.box(x, c.h + .09, c.lz + .07, .23, .03, .26, SAL[i % 8], MAT.gloss); r.box(x + .03, c.h + .11, c.lz + .1, .08, .03, .08, SAL[(i + 3) % 8], MAT.gloss); }
+    const tx = c.lx + c.w / 2 - .4; r.box(tx, c.h + .04, c.lz + .02, .5, .03, .4, '#c9cbcc', MAT.metal);
+    for (let i = 0; i < 9; i++) r.prim(PRIMS.ico, MAT.matte, tx - .15 + (i % 3) * .15, c.h + .09 + (i > 5 ? .07 : 0), c.lz - .1 + Math.floor(i / 3) * .1, .045, .04, .045, ['#7a5a2a', '#8a6630', '#6a4a22'][i % 3]);
+    for (let i = 0; i < 3; i++) r.cyl(c.lx - c.w / 2 + .2 + i * .1, c.h + .1, c.lz - .15, .03, .2, ['#f2efe6', '#e8c84a', '#c8302a'][i], MAT.gloss, true);
+    for (let i = 0; i < 8; i++) r.cyl(c.lx + .3, c.h + .03 + i * .02, c.lz - .17, .14, .02, i % 3 ? '#e4cf9c' : '#d8bd82', MAT.matte, true);
+    r.box(c.lx - .1, c.h + .03, c.lz - .17, .5, .02, .22, '#8a5a3a', MAT.wood); r.box(c.lx + .55, c.h + .15, c.lz - .1, .12, .26, .1, '#1d1d1d', MAT.gloss);
+    // Behind the counter: the fryer with its oil and baskets, and its hood and duct.
+    const fx = c.lx - c.w / 2 + .6;
+    if (r.claim(fx, zb + .4, .8, .6, 1)) {
+      r.box(fx, .45, zb + .4, .8, .9, .6, '#aeb2b4', MAT.metal); r.box(fx, .91, zb + .4, .7, .03, .5, '#c98a2a', MAT.gloss);
+      for (const e of [-1, 1]) { r.box(fx + e * .18, .95, zb + .4, .26, .08, .36, '#6a6d70', MAT.metal); r.bar(fx + e * .18, 1.0, zb + .62, .012, .3, 'z', '#1d1d1d'); }
+      r.box(fx, 1.7, zb + .45, .95, .5, .7, '#b9bcbd', MAT.metal); r.box(fx, (1.95 + r.h) / 2, zb + .35, .35, r.h - 1.95, .35, '#b9bcbd', MAT.metal);
+    }
+    r.run('R', zb + 1.3, zb + 2.3, .3, 1, (x, z, len) => r.shelves(x, z, len, .3, 2, 4, 'z', (i, k) => ['#f2efe6', '#e8c84a', '#c8302a', '#7a5a2a'][(i + k) % 4], { pitch: .2, shape: 'can', ih: .16, face: -1, back: '#f4f1ea' }));
+    // Menu boards, a juice squeezer, tables and wall pictures.
+    menu(r, c.lx, 2.45, zb + .03, Math.min(3.2, r.w - 1), .9, 'פלאפל במנה ₪22 · בפיתה ₪18\nשווארמה ₪38 · סביח ₪28\nשתייה קרה ₪8 · צ׳יפס ₪12', '#2b1a0a', '#f6d27a');
+    r.sign(c.lx, 1.95, zb + .03, 1.8, .26, 'סלטים חופשי · טחינה ביתית', { bg: '#c8302a', fg: '#fff', weight: 800 });
+    const jx = c.lx - c.w / 2 - .5; if (r.claim(jx, c.lz - .1, .5, .5, 1.2)) { r.box(jx, .4, c.lz - .1, .45, .8, .45, '#e88a2b', MAT.gloss); r.box(jx, 1.0, c.lz - .1, .4, .4, .4, '#9ec8d8', MAT.gloss); r.cyl(jx, 1.3, c.lz - .1, .1, .06, '#e88a2b', MAT.gloss, true); }
+    let seed = 11; r.pack(x0 + .1, x1 - .1, c.lz + c.d / 2 + 1.2, zf - .3, 1.5, .8, 3, (x, z) => { r.table(x, z, { seats: 2, top: '#f2efe6', chair: '#c8302a', plastic: true, plate: true, diner: seed % 3 === 0 ? seed : undefined }); seed += 4; }, .35);
+    for (let i = 0; i < 2; i++) r.picture('L', zf - 1 - i * 1.3, 1.9, .8, .6, ['#e8c84a', '#8fb34a'][i], '#c9a06a', '#5a3a20');
+    r.pendant(c.lx - c.w / 3, c.lz + .1, .9, '#c8302a'); r.pendant(c.lx + c.w / 3, c.lz + .1, .9, '#c8302a');
+  },
+};
+
+const pizza: InteriorSet = {
+  name: 'pizza', he: 'פיצה אל פורנו', en: 'WOOD-FIRED PIZZA', size: [6, 7],
+  floor: '#7a4a38', floorMat: MAT.tiles, wall: '#efd9b6', light: '#ffd09a', sign: { bg: '#1f6a3a', fg: '#f8f1dc' }, look: { shirt: '#f4f1ea', pants: '#2b2b2b', apron: '#c8302a' },
+  counter: r => ({ lx: (r.x0 + r.x1) / 2 + (r.door.lx > 0 ? -.3 : .3), lz: r.zb + 2.4, w: Math.min(3.6, r.w - 1.6), color: '#c8302a', top: '#d8d4cc' }),
+  furnish(r) {
+    const c = r.counter!, { x0, x1, zb, zf } = r;
+    // The wood-fired oven on the back wall: brick base, plastered dome, glowing mouth, chimney, wood stack.
+    const ox = c.lx + (c.w > 2.6 ? c.w / 2 - 1.1 : 0), oz = zb + .75;
+    if (r.claim(ox, oz, 1.8, 1.2, 2.2)) {
+      r.box(ox, .45, oz, 1.8, .9, 1.2, '#8a4a32', MAT.plain); for (let k = 0; k < 8; k++) r.box(ox, .1 + k * .11, oz + .61, 1.8, .015, .01, '#5a2a1c');
+      r.prim(PRIMS.sphere, MAT.plaster, ox, .9, oz, .9, .75, .6, '#c9a88a'); r.box(ox, .95, oz + .5, .7, .42, .3, '#1a1210', MAT.plain); r.prim(PRIMS.box, NIGHT.bulb, ox, .88, oz + .66, .5, .26, .02, null);
+      r.box(ox, .93, oz + .68, .8, .06, .1, '#6a6d70', MAT.metal);
+      r.cyl(ox, 1.9, oz - .15, .17, 1.2, '#8a6a58', MAT.plain, true); r.box(ox, r.h - .18, oz - .15, .5, .36, .5, '#8a6a58');
+      for (let i = 0; i < 6; i++) r.bar(ox + 1.0 + (i % 2) * .05, .1 + Math.floor(i / 2) * .13, oz - .1 + (i % 3) * .08, .05, .4, 'z', '#7a5028', MAT.wood);
+    }
+    // Marble counter with pizzas under the glass, the till, boxes and a flour-dusted board.
+    r.glass(c.lx, c.h + .26, c.lz + .1, c.w - .1, .42, c.d - .24); r.box(c.lx, c.h + .04, c.lz + .1, c.w - .1, .02, c.d - .24, '#e9e9e4', MAT.metal);
+    const TOP = ['#c8302a', '#f2d24a', '#3f8f4a', '#8a3a28'], n = Math.floor((c.w - .2) / .5);
+    for (let i = 0; i < n; i++) { const x = c.lx - c.w / 2 + .35 + i * .5; r.cyl(x, c.h + .06, c.lz + .1, .21, .02, '#e2c58a', MAT.matte, true); r.cyl(x, c.h + .075, c.lz + .1, .19, .012, '#c8302a', MAT.gloss, true); for (let j = 0; j < 6; j++) { const a = j * 1.05 + i; r.cyl(x + Math.cos(a) * .1, c.h + .09, c.lz + .1 + Math.sin(a) * .1, .035, .012, TOP[(i + j) % 4], MAT.gloss, true); } }
+    r.box(c.lx + c.w / 2 - .3, c.h + .1, c.lz - .12, .3, .18, .25, '#2a2a2a', MAT.gloss);
+    for (let i = 0; i < 5; i++) r.box(c.lx - c.w / 2 + .5, c.h + .03 + i * .045, c.lz - .15, .38, .04, .38, '#e8d3a8', MAT.plain);
+    r.box(c.lx - .3, c.h + .03, c.lz - .17, .55, .02, .3, '#c9a06a', MAT.wood); r.bar(c.lx - .3, c.h + .08, c.lz - .17, .02, .3, 'x', '#c9a06a', MAT.wood);
+    // Prep fridge, shelves of tomato tins and oil, menu board, tables with checked cloths.
+    const fx = c.lx - c.w / 2 + .55; if (r.claim(fx, zb + .4, 1, .6, 1)) { r.box(fx, .45, zb + .4, 1, .9, .6, '#d9dadb', MAT.metal); r.box(fx, .92, zb + .4, 1, .04, .62, '#b9bcbd', MAT.metal); for (let i = 0; i < 3; i++) r.box(fx - .3 + i * .3, .45, zb + .71, .26, .6, .01, '#9a9c9a', MAT.metal); for (let i = 0; i < 5; i++) r.cyl(fx - .35 + i * .17, 1.0, zb + .4, .06, .1, ['#c8302a', '#3f8f4a'][i % 2], MAT.gloss, true); }
+    r.run('L', zb + 1.3, zb + 3, .35, 1.2, (x, z, len) => r.shelves(x, z, len, .35, 2.1, 4, 'z', (i, k) => ['#c8302a', '#e8c84a', '#3f6a3a', '#f2efe6'][(i + k) % 4], { pitch: .24, shape: 'can', ih: .2, face: 1, back: '#efe4cf' }));
+    menu(r, c.lx, 2.45, zb + .03, Math.min(3.4, r.w - 1), .9, 'מרגריטה ₪48 · מושרמה ₪55\nנפוליטנה ₪52 · ארבע גבינות ₪58\nטירמיסו ₪22 · בירה ₪16', '#1f6a3a', '#f8f1dc');
+    r.sign(c.lx, 1.85, zb + .03, 2, .24, 'בצק טרי · אש עצים · מאז 1998', { bg: '#c8302a', fg: '#fff', weight: 800 });
+    let seed = 5; r.pack(x0 + .1, x1 - .1, c.lz + c.d / 2 + 1.3, zf - .3, 1.5, 1.5, 4, (x, z) => { r.table(x, z, { seats: 4, top: '#c8302a', chair: '#2a1d14', plastic: false, plate: true, diner: seed % 3 === 0 ? seed : undefined }); r.box(x, .775, z, .5, .004, .5, '#f2efe6'); seed += 3; }, .4);
+    if (r.fits(x1 - .35, zf - .4, .5, .5)) r.plant(x1 - .35, 0, zf - .4, 1.2, '#a2643f');
+    for (const x of [-1, 1]) r.pendant(c.lx + x * c.w / 3, c.lz + .2, .8, '#2a1d14');
+  },
+};
+
+const barber: InteriorSet = {
+  name: 'barber', he: 'מספרת הגבעה', en: 'BARBER SHOP', size: [5.5, 6.5],
+  floor: '#2e2e30', floorMat: MAT.tiles, wall: '#d9cdb8', light: '#fff1dc', sign: { bg: '#1d2b44', fg: '#f4efe6' }, look: { shirt: '#1d1d1d', pants: '#1d1d1d', apron: '#f4efe6', beard: true },
+  keeper: r => { const L = r.door.lx > 0; return [(L ? r.x0 : r.x1) + (L ? 1 : -1) * 1.55, r.zb + 2.3]; },
+  furnish(r) {
+    const { x0, x1, zb, zf } = r, L = r.door.lx > 0, wx = L ? x0 : x1, s = L ? 1 : -1, face = L ? r.faceL : r.faceR;
+    // A barber chair (steel base, pump, leather seat, back, arms, footrest) turned to the mirror.
+    const chair = (z: number, tone: string) => {
+      const g = r.at(wx + s * .8, z, L ? -HALF : HALF), B = r.B;
+      B.lbox(g, MAT.metal, 0, .04, 0, .6, .08, .6, '#2a2a2a'); B.lbox(g, MAT.metal, 0, .3, 0, .09, .5, .09, '#c9cbcc');
+      B.lbox(g, MAT.gloss, 0, .6, 0, .56, .12, .52, tone); B.lbox(g, MAT.gloss, 0, .95, -.25, .52, .7, .1, tone); B.lbox(g, MAT.gloss, 0, 1.38, -.26, .3, .16, .08, tone);
+      for (const e of [-1, 1]) { B.lbox(g, MAT.metal, e * .32, .78, -.02, .05, .05, .42, '#c9cbcc'); B.lbox(g, MAT.gloss, e * .32, .72, .1, .07, .04, .3, '#1d1d1d'); }
+      B.lbox(g, MAT.metal, 0, .28, .38, .4, .04, .24, '#c9cbcc'); B.lbox(g, MAT.metal, 0, .46, .26, .06, .36, .05, '#c9cbcc');
+    };
+    for (const [z, tone] of [[zb + 1.3, '#7a1f24'], [zb + 2.3, '#1d1d1d']] as const) if (r.claim(wx + s * .8, z, .68, .8, 1.2)) chair(z, tone);
+    // The mirror wall with shelf stations: bottles, clippers, combs, towels and a counter-top.
+    const ml = Math.min(r.d - 1.6, 3.6), mz = zb + .1 + ml / 2 + .3;
+    r.prim(PRIMS.box, MIRROR, wx + s * .015, 1.5, mz, .02, 1.2, ml, null); r.box(wx + s * .02, .9, mz, .04, .04, ml + .06, '#c9a24a', MAT.metal); r.box(wx + s * .02, 2.1, mz, .04, .04, ml + .06, '#c9a24a', MAT.metal);
+    r.box(wx + s * .22, .76, mz, .4, .04, ml, '#4a3a2a', MAT.wood); r.box(wx + s * .22, .38, mz, .36, .72, ml - .1, '#2f2a26', MAT.wood);
+    for (let i = 0; i < 7; i++) { const z = mz - ml / 2 + .3 + i * (ml - .6) / 6; r.cyl(wx + s * .28, .85, z, .035, .14, ['#2f6fb0', '#c8302a', '#f2efe6', '#3f8f4a'][i % 4], MAT.gloss, true); if (i % 2) { r.box(wx + s * .2, .79, z, .06, .02, .14, '#1d1d1d', MAT.gloss); r.box(wx + s * .3, .79, z + .05, .12, .01, .03, '#c9a24a', MAT.metal); } else r.box(wx + s * .18, .8, z, .22, .03, .16, '#f4efe6'); }
+    r.sign(wx + s * .05, 2.4, mz, 1.5, .3, 'תספורת · זקן · גילוח במברשת', { bg: '#1d2b44', fg: '#f4efe6', weight: 700 }, face);
+    // Backwash sink on the back wall with its mirror, and the waiting bench with magazines.
+    const bx = L ? x1 - .9 : x0 + .9;
+    if (r.claim(bx, zb + .6, 1.2, .9, 1.3)) {
+      r.box(bx, .43, zb + .4, 1.0, .86, .55, '#f2efe6', MAT.gloss); r.box(bx, .88, zb + .4, 1, .04, .55, '#d8d4cc', MAT.stone); r.prim(PRIMS.box, MAT.gloss, bx, .86, zb + .4, .5, .03, .34, '#ffffff'); r.bar(bx, 1.05, zb + .15, .015, .2, 'z', '#c9cbcc');
+      r.box(bx, 1.7, zb + .02, 1.4, .7, .03, '#a8c4d0', MAT.metal);
+    }
+    const bn = r.first([[-s * 1.6, zf - .5], [-s * 1.0, zf - .5], [0, zf - .5]], 1.6, .5);
+    if (bn) { r.claim(bn[0], bn[1], 1.6, .5, .6); r.box(bn[0], .42, bn[1], 1.6, .08, .45, '#7a1f24', MAT.gloss); for (const e of [-1, 1]) r.box(bn[0] + e * .7, .2, bn[1], .06, .4, .4, '#1d1d1d', MAT.metal); for (let i = 0; i < 3; i++) r.box(bn[0] - .3 + i * .3, .48, bn[1], .22, .015, .3, ['#f2d24a', '#2f6fb0', '#c8302a'][i]); }
+    // The outside pole beside the door: red, white and blue stripes between brass caps.
+    const px = r.door.lx + (r.door.lx > 0 ? 1 : -1) * (r.door.width / 2 + .3);
+    r.cyl(px, 1.75, .17, .08, .06, '#c9a24a', MAT.metal, true); r.cyl(px, 1.15, .17, .08, .06, '#c9a24a', MAT.metal, true);
+    for (let i = 0; i < 6; i++) r.cyl(px, 1.22 + i * .09, .17, .07, .09, ['#c8302a', '#f4efe6', '#1f4fa8'][i % 3], MAT.gloss, true);
+    for (let i = 0; i < 2; i++) r.pendant(wx + s * 1.6, zb + 1.3 + i * 1.5, .8, '#1d1d1d');
+    r.picture('B', (x0 + x1) / 2 - 1, 2.0, .8, .6, '#c9b48a', '#6a4a2a', '#2a1d14'); r.picture('B', (x0 + x1) / 2 + 1, 2.0, .6, .8, '#a8b8c8', '#5a6a4a', '#2a1d14');
+    if (r.fits(-s * 1.9, zb + .4, .5, .5)) r.plant(-s * 1.9, 0, zb + .4, 1.2, '#2a2a2a');
+  },
+};
+
+/** A round wall clock (rim, face, hands) facing `face` (0 = +z) on a wall; `t` is the time shown in hours. */
+function wallClock(r: Room, lx: number, y: number, lz: number, rad: number, face: number, t: number, rim = '#c9a24a', dial = '#f4efe6') {
+  const co = Math.cos(face), si = Math.sin(face), TAU = Math.PI * 2, P = (dx: number, dy: number, dz: number): [number, number, number] => [lx + dx * co + dz * si, y + dy, lz - dx * si + dz * co];
+  r.prim(PRIMS.cyl, MAT.metal, ...P(0, 0, .02), rad, .04, rad, rim, face, HALF); r.prim(PRIMS.cyl, MAT.matte, ...P(0, 0, .045), rad * .88, .01, rad * .88, dial, face, HALF);
+  for (let i = 0; i < 4; i++) { const a = i * HALF; r.prim(PRIMS.box, MAT.plain, ...P(Math.sin(a) * rad * .75, Math.cos(a) * rad * .75, .055), rad * .06, rad * .12, .006, '#1d1d1d', face, 0, -a); }
+  for (const [len, a, w] of [[rad * .55, -(t / 12) * TAU, .035], [rad * .78, -(t % 1) * TAU, .022]] as const) r.prim(PRIMS.box, MAT.plain, ...P(-Math.sin(a) * len / 2, Math.cos(a) * len / 2, .062), rad * w * 2, len, .004, '#141414', face, 0, a);
+}
+const clocks: InteriorSet = {
+  name: 'clocks', he: 'אורום · שעונים ותכשיטים', en: 'AURUM · CLOCKS & WATCHES', size: [5, 6],
+  floor: '#4a3a30', floorMat: MAT.wood, wall: '#efe6d4', light: '#ffe8c0', spots: true, sign: { bg: '#141414', fg: '#d8b25a' }, look: { shirt: '#f4efe6', pants: '#1d1d1d', gray: true },
+  counter: r => ({ lx: (r.x0 + r.x1) / 2 + (r.door.lx > 0 ? -.3 : .3), lz: r.zb + 1.9, w: Math.min(2.8, r.w - 1.6), color: '#2a1d14', top: '#e8e0cc', mat: MAT.wood }),
+  furnish(r) {
+    const c = r.counter!, { x0, x1, zb, zf } = r;
+    // The wall of clocks behind the counter: many faces, rims and sizes in rows.
+    r.box(0, 1.65, zb + .015, r.w - .5, 2.3, .03, '#3a2a20', MAT.wood);
+    let k = 0; for (let row = 0; row < 3; row++) { const rad = [.2, .15, .12][row], n = Math.max(2, Math.floor((r.w - .9) / (rad * 2 + .12))); for (let i = 0; i < n; i++, k++) wallClock(r, -(r.w - .9) / 2 + (i + .5) * (r.w - .9) / n, 2.5 - row * .55, zb + .04, rad, 0, r.rand(k) * 12, ['#c9a24a', '#1d1d1d', '#b9bcbd', '#8a5a3a'][k % 4], k % 3 ? '#f4efe6' : '#1d1d1d'); }
+    r.sign(c.lx, 2.95, zb + .06, 2, .22, 'שעונים · תיקונים · מתנות', { bg: '#141414', fg: '#d8b25a', weight: 700 });
+    // Counter: glass top with watches on cushions, a till.
+    r.glass(c.lx, c.h + .16, c.lz, c.w - .1, .26, c.d - .1); r.box(c.lx, c.h + .03, c.lz, c.w - .1, .02, c.d - .1, '#1d1d1d');
+    for (let i = 0; i < Math.floor((c.w - .3) / .26); i++) { const x = c.lx - c.w / 2 + .25 + i * .26; r.cyl(x, c.h + .05, c.lz + .02, .055, .04, '#2f2a26', MAT.matte, true); r.cyl(x, c.h + .075, c.lz + .02, .04, .012, i % 2 ? '#d8b25a' : '#c9cbcc', MAT.metal, true); r.box(x, c.h + .06, c.lz + .02, .04, .01, .22, '#6a4a2a'); }
+    r.box(c.lx + c.w / 2 - .3, c.h + .2, c.lz - .15, .28, .2, .22, '#2a2a2a', MAT.gloss);
+    // Glass cases of watches along both walls, a grandfather clock, a repair bench.
+    const watch = (x: number, y: number, z: number, i: number) => { r.cyl(x, y + .02, z, .045, .035, i % 2 ? '#2f2a26' : '#d8b25a', MAT.matte, true); r.cyl(x, y + .045, z, .034, .012, i % 3 ? '#f4efe6' : '#1d1d1d', MAT.plain, true); r.box(x, y + .02, z, .02, .02, .13, '#6a4a2a'); };
+    for (const x of [x0 + .35, x1 - .35]) for (let z = zf - .9; z > c.lz + c.d / 2 + .7; z -= 1.1) r.vitrine(x, z, .55, 1, 1.1, '#2a1d14', watch, .2);
+    const gx = r.door.lx > 0 ? x1 - .4 : x0 + .4;
+    if (r.claim(gx, zb + .45, .6, .5, 2.2)) {
+      r.box(gx, 1.1, zb + .45, .56, 2.2, .44, '#5a3a24', MAT.wood); r.box(gx, 1.3, zb + .45 + .23, .3, .8, .01, '#e9d9b0'); r.cyl(gx, .95, zb + .45 + .235, .08, .02, '#d8b25a', MAT.metal, true);
+      r.glass(gx, 1.3, zb + .45 + .22, .36, .9, .01); wallClock(r, gx, 2.0, zb + .45 + .235, .13, 0, 4.2, '#d8b25a');
+    }
+    const bn = r.first([[c.lx - c.w / 2 - .85, zb + .5], [c.lx + c.w / 2 + .85, zb + .5]], 1.3, .6);
+    if (bn) {
+      const [bx, bz] = bn; r.claim(bx, bz, 1.3, .6, 1.5);
+      r.box(bx, .75, bz, 1.2, .06, .55, '#6a4a2a', MAT.wood); for (const e of [-1, 1]) r.box(bx + e * .55, .37, bz, .05, .74, .5, '#4a3020', MAT.wood);
+      r.bar(bx - .3, 1.15, bz - .1, .012, .7, 'z', '#9a9c9a'); r.box(bx - .3, 1.45, bz - .22, .25, .12, .2, '#1d1d1d', MAT.metal); r.glow(bx - .3, 1.38, bz - .22, .12, .02, .12);
+      r.cyl(bx + .1, .8, bz, .09, .04, '#d8b25a', MAT.metal, true); r.cyl(bx + .3, .8, bz + .05, .06, .02, '#c9cbcc', MAT.metal, true); r.box(bx + .45, .79, bz - .05, .1, .015, .2, '#c9cbcc', MAT.metal);
+      for (let i = 0; i < 6; i++) r.box(bx - .4 + i * .08, .86, bz + .2, .012, .1, .012, '#b9bcbd', MAT.metal);
+      r.box(bx, 1.7, zb + .03, 1.1, .5, .02, '#c9a77c', MAT.wood);
+    }
+    for (let i = 0; i < 3; i++) wallClock(r, x0 + .015, 2.0 - (i % 2) * .5, zf - 1 - i * 1.0, .17, HALF, 3 + i * 3.3, ['#c9a24a', '#1d1d1d', '#b9bcbd'][i]);
+    for (let i = 0; i < 3; i++) wallClock(r, x1 - .015, 2.0 - (i % 2) * .5, zf - 1 - i * 1.0, .17, -HALF, 7 + i * 2.9, ['#8a5a3a', '#c9a24a', '#1d1d1d'][i]);
+    r.pendant(c.lx - .6, c.lz, .9, '#d8b25a'); r.pendant(c.lx + .6, c.lz, .9, '#d8b25a');
+  },
+};
+
+const chabad: InteriorSet = {
+  name: 'chabad', he: 'בית חב״ד טבעון', en: 'BEIT CHABAD', size: [8, 9],
+  floor: '#cdbf9f', floorMat: MAT.tiles, wall: '#f4eddc', light: '#fff0d0', sign: { bg: '#1f3f7a', fg: '#f4efe6' }, look: { shirt: '#f4efe6', pants: '#1d1d1d', beard: true },
+  counter: r => ({ lx: (r.x0 + r.x1) / 2 + (r.door.lx > 0 ? -.8 : .8), lz: r.zb + 1.7, w: Math.min(2.4, r.w * .32), color: '#5a4636', top: '#e9e2d0', mat: MAT.wood }),
+  furnish(r) {
+    const c = r.counter!, { x0, x1, zb, zf } = r, BK = ['#2a3f6a', '#5a1f24', '#2f5a3a', '#6a4a22', '#1d1d1d', '#7a6a3a', '#3a3a5a'];
+    // Full-height bookshelves of sacred books on both side walls: dark leather spines.
+    for (const s of ['L', 'R'] as const) r.run(s, zb + .2, zf - .6, .4, 1.5, (x, z, len) => r.shelves(x, z, len, .4, 2.5, 7, 'z', (i, k) => BK[(i * 3 + k) % BK.length], { pitch: .1, shape: 'book', ih: .28, face: s === 'L' ? 1 : -1, back: '#6a4a2a', frame: '#4a3020', board: '#6a4a2a' }));
+    // The ark alcove on the back wall: a velvet curtain with a gold valance and an eternal light.
+    const ax = c.lx + (c.w > 2 ? c.w / 2 + 1.3 : 1.7), aw = 1.6;
+    if (ax + aw / 2 < x1 - .2) { r.box(ax, 1.25, zb + .02, aw, 2.3, .04, '#6a1a24', MAT.plain); for (let i = 0; i < 8; i++) r.box(ax - aw / 2 + .1 + i * aw / 8 * 1.02, 1.2, zb + .05, .02, 2.2, .03, '#4a1018'); r.box(ax, 2.5, zb + .06, aw + .1, .18, .08, '#d8b25a', MAT.metal); r.sign(ax, 2.72, zb + .04, 1.2, .2, 'דע לפני מי אתה עומד', { bg: '#1f3f7a', fg: '#f2d58a', weight: 700 }); r.prim(PRIMS.ico, NIGHT.bulb, ax, 2.38, zb + .15, .05, .05, .05, null); }
+    // A long table with benches: white cloth, wine cups, challah covers, prayer books.
+    const tw = Math.min(3.6, r.w - 2.6), td = .9;
+    r.pack(x0 + .1, x1 - .1, c.lz + c.d / 2 + 1.4, zf - .6, tw + .8, td + 1, 2, (x, z) => {
+      r.box(x, .76, z, tw, .05, td, '#f4f1ea', MAT.plain, true); for (const e of [-1, 1]) r.box(x + e * (tw / 2 - .25), .37, z, .08, .74, td - .2, '#6a4a2a', MAT.wood);
+      r.hit(x, z, tw + .4, td + .9, .9);
+      for (const e of [-1, 1]) { r.box(x, .45, z + e * (td / 2 + .3), tw - .1, .06, .28, '#8a6a42', MAT.wood); for (const q of [-1, 1]) r.box(x + q * (tw / 2 - .3), .22, z + e * (td / 2 + .3), .06, .44, .24, '#6a4a2a', MAT.wood); }
+      for (let i = 0; i < Math.floor(tw / .55); i++) for (const e of [-1, 1]) { const px = x - tw / 2 + .3 + i * .55; r.cyl(px, .82, z + e * .25, .03, .08, '#c9cbcc', MAT.metal, true); r.box(px + .12, .79, z + e * .3, .12, .02, .17, BK[(i + (e > 0 ? 2 : 0)) % BK.length]); if (i % 3 === 1) r.prim(PRIMS.box, MAT.plain, px, .83, z, .3, .02, .24, '#d8b25a'); }
+    }, .2);
+    // The menorah on a podium, the donation box and the info counter.
+    const mx = r.first([[x0 + .5, zb + 2.8], [x1 - .5, zb + 2.8], [x0 + .5, zf - .6], [x1 - .5, zf - .6]], .7, .5);
+    if (mx) {
+      const [x, z] = mx; r.claim(x, z, .7, .5, 1.9); r.box(x, .45, z, .5, .9, .4, '#5a4636', MAT.wood); r.box(x, .92, z, .56, .04, .46, '#d8b25a', MAT.metal);
+      r.cyl(x, 1.25, z, .02, .6, '#d8b25a', MAT.metal, true);
+      for (let i = -3; i <= 3; i++) { const dy = (3 - Math.abs(i)) * .03; r.cyl(x + i * .07, 1.5 + dy / 2, z, .008, .3 + dy, '#d8b25a', MAT.metal, true); r.cyl(x + i * .07, 1.7 + dy, z, .012, .06, '#f2efe6', MAT.matte, true); r.glow(x + i * .07, 1.76 + dy, z, .02, .03, .02); }
+      r.bar(x, 1.4, z, .006, .5, 'x', '#d8b25a', MAT.metal);
+    }
+    r.box(c.lx + c.w / 2 - .3, c.h + .08, c.lz - .05, .22, .16, .16, '#d8b25a', MAT.metal); r.sign(c.lx + c.w / 2 - .3, c.h + .3, c.lz - .05, .3, .12, 'צדקה', { bg: '#1f3f7a', fg: '#f4efe6' });
+    for (let i = 0; i < 4; i++) r.box(c.lx - c.w / 2 + .3 + i * .3, c.h + .04 + (i % 2) * .01, c.lz + .1, .22, .06 + i * .02, .16, ['#f2efe6', '#2a3f6a', '#d8b25a', '#f2efe6'][i], MAT.plain);
+    r.sign(c.lx, 2.25, zb + .03, 2.4, .5, 'שעות תפילה\nשחרית 07:00 · מנחה 17:30', { bg: '#1f3f7a', fg: '#f4efe6', weight: 700 });
+    r.sign(r.door.lx > 0 ? x0 + .02 : x1 - .02, 1.9, zf - 1.5, 1.2, .5, 'שבת שלום\nסעודת שבת — הצטרפו', { bg: '#f2efe6', fg: '#1f3f7a', weight: 800, border: true }, r.door.lx > 0 ? r.faceL : r.faceR);
+    if (r.fits(x0 + .4, zb + .45, .5, .5)) r.plant(x0 + .4, 0, zb + .45, 1.3, '#a2643f');
+  },
+};
+
+const drugstore: InteriorSet = {
+  name: 'drugstore', he: 'דראגסטור הצומת', en: 'JUNCTION DRUGSTORE', size: [8, 7],
+  floor: '#d9d6cc', floorMat: MAT.tiles, wall: '#f4f2ea', light: '#f6f6ff', sign: { bg: COKE, fg: '#ffffff' }, look: { shirt: COKE, pants: '#2b2b2b' },
+  counter: r => ({ lx: r.door.lx > 0 ? r.x0 + 1.5 : r.x1 - 1.5, lz: r.zf - 1.8, w: 2.2, d: .7, color: '#3a3d40', top: '#e8e4dc' }),
+  keeper: r => { const c = r.counter!; return [c.lx, c.lz - c.d / 2 - .4, c.lx, c.lz + c.d / 2 + .8]; },
+  furnish(r) {
+    const c = r.counter!, { x0, x1, zb, zf } = r, SNK = ['#e8a02a', '#c8302a', '#2f6fb0', '#3f8f4a', '#f2d24a', '#8a3a28', '#7a3a8a'];
+    // Back wall of three Coca-Cola fridges; walls of chips, sweets and bakery on racks.
+    let x = x0 + .7; for (let i = 0; i < 3; i++) x += drinkFridge(r, x, zb + .45, 1.2, i === 1 ? 'COCA-COLA ZERO' : 'COCA-COLA') ? 1.35 : .3;
+    for (const s of ['L', 'R'] as const) r.run(s, zb + 1.3, zf - 2.6, .45, 1.4, (px, pz, len) => r.shelves(px, pz, len, .45, 2, 5, 'z', (i, k) => SNK[(i * 2 + k) % SNK.length], { pitch: .24, shape: 'bag', ih: .26, face: s === 'L' ? 1 : -1, back: '#e9e6dc', frame: COKE, board: '#d9dadb' }));
+    // A freestanding gondola of snacks and sweets down the middle, with red headers.
+    r.pack(x0 + 1.3, x1 - 1.3, zb + 1.8, zf - 1.5, .8, 2.2, 1, (px, pz) => { r.shelves(px, pz, 2.2, .8, 1.6, 4, 'z', (i, k) => SNK[(i + k * 3) % SNK.length], { two: true, shape: 'box', pitch: .22, ih: .22, back: '#e9e6dc', frame: COKE, board: '#f2efe6' }); r.hit(px, pz, .8, 2.2, 1.6); r.sign(px, 1.78, pz + 1.1, .7, .2, 'חטיפים · ממתקים', { bg: COKE, fg: '#fff', weight: 800 }); r.sign(px, 1.78, pz - 1.1, .7, .2, 'חטיפים · ממתקים', { bg: COKE, fg: '#fff', weight: 800 }, Math.PI); }, .9);
+    // Cashier counter: till, candy rack, lottery tickets; a red Coca-Cola panel on the front.
+    r.box(c.lx, .55, c.lz + c.d / 2 + .005, c.w - .1, .8, .01, COKE, MAT.gloss); r.sign(c.lx, .55, c.lz + c.d / 2 + .02, c.w - .4, .3, 'COCA-COLA', { bg: COKE, fg: '#fff', weight: 900 });
+    r.box(c.lx + .3, c.h + .1, c.lz - .1, .36, .18, .28, '#1d1d1d', MAT.gloss); r.prim(PRIMS.box, MAT.gloss, c.lx + .3, c.h + .33, c.lz - .17, .3, .22, .02, '#1d1d1d', 0, -.2); r.box(c.lx - .5, c.h + .04, c.lz + .1, .16, .04, .1, '#2a2a2a', MAT.gloss);
+    for (let k = 0; k < 3; k++) for (let i = 0; i < 6; i++) r.box(c.lx - c.w / 2 + .2 + i * .09, c.h + .08 + k * .12, c.lz + .15, .08, .1, .03, SNK[(i + k) % SNK.length], MAT.gloss);
+    // Toto terminal and ATM: standing kiosks on the side wall, with lit screens and signs.
+    const kiosk = (kx: number, kz: number, body: string, head: string, label: string, screen: string) => {
+      if (!r.claim(kx, kz, .7, .6, 1.9)) return false;
+      r.box(kx, .9, kz, .62, 1.8, .5, body, MAT.gloss); r.box(kx, 1.82, kz, .64, .12, .52, head, MAT.gloss); r.sign(kx, 1.82, kz + .27, .6, .1, label, { bg: head, fg: '#fff', weight: 900, glow: .5 });
+      r.prim(PRIMS.box, MAT.gloss, kx, 1.4, kz + .23, .46, .34, .03, '#141414', 0, -.25); r.glow(kx, 1.4, kz + .245, .4, .28, .005);
+      r.box(kx, 1.0, kz + .28, .3, .2, .03, '#2a2a2a', MAT.metal); for (let i = 0; i < 12; i++) r.box(kx - .09 + (i % 3) * .09, .95 + Math.floor(i / 3) * .045, kz + .3, .06, .03, .01, '#c9cbcc', MAT.metal);
+      r.box(kx + .2, 1.2, kz + .27, .15, .03, .04, '#141414'); r.box(kx, .78, kz + .27, .26, .04, .06, '#1d1d1d');
+      r.sign(kx, 2.15, kz + .02, .6, .2, screen, { bg: '#141414', fg: '#f2d24a', weight: 700 }); return true;
+    };
+    const kx0 = r.door.lx > 0 ? x1 - .5 : x0 + .5;
+    kiosk(kx0, zb + 1.7, '#1f4fa8', '#f2c800', 'TOTO', 'טוטו · לוטו · צ׳אנס'); kiosk(kx0, zb + 2.6, '#d9dadb', '#1f4fa8', 'כספומט ATM', 'משיכת מזומן');
+    // Ice-cream freezer chest, a hanging Coca-Cola banner, pendant lamps.
+    const fz = r.first([[x1 - 1.1, zf - .6], [x0 + 1.1, zf - .6], [(x0 + x1) / 2 + 1.5, zf - .6]], 1.6, .7);
+    if (fz) { const [fx, fzz] = fz; r.claim(fx, fzz, 1.6, .7, .9); r.box(fx, .42, fzz, 1.6, .84, .7, '#f2efe6', MAT.gloss); r.box(fx, .86, fzz, 1.62, .04, .72, COKE, MAT.gloss); r.glass(fx, .84, fzz, 1.45, .02, .58); for (let i = 0; i < 6; i++) r.box(fx - .65 + i * .26, .74, fzz, .2, .1, .4, SNK[i], MAT.gloss); r.sign(fx, .5, fzz + .36, 1.2, .24, 'גלידות', { bg: COKE, fg: '#fff', weight: 800 }); }
+    r.sign(0, r.h - .5, zb + .04, 3, .5, 'COCA-COLA\nהטעם האמיתי', { bg: COKE, fg: '#ffffff', weight: 900 });
+    for (let i = 0; i < 3; i++) r.pendant((x0 + x1) / 2 + (i - 1) * 2, zf - 1, .6, COKE);
+  },
+};
+
+const empty: InteriorSet = {
+  name: 'empty', he: 'להשכרה', en: 'FOR RENT', size: [6, 7], noKeeper: true,
+  floor: '#9a9893', floorMat: MAT.paving, wall: '#d9d5cc', ceiling: '#e4e2dc', light: '#e8ecf4', sign: { bg: '#ffffff', fg: '#c8302a' },
+  furnish(r) {
+    const { x0, x1, zb, zf } = r;
+    // Bare floor and walls: a stepladder, a paint bucket with a roller, dust sheets, loose cable and a to-let poster.
+    const lad = r.first([[x0 + 1, zb + 1.4], [x1 - 1, zb + 1.4], [x0 + 1, zb + 3]], .8, 1.1);
+    if (lad) {
+      const [lx, lz] = lad; r.claim(lx, lz, .8, 1.1, 1.8);
+      for (const e of [-1, 1]) { r.prim(PRIMS.box, MAT.metal, lx + e * .3, .9, lz - .15, .04, 1.9, .05, '#c9cbcc', 0, .2); r.prim(PRIMS.box, MAT.metal, lx + e * .3, .8, lz + .28, .04, 1.65, .05, '#c9cbcc', 0, -.22); }
+      for (let i = 0; i < 5; i++) r.box(lx, .25 + i * .3, lz + .06 - i * .015, .6, .03, .22, '#9a9c9a', MAT.metal);
+      r.box(lx, 1.85, lz - .05, .56, .06, .4, '#d23c2b', MAT.gloss); r.box(lx, 1.95, lz - .05, .3, .12, .16, '#2f6fb0', MAT.gloss);
+    }
+    const pb = r.first([[(x0 + x1) / 2 + 1.4, zb + 1.6], [x1 - 1.5, zb + 2.5], [x0 + 1.5, zb + 2.5]], .6, .6);
+    if (pb) {
+      const [bx, bz] = pb; r.claim(bx, bz, .6, .6, .5); r.cyl(bx, .2, bz, .17, .4, '#e8e4dc', MAT.gloss); r.cyl(bx, .41, bz, .17, .02, '#e8d9b8', MAT.matte, true); r.bar(bx + .25, .03, bz + .1, .03, .24, 'x', '#d23c2b', MAT.plain); r.bar(bx + .35, .03, bz - .1, .02, .24, 'z', '#8a5a3a', MAT.wood);
+    }
+    r.paint(0, 1.7, zb + .015, 1.1, 1.5, (g, W, H) => {
+      g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H); g.fillStyle = '#c8302a'; g.fillRect(0, 0, W, H * .3); g.fillStyle = '#ffffff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.direction = 'rtl';
+      g.font = `900 ${H * .18}px Arial, "Segoe UI", sans-serif`; g.fillText('להשכרה', W / 2, H * .15, W * .9);
+      g.fillStyle = '#1d1d1d'; g.font = `700 ${H * .075}px Arial, "Segoe UI", sans-serif`; g.fillText('חנות ברחוב ראשי', W / 2, H * .43, W * .9); g.fillText('מתאימה לכל שימוש', W / 2, H * .55, W * .9);
+      g.fillStyle = '#c8302a'; g.font = `900 ${H * .09}px Arial, sans-serif`; g.fillText('050-000-0000', W / 2, H * .78, W * .9); g.fillStyle = '#1d1d1d'; g.font = `600 ${H * .045}px Arial, sans-serif`; g.fillText('TO LET · לפרטים התקשרו', W / 2, H * .92, W * .9);
+    });
+    for (let i = 0; i < 3; i++) r.bar(x1 - .3 - i * .12, 2.5 - i * .3, zb + .5 + i * .1, .01, .6, 'x', ['#1d1d1d', '#c8302a', '#2f6fb0'][i], MAT.plain);
+    for (let i = 0; i < 4; i++) r.box((x0 + x1) / 2 - 1.2 + i * 1.1 + r.rand(i) * .3, .01, zf - 1.4 - r.rand(i + 9) * 3, .5 + r.rand(i + 4) * .5, .008, .4 + r.rand(i + 6) * .5, '#bdb5a6', MAT.plain);
+    if (r.claim(x1 - .35, zf - 1.1, .5, 1.5, .6)) for (let i = 0; i < 3; i++) r.box(x1 - .35, .16 + (i % 2) * .02, zf - .6 - i * .5, .4, .3 + i * .04, .35, '#c9a77c', MAT.plain, true);
+    r.box(x0 + .02, .5, (zb + zf) / 2, .02, 1, 1.4, '#ccc6ba', MAT.plain);
+  },
+};
+
+export const INTERIORS: Record<string, InteriorSet> = { restaurant, print, camera, pilates, paint, chocolate, pharmacy, flowers, alhakav, cinemaLobby, falafel, pizza, barber, clocks, chabad, drugstore, empty };
