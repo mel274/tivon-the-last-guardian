@@ -5,6 +5,7 @@ import { buildStreets } from './streets';
 import { buildBenGurion } from './benGurion';
 import { buildKiryatAmal, buildComputerShop } from './kiryatAmal';
 import { buildLandmarks } from './landmarksWorld';
+import { prepareTerraces, buildTerraceWalls } from './terraces';
 import { buildFootprints, buildCars, buildTrees, flushExtrusions } from './scenery';
 
 /** Kiryat Tivon at 1:1: every OSM street, path and building footprint on real elevation, with
@@ -25,6 +26,8 @@ export function* townStages(ctx: WorldContext): Generator<[string, string]> {
   ctx.scene.add(town);
   ctx.groups.town = town;
   const kit = new Kit(ctx, town), skip = new Set<string>();
+  prepareTerraces(); // house pads must exist before anything is draped on the ground
+  stage('terraces');
   yield ['רחובות ושבילים', 'Streets and paths'];
   buildStreets(kit);
   stage('streets');
@@ -42,6 +45,8 @@ export function* townStages(ctx: WorldContext): Generator<[string, string]> {
   yield ['בתים', 'Houses'];
   const { gardens } = buildFootprints(kit, skip);
   stage('buildings');
+  buildTerraceWalls(kit);
+  stage('terraceWalls');
   buildCars(kit);
   stage('cars');
   yield ['עצים', 'Trees'];
