@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { ShapeUtils } from 'three';
-import { BUILDINGS, AREAS, ROADS, WORLD, VEHICLE, orientedBox, pointInPolygon, type Footprint, type P2 } from './geo';
+import { BUILDINGS, AREAS, ROADS, WORLD, VEHICLE, DISTRICTS, landmark, orientedBox, pointInPolygon, type Footprint, type P2 } from './geo';
 import { surfaceHeight } from './terrain';
 import { Kit, MAT, NIGHT, Frame, PRIMS } from './kit';
 import { buildingMaterial } from './materials';
 import { styleFor, wallFinish, gardenTrees, treeKind } from './streetStyle';
 import { nearestRoad } from './geo';
-import { ZEID } from './layout';
+import { ZEID, STATIC_PADS } from './layout';
+import { layoutPlots, dressPlots, PLOT_STATS } from './plots';
+import { LANDMARKS } from '../game/landmarks';
 
 /** The town's fabric from real OSM footprints. Each building stands on its ground (on slopes the
  *  downhill side shows a taller base, as Tivon's hillside houses do); heights follow OSM levels
@@ -91,18 +93,58 @@ export function groundRange(poly: P2[]) {
 }
 const polyArea = (p: P2[]) => { let a = 0; for (let i = 0; i < p.length; i++) { const [x1, z1] = p[i], [x2, z2] = p[(i + 1) % p.length]; a += x1 * z2 - x2 * z1; } return Math.abs(a) / 2; };
 
-/** All OSM buildings except those in `skip` (custom-built) and underground tombs. */
+/** Garden tree: candidate spots in order of preference, and the instanced tree kind. */
+export type GardenTree = { at: P2[]; kind: number };
+const CIVIC = new Set(['school', 'pitch', 'cemetery', 'heritage', 'pool', 'playground', 'parking', 'pedestrian', 'park']);
+const civic = AREAS.filter(a => CIVIC.has(a.kind)).map(a => { const xs = a.points.map(q => q[0]), zs = a.points.map(q => q[1]); return { a, box: [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)] }; });
+const HOME = new Set(['yes', 'house', 'detached', 'residential', 'semidetached_house', 'bungalow']);
+/** A private house: an untagged, unnamed residential footprint of 40–250 m² and at most three
+ *  storeys (mapped, or as the street survey would build it), outside schools, parks and other
+ *  public grounds. In the OSM data nearly every building is a plain `building=yes`. */
+export function isPrivateHouse(b: Footprint, area = polyArea(b.points)) {
+  if (b.layer < 0 || b.points.length < 3 || b.name || b.tag || !HOME.has(b.type) || area < 40 || area >= 250) return false;
+  const st = styleFor(b.street);
+  if (/commercial|public|industrial|office/.test(st.type) || (st.type.includes('apartment') && area > 160)) return false;
+  if ((b.levels || (b.height ? Math.round(b.height / 3) : Math.min(st.floorsMax, st.floorsTypical + 1))) > 3) return false;
+  const cx = b.points.reduce((s, q) => s + q[0], 0) / b.points.length, cz = b.points.reduce((s, q) => s + q[1], 0) / b.points.length;
+  return !civic.some(({ a, box }) => cx >= box[0] && cx <= box[1] && cz >= box[2] && cz <= box[3] && pointInPolygon(cx, cz, a.points));
+}
+const CARS = ['#d8d6cf', '#2d2f33', '#8e9399', '#7c2f2b', '#e9e8e3', '#33475f', '#5d6b5e', '#b8b4a6', '#f2f2ef'];
+
+/** All OSM buildings except those in `skip` (custom-built) and underground tombs. Private houses
+ *  get their own walled, hedged and planted plots (plots.ts). */
 export function buildFootprints(kit: Kit, skip: Set<string>) {
   seed = 90210; let count = 0;
-  const gardens: Array<[number, number, number]> = [];
+  const gardens: GardenTree[] = [];
+  // Plots are laid out before this function marks the occupancy grid, so it still tells authored ground apart.
+  const homes: Footprint[] = [], home = new Set<string>(), others: Array<{ points: P2[]; claim: boolean }> = [];
+  for (const b of BUILDINGS) {
+    if (b.layer < 0 || b.points.length < 3) continue;
+    const area = polyArea(b.points);
+    if (!skip.has(b.id) && isPrivateHouse(b, area)) { home.add(b.id); homes.push(b); } else others.push({ points: b.points, claim: !skip.has(b.id) && area >= 40 });
+  }
+  const v = new THREE.Vector3(), keepDiscs: Array<[number, number, number]> = [];
+  for (const i of kit.ctx.interactables) { i.object.getWorldPosition(v); keepDiscs.push([v.x, v.z, 6]); }
+  for (const n of kit.ctx.npcs) { n.object.getWorldPosition(v); keepDiscs.push([v.x, v.z, 6]); }
+  for (const l of LANDMARKS) { const m = landmark(l.id); keepDiscs.push([m.x, m.z, 9]); }
+  const districts = Object.values(DISTRICTS).map(d => ({ x: d.x, z: d.z, r2: (d.r + 30) ** 2 }));
+  const plots = layoutPlots({
+    houses: homes.map(b => b.points), others,
+    roads: ROADS.filter(r => VEHICLE.has(r.kind) || r.kind === 'service'), paths: ROADS.filter(r => !VEHICLE.has(r.kind) && r.kind !== 'service'),
+    pub: civic.map(c => c.a.points), keep: STATIC_PADS.map(p => p.poly), keepDiscs,
+    // Occupied cells off the roads' own bands are authored ground; inside the districts, occupied near-road cells count as street.
+    keepTest: (x, z, near) => kit.occ.free(x, x, z, z) ? null : districts.some(d => (x - d.x) ** 2 + (z - d.z) ** 2 < d.r2) ? (near ? 'road' : 'keep') : near ? null : 'keep',
+  });
+  PLOT_STATS.houses = homes.length; PLOT_STATS.layoutMs = Math.round(plots.ms);
+  const plotted = (x: number, z: number) => plots.grid.ownAt(x, z) >= 0;
   for (const b of BUILDINGS) {
     if (skip.has(b.id) || b.layer < 0 || b.points.length < 3) continue;
     const area = polyArea(b.points); if (area < 6) continue;
-    const { lo, hi } = groundRange(b.points);
+    const { lo, hi } = groundRange(b.points), house = home.has(b.id);
     // Storeys, finishes and roofs follow the street's Street View survey (or town defaults).
     const st = styleFor(b.street), big = area > 500 || (st.type.includes('apartment') && area > 160);
     const guess = (big ? st.floorsMax : st.floorsTypical) + (rnd() < .25 ? -1 : rnd() < .15 ? 1 : 0) + (area < 55 ? -1 : 0);
-    const levels = b.levels || (b.height ? Math.round(b.height / 3) : Math.max(1, Math.min(st.floorsMax, guess)));
+    const levels = Math.min(house ? 3 : 99, b.levels || (b.height ? Math.round(b.height / 3) : Math.max(1, Math.min(st.floorsMax, guess))));
     const top = hi + levels * 3;
     const fin = wallFinish(pick(st.walls), rnd()), stone = fin.stone, wall = fin.color;
     const box = orientedBox(b.points);
@@ -117,23 +159,34 @@ export function buildFootprints(kit: Kit, skip: Set<string>) {
       const heaters = area < 150 ? 1 : Math.min(6, Math.floor(area / 120));
       for (let i = 0; i < heaters; i++) { const [x, z] = f.at((i - (heaters - 1) / 2) * Math.min(2.4, box.w / heaters), -box.d / 4); if (pointInPolygon(x, z, b.points)) solarHeater(kit, x, top, z, box.rot); }
     }
-    // Garden trees by the street's density and species.
-    if (levels <= 3) { const n = gardenTrees(st.treeDensity); for (let k = 0; k < Math.floor(n) + (rnd() < n % 1 ? 1 : 0); k++) { const a = rnd() * Math.PI * 2, r = Math.max(box.w, box.d) / 2 + 2.2 + rnd() * 3.5; gardens.push([box.cx + Math.cos(a) * r, box.cz + Math.sin(a) * r, treeKind(st.species, rnd())]); } }
-    if (levels <= 3 && st.frontBoundary !== 'none') frontBoundary(kit, box, st.frontBoundary, st.hedges);
+    // Other low buildings keep a ring of garden trees and a street-side boundary where no plot is.
+    if (!house && levels <= 3) {
+      const n = gardenTrees(st.treeDensity);
+      for (let k = 0; k < Math.floor(n) + (rnd() < n % 1 ? 1 : 0); k++) {
+        const a = rnd() * Math.PI * 2, r = Math.max(box.w, box.d) / 2 + 2.2 + rnd() * 3.5, x = box.cx + Math.cos(a) * r, z = box.cz + Math.sin(a) * r;
+        gardens.push({ at: [[x, z], ...[0, 1, 2].map((): P2 => [x + (rnd() - .5) * 6, z + (rnd() - .5) * 6])], kind: treeKind(st.species, rnd()) });
+      }
+      if (st.frontBoundary !== 'none') frontBoundary(kit, box, st.frontBoundary, st.hedges, plotted);
+    }
     count++;
   }
+  gardens.push(...dressPlots(kit, plots, h => styleFor(homes[h].street), (x, z, rot) => car(kit, x, z, rot, pick(CARS))));
+  PLOT_STATS.dressMs = Math.round(PLOT_STATS.dressMs);
+  if (import.meta.env?.DEV) console.info('[plots]', JSON.stringify({ ...PLOT_STATS, stages: plots.stages }));
   return { count, gardens };
 }
 
 const vehicleRoads = ROADS.filter(r => VEHICLE.has(r.kind) && !r.kind.startsWith('trunk'));
 /** Garden wall / hedge / fence along the street side of a plot, just behind the pavement. */
-function frontBoundary(kit: Kit, box: { cx: number; cz: number; w: number; d: number }, kind: string, hedges: boolean) {
+function frontBoundary(kit: Kit, box: { cx: number; cz: number; w: number; d: number }, kind: string, hedges: boolean, plotted: (x: number, z: number) => boolean) {
   const r = nearestRoad(box.cx, box.cz, vehicleRoads); if (r.dist > 28) return;
   const nx = box.cx - r.px, nz = box.cz - r.pz, l = Math.hypot(nx, nz) || 1, off = r.road.width / 2 + 1.9;
   if (l < off + 1.5) return;
   const len = Math.min(16, Math.max(box.w, box.d) + 3), x = r.px + nx / l * off, z = r.pz + nz / l * off;
   const f = new Frame(x, z, Math.atan2(r.dx, r.dz) + Math.PI / 2), k = kind.toLowerCase();
   for (const e of [-len / 2, len / 2]) { const [ex, ez] = f.at(e, 0), q = nearestRoad(ex, ez, vehicleRoads); if (q.dist < q.road.width / 2 + 1.6) return; }
+  // Never across a private plot (it has its own boundary).
+  for (let e = -len / 2; e <= len / 2; e += 1) { const [ex, ez] = f.at(e, 0); if (plotted(ex, ez)) return; }
   // Never across an authored plaza (the Zeid lane opens onto Alexander Zaid Street).
   for (let e = -len / 2 - 1.5; e <= len / 2 + 1.5; e += 1.5) { const [ex, ez] = f.at(e, 0); if (pointInPolygon(ex, ez, ZEID.upperPlaza) || pointInPolygon(ex, ez, ZEID.lowerPlaza)) return; }
   const stoneWall = k.includes('stone'), fence = k.includes('fence'), hedge = k.includes('hedge') || (hedges && !fence); // the survey's signature: rubble wall, tall hedge behind
@@ -154,7 +207,6 @@ function car(kit: Kit, x: number, z: number, rot: number, color: string) {
 /** Cars parked along residential kerbs and in car parks. */
 export function buildCars(kit: Kit) {
   seed = 777;
-  const CARS = ['#d8d6cf', '#2d2f33', '#8e9399', '#7c2f2b', '#e9e8e3', '#33475f', '#5d6b5e', '#b8b4a6', '#f2f2ef'];
   for (const road of ROADS) {
     if (road.kind !== 'residential' && road.kind !== 'unclassified') continue;
     for (let i = 3; i < road.points.length - 3; i += 4) {
@@ -174,7 +226,7 @@ export function buildCars(kit: Kit) {
 
 /** Instanced trees: dense oak–pine woodland in OSM forests, park trees, garden trees around
  *  houses and street trees, chunked by 128 m tiles so they frustum-cull. */
-export function buildTrees(kit: Kit, extra: Array<[number, number, number]> = []) {
+export function buildTrees(kit: Kit, extra: GardenTree[] = []) {
   seed = 4242;
   type T = { x: number; z: number; kind: 0 | 1 | 2 | 3; s: number };
   const trees: T[] = [];
@@ -183,8 +235,8 @@ export function buildTrees(kit: Kit, extra: Array<[number, number, number]> = []
     if (!kit.occ.free(x - r, x + r, z - r, z + r)) return false;
     kit.occ.markDisc(x, z, r * .7); trees.push({ x, z, kind, s }); return true;
   };
-  // Garden trees: if the spot is taken, try a few nearby ones before giving up.
-  for (const [x, z, k] of extra) for (let j = 0; j < 4; j++) if (tryAdd(x + (j ? (rnd() - .5) * 6 : 0), z + (j ? (rnd() - .5) * 6 : 0), k as T['kind'], .8 + rnd() * .4, 1)) break;
+  // Garden trees: if the spot is taken, try the alternatives before giving up.
+  for (const { at, kind } of extra) { const s = .8 + rnd() * .4; for (const [x, z] of at) if (tryAdd(x, z, kind as T['kind'], s, 1)) break; }
   for (const a of AREAS) {
     const dens = a.kind === 'forest' ? 1 / 55 : a.kind === 'park' ? 1 / 140 : a.kind === 'cemetery' ? 1 / 90 : a.kind === 'farm' ? 1 / 900 : 0;
     if (!dens) continue;
