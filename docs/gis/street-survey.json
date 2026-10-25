@@ -1889,5 +1889,1442 @@
       "ground": "dry grass"
     },
     "notable": "Short street beside a plain flat-roofed grey concrete institutional building (school/sports hall) with tall ball-court fencing, steel gates and a concrete retaining plinth, a big oak on dry ground opposite (second spot failed to render)."
+  },
+  {
+    "name": "משה דיין",
+    "en": "Moshe Dayan",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.7,
+      "walls": [
+        "cream plaster",
+        "white plaster",
+        "jerusalem stone cladding"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "low stone wall",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "aleppo pine",
+        "cypress",
+        "olive",
+        "judas tree"
+      ],
+      "hedges": true,
+      "ground": "lawn"
+    },
+    "notable": "Wide newer southern street: red-paver sidewalks both sides, grey kerbs, long rubble-stone and white dressed-stone retaining walls topped with green railings and shrubs, red-tiled 1-2 storey houses, a public lawn strip and a roundabout lined with tall cypresses at the north end."
+  },
+  {
+    "name": "האלה",
+    "en": "HaEla",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 8,
+      "frontBoundary": "hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "olive",
+        "carob",
+        "cypress",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "dry grass"
+    },
+    "notable": "Starts at a roundabout with red-white kerbs, a red-paver sidewalk and a lawn verge with a timber electricity pole; further east it narrows to a patched concrete lane between overgrown thickets and dry weedy plots, a cream 3-storey block glimpsed above the scrub."
+  },
+  {
+    "name": "רותם",
+    "en": "Rotem",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "cream plaster",
+        "white plaster",
+        "ochre plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "palm",
+        "olive",
+        "ficus",
+        "cypress",
+        "aleppo pine"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "South-western edge street facing a pine-forested ridge: the west end is a narrow kerbless lane with dirt verges, white block garden walls and tall hedges; the east end widens into a bus route with red-white kerbs, red-paver sidewalks, green railings, a glass bus shelter, Washingtonia palms and newer ochre/cream red-roofed villas with timber pergolas and fences."
+  },
+  {
+    "name": "כרומגן",
+    "en": "Chromagen",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "commercial",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0,
+      "walls": [
+        "grey plaster",
+        "metal cladding",
+        "white plaster"
+      ],
+      "setbackM": 10,
+      "frontBoundary": "fence",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "eucalyptus",
+        "palm"
+      ],
+      "hedges": false,
+      "ground": "dry grass"
+    },
+    "notable": "no coverage (estimated) - access road just north of Route 75 to the Chromagen solar-water-heater plant of Kibbutz Sha'ar HaAmakim. Satellite shows big flat factory halls with grey metal and solar-panel roofs, a looping road around fenced parking and storage yards, and pine woodland on the slope; the only Street View is from the highway, looking over a guardrail into yellow-flowering broom/acacia thickets."
+  },
+  {
+    "name": "הברוש",
+    "en": "HaBrosh",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 3,
+      "floorsMax": 4,
+      "redTileRoofShare": 0.2,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "blue-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "ficus",
+        "oak",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Busy short street by the town centre: angled and kerb parking packed with cars, blue-white paid-parking kerbs at the crossing, a green-screened building site, cream 3-4 storey apartment blocks with deep balconies and roller shutters behind rubble-stone planter walls, big pines and ficus overhead and a tall power pylon at the corner."
+  },
+  {
+    "name": "דוד אלעזר",
+    "en": "David Elazar",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.7,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "low",
+      "species": [
+        "aleppo pine",
+        "cypress",
+        "olive"
+      ],
+      "hedges": false,
+      "ground": "rocky"
+    },
+    "notable": "Curving street in the newer southern hilltop neighbourhood: red-white kerbs, red-paver sidewalks, rubble-stone retaining walls topped with red steel railings, a fenced round concrete water reservoir in a planted rock garden, red-roofed cream 2-3 storey terraced houses and wide views over the valley; young trees only (one spot's images were black)."
+  },
+  {
+    "name": "יהושע חנקין",
+    "en": "Yehoshua Hankin",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.7,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 10,
+      "frontBoundary": "low stone wall",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "grey",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "carob",
+        "olive",
+        "cypress"
+      ],
+      "hedges": false,
+      "ground": "rocky"
+    },
+    "notable": "Wide newer connector road with few front doors: the west side is a red-paver sidewalk behind a long steel railing looking down over red-roofed houses, the east side a continuous rubble-stone retaining wall with stone stairs climbing into a dense oak and shrub slope; grey kerbs, tall street lamps."
+  },
+  {
+    "name": "בר לב",
+    "en": "Bar Lev",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.9,
+      "walls": [
+        "cream plaster",
+        "white plaster",
+        "jerusalem stone cladding"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "fence",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "none",
+      "parking": "kerb",
+      "slope": "steep",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "low",
+      "species": [
+        "palm",
+        "olive",
+        "cypress",
+        "bougainvillea"
+      ],
+      "hedges": false,
+      "ground": "gardens"
+    },
+    "notable": "New-build southern lane paved entirely in red interlocking pavers with a grey central gutter, climbing between tall white dressed-stone retaining walls; uniform red-tiled 2-3 storey terraced/semi-detached houses behind low cream walls with steel railings, young palms, and a fenced playground with a timber shade pergola at the bend."
+  },
+  {
+    "name": "כיכר בן גוריון",
+    "en": "Ben Gurion Square",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "commercial",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 2,
+      "frontBoundary": "none",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "flat",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "ficus",
+        "aleppo pine",
+        "eucalyptus",
+        "palm",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "lawn"
+    },
+    "notable": "The town-centre junction: flat-roofed 2-storey white shop buildings with green shutters, sign boards and arcaded shopfronts, a corner café under red-and-white striped awnings, painted traffic islands with white-flower beds and young ficus, red-white kerbs and zebra crossings; one side opens onto the founders' park lawn with big ficus/pine trees and a green-screened fence."
+  },
+  {
+    "name": "כביש אחורי גן המייסדים",
+    "en": "Road behind Gan HaMeyasdim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "none",
+      "floorsTypical": 0,
+      "floorsMax": 0,
+      "redTileRoofShare": 0,
+      "walls": [],
+      "setbackM": 0,
+      "frontBoundary": "none",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "forest",
+      "species": [
+        "oak",
+        "aleppo pine",
+        "carob"
+      ],
+      "hedges": false,
+      "ground": "dry grass"
+    },
+    "notable": "Narrow kerbless service lane of patched asphalt winding through the old oak-and-pine grove behind the founders' park: bare packed-earth and dry-grass ground under the canopy, scattered limestone rocks, cars parked informally on the dirt at the town-centre end, no buildings fronting it."
+  },
+  {
+    "name": "יסמין",
+    "en": "Yasmin",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 4,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "cypress",
+        "oak",
+        "aleppo pine",
+        "eucalyptus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Shady street east of the centre: big ficus and oak canopy over grey-paver sidewalks, a red-roofed white bungalow and a flat-roofed white public building on one side, and at the east end a junction with a small paved plaza, rubble-stone wall, row of tall cypresses, red-white kerbs and white/cream 3-4 storey apartment blocks behind hedges."
+  },
+  {
+    "name": "המייסדים",
+    "en": "HaMeyasdim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.4,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "low stone wall",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "olive",
+        "palm",
+        "cypress",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Short southern street of older single-storey white houses: clipped round box shrubs and green iron lamp posts at the crossing, big oaks over grey-paver sidewalks, low dry-stone rubble walls and limestone boulders at the verges, a Washingtonia palm and a dirt shoulder on the uphill side."
+  },
+  {
+    "name": "סימטת החרוב",
+    "en": "Simtat HaHaruv",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.4,
+      "walls": [
+        "white plaster",
+        "grey-green plaster",
+        "cream plaster"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "carob",
+        "ficus",
+        "bougainvillea"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Narrow old lane: magenta bougainvillea spilling over hedges, a flat-roofed white institutional building with red-painted steel gates and an outside stair, a small boxy 2-storey pale grey-green plaster building, red-roofed cottages behind teal metal gates and tall clipped hedges, and a spreading oak canopy; cars on a gravel apron."
+  },
+  {
+    "name": "גורדון",
+    "en": "Gordon",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 8,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "aleppo pine",
+        "olive",
+        "palm",
+        "carob"
+      ],
+      "hedges": true,
+      "ground": "rocky"
+    },
+    "notable": "Narrow kerbless lane on the southern edge: pale concrete-patched asphalt between dusty dirt verges, big oaks and pines, banks of pink-and-white oleander, a low rubble wall with a date palm, and only a red-roofed single-storey cottage glimpsed through the greenery."
+  },
+  {
+    "name": "סמתת הנרקיסים",
+    "en": "Simtat HaNarkisim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "cypress",
+        "aleppo pine",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Quiet north-eastern lane of red-roofed cottages behind tall clipped hedges, with a towering Norfolk Island pine, oaks and cypresses; grey-paver sidewalk with a low stone edging, a small flat-roofed utility shed, and at the east end an open asphalt car park with green/yellow recycling bins."
+  },
+  {
+    "name": "סמטת הנרקיסים",
+    "en": "Simtat HaNarkisim (east)",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.7,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "aleppo pine",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "dry grass"
+    },
+    "notable": "Short spur that is mostly a big shaded asphalt car park under spreading old oaks, with green recycling bins, a corrugated-metal shed, a red-roofed white house behind a hedge and a white boundary wall; the other end trails off into a rough lane between dry oak scrub."
+  },
+  {
+    "name": "הדס",
+    "en": "Hadas",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.1,
+      "walls": [
+        "white plaster",
+        "cream plaster",
+        "grey plaster"
+      ],
+      "setbackM": 3,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "cypress",
+        "aleppo pine",
+        "palm",
+        "bougainvillea"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Car-lined street just north of the centre: flat-roofed 2-3 storey white and grey blocks with small shops at the corner, low rubble-stone planter walls, red-white kerbs and a parking lot at the junction, a transformer pole, big ficus and tall cypresses, bougainvillea and a jacaranda-like tree over steel railings."
+  },
+  {
+    "name": "סימטת הליבנה",
+    "en": "Simtat Halivne",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "cypress",
+        "oak",
+        "eucalyptus",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "dry grass"
+    },
+    "notable": "Short lane off a red-white-kerbed junction: tall ivy-covered hedge walls swallowing white garden gates, a hand-painted red house-name sign, a red-roofed house behind a white wall and hedge, a flat-roofed cream 2-storey house, tall cypresses, a gnarled eucalyptus over a dry vacant plot and a lattice power pylon."
+  },
+  {
+    "name": "כיכר קומפיין",
+    "en": "Compiègne Circle",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "black-white",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "aleppo pine",
+        "palm",
+        "olive",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "lawn"
+    },
+    "notable": "Roundabout on Rabin in the newer south-west: black-and-white striped kerbs on the islands, red-paver sidewalks and planted medians, long clipped hedges and lawn verges, cream 2-3 storey terraced houses with red roofs and balconies, bare young street trees, a green-screened building site and a pine belt beyond."
+  },
+  {
+    "name": "הסיגליות",
+    "en": "HaSigaliot",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "cypress",
+        "ficus",
+        "aleppo pine"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "North-eastern junction lane: a red-roofed cream house on a white dressed-stone plinth wall with a stone urn, dark green steel pipe railings at the corners, grey-paver sidewalk, a lattice power pylon, then a narrow concrete track between walls of dense overgrown hedge and oak scrub."
+  },
+  {
+    "name": "כיכר ציפורנים",
+    "en": "Tsipornim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "none",
+      "floorsTypical": 0,
+      "floorsMax": 0,
+      "redTileRoofShare": 0,
+      "walls": [],
+      "setbackM": 0,
+      "frontBoundary": "none",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "oak",
+        "olive",
+        "cypress",
+        "aleppo pine"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Planted roundabout in the north-east: lavender and low clipped shrub beds on the central island, red-white kerbs and zebra crossings, red-paver sidewalks, lattice power pylons, a big old oak on a rock-studded verge and an olive grove on a lawn slope, with houses set well back out of sight."
+  },
+  {
+    "name": "עוקף מרדכי",
+    "en": "Okef Mordechai",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "none",
+      "floorsTypical": 0,
+      "floorsMax": 0,
+      "redTileRoofShare": 0,
+      "walls": [],
+      "setbackM": 0,
+      "frontBoundary": "none",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "forest",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "carob"
+      ],
+      "hedges": false,
+      "ground": "dry grass"
+    },
+    "notable": "no coverage (estimated) - the 'Mordechai bypass' is a pale unpaved dirt track along the town's western edge (seen on satellite), running behind the back gardens of the red-roofed houses on Mordechai St between pine/oak woodland and an open dry-grass field; no houses face it. The nearest Street View (27 Mordechai St) shows stone-clad 2-storey red-roofed houses on rubble plinths."
+  },
+  {
+    "name": "שחף",
+    "en": "Shachaf",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "eucalyptus",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "dry grass"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: the north-south perimeter road on the east side of the residential core, between rows of small 1-storey kibbutz houses on one side and long low agricultural sheds and pine/oak woodland on the other; narrow kerbless asphalt, cars parked in gravel bays."
+  },
+  {
+    "name": "צבר",
+    "en": "Zabar",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.1,
+      "walls": [
+        "exposed concrete",
+        "grey plaster",
+        "white plaster"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "fence",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "eucalyptus",
+        "cypress",
+        "aleppo pine"
+      ],
+      "hedges": false,
+      "ground": "dry grass"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: service road in the farmyard/industrial strip on the kibbutz east side: long low sheds with corrugated and solar-panel roofs, fenced yards, dirt aprons and a few eucalyptus/cypress windbreaks."
+  },
+  {
+    "name": "ארז",
+    "en": "Erez",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "aleppo pine",
+        "cypress",
+        "palm",
+        "eucalyptus"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: south-western residential lane near the entrance off Route 75: rows of small single-storey kibbutz houses with flat roofs, solar heaters and some red tiles, set on shared lawns under big ficus and pine, narrow kerbless asphalt path."
+  },
+  {
+    "name": "רקפת",
+    "en": "Rakafot",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "aleppo pine",
+        "cypress",
+        "palm",
+        "eucalyptus"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: residential path west of the kibbutz centre: attached rows of 1-storey members' houses (some extended to 2 storeys), pale beige/grey flat or low-pitched roofs with a minority of red tiles, little pergolas and porches facing shared lawns; no kerbs or sidewalks."
+  },
+  {
+    "name": "חבצלת",
+    "en": "Havazelet",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "aleppo pine",
+        "cypress",
+        "palm",
+        "eucalyptus"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: western residential path among rows of small single-storey kibbutz houses, shared lawns and hedges, big ficus, pines and palms; narrow kerbless asphalt."
+  },
+  {
+    "name": "כרמל",
+    "en": "Carmel",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "cypress",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: northern lane past the kibbutz's 2-3 storey red-roofed assisted-living home and its car park, with houses among pines and the oak woodland edge beyond."
+  },
+  {
+    "name": "אור",
+    "en": "Or",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "commercial",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0,
+      "walls": [
+        "grey plaster",
+        "exposed concrete",
+        "ochre plaster"
+      ],
+      "setbackM": 3,
+      "frontBoundary": "fence",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "low",
+      "species": [
+        "eucalyptus",
+        "cypress",
+        "palm"
+      ],
+      "hedges": false,
+      "ground": "dry grass"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: road from the kibbutz down to its light-industrial zone by Route 75: flat-roofed one-storey workshops and warehouses in grey and pink plaster, rooftop billboards, chain-link fenced yards with parked vans, dry weedy verges."
+  },
+  {
+    "name": "כנרת",
+    "en": "Kineret",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "palm",
+        "cypress",
+        "jacaranda",
+        "bougainvillea"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: central residential path near the kibbutz green: small 1-storey houses and a few 2-storey ones, mixed flat roofs with solar heaters and some red tiles, shared lawns, ficus and palms."
+  },
+  {
+    "name": "כדורעף",
+    "en": "CadorAf",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "eucalyptus",
+        "palm",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: short pedestrian path by the kibbutz green and communal hall, named after the volleyball court there; lawn, sports court fencing and big shade trees."
+  },
+  {
+    "name": "Hartia",
+    "en": "Hartia",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.2,
+      "walls": [
+        "white plaster",
+        "grey plaster"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "ficus",
+        "cypress",
+        "palm",
+        "eucalyptus"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: short path in the kibbutz service corner near the old silo and the grocery store: low flat-roofed service buildings, a small parking area, lawns and shade trees."
+  },
+  {
+    "name": "כיכר הכניסה",
+    "en": "Entrance Square",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "none",
+      "floorsTypical": 0,
+      "floorsMax": 0,
+      "redTileRoofShare": 0,
+      "walls": [],
+      "setbackM": 0,
+      "frontBoundary": "none",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "red-white",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "cypress",
+        "aleppo pine",
+        "palm",
+        "bougainvillea"
+      ],
+      "hedges": false,
+      "ground": "dry grass"
+    },
+    "notable": "no coverage (estimated) - kibbutz entrance roundabout just north of Route 75 (the highway panorama 54 m away shows the turn-off): magenta bougainvillea, tall cypresses and pines, palms, lattice power pylons, a concrete water tower and the light-industrial buildings behind."
+  },
+  {
+    "name": "המיסדים",
+    "en": "Hameyasdim (kibbutz)",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.4,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "aleppo pine",
+        "cypress",
+        "olive"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: the 'founders' lane' in the old core near the assisted-living home: the oldest small single-storey kibbutz houses, some red-tiled, among mature pines and ficus on lawns."
+  },
+  {
+    "name": "נרקיס",
+    "en": "Narkish",
+    "spotsChecked": 0,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "aleppo pine",
+        "cypress",
+        "palm",
+        "eucalyptus"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "no coverage (estimated) - lane inside Kibbutz Sha'ar HaAmakim, across Route 75 from the town; no Street View, estimated from satellite and the Route 75 panoramas: short residential path in the kibbutz core: small single-storey houses with flat roofs and solar heaters (a minority red-tiled), shared lawns and hedges, big shade trees; no kerbs."
   }
 ]
