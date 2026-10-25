@@ -220,7 +220,7 @@ let logoMaterial: THREE.MeshStandardMaterial | null = null;
 function logoSign(kit: Kit, f: Frame, lx: number, y: number, lz: number, size: number) {
   if (!logoMaterial) {
     logoMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .6, emissive: '#ffffff', emissiveIntensity: .12 });
-    if (typeof Image !== 'undefined') new THREE.TextureLoader().load('/textures/amali-logo.png', t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; logoMaterial!.map = t; logoMaterial!.emissiveMap = t; logoMaterial!.needsUpdate = true; });
+    if (typeof Image !== 'undefined') new THREE.TextureLoader().load(import.meta.env.BASE_URL + 'textures/amali-logo.png', t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; logoMaterial!.map = t; logoMaterial!.emissiveMap = t; logoMaterial!.needsUpdate = true; });
     else logoMaterial.color.set('#005186');
   }
   const [x, z] = f.at(lx, lz); const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), logoMaterial);

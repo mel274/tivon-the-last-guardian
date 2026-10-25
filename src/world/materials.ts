@@ -64,7 +64,7 @@ let atlasRequested = false;
 function requestTextures() {
   if (atlasRequested || !hasDOM) return; atlasRequested = true;
   for (const s of ['grass', 'soil', 'tiles', 'wood', 'cavestone'] as Surface[]) { const cv = proceduralCanvas(s); if (cv) install(s, cv); }
-  const img = new Image(); img.src = '/textures/tivon-material-atlas.png';
+  const img = new Image(); img.src = import.meta.env.BASE_URL + 'textures/tivon-material-atlas.png';
   img.onload = () => {
     (['limestone', 'plaster', 'asphalt', 'paving'] as Surface[]).forEach((name, index) => {
       const canvas = document.createElement('canvas'); canvas.width = canvas.height = 512;
