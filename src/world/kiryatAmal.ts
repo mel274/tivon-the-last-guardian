@@ -106,7 +106,7 @@ function rowOnEdge(kit: Kit, poly: P2[], a: P2, b: P2, y: number, units: Array<[
 export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   const U = ZEID.upper, Lw = ZEID.lower, B = kit.B, F = MANDU_FLOOR;
   const { HW, HD, BAL, STW, ARC0 } = ZEID.frame;
-  skip.add(ZEID.building.id);
+  skip.add(ZEID.building.id); skip.add('775921710'); skip.add('775921711'); // the OSM falafel row and drugstore, rebuilt by hand below
   // M: building frame at the lower plaza (+x east along Route 75, +z south); Mu: the upper level.
   const M = new Frame(ZEID.frame.x, ZEID.frame.z, ZEID.frame.rot, Lw), Mu = sub(M, 0, 0, 0, F);
   const W = (lx: number, lz: number) => M.at(lx, lz);
@@ -377,6 +377,39 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
     const [ax, az] = along(1.5, 3), [bx, bz] = along(24.5, 3);
     npc.path = [[ax, U, az], [bx, U, bz], [-201, U, -837.3], [-182, U, -834 + i * 2]];
   }
+
+
+  // ——— Route 75 guardrail: a W-beam rail on the south edge of the eastbound carriageway ———
+  // From the bus stop east to the Kiryat Amal junction; the layout leaves gaps at crossings.
+  { const R5 = ROUTE75_RAIL;
+    for (let i = 0; i < R5.length; i++) {
+      const a = R5[i], ay = surfaceHeight(a.x, a.z); if (a.gap) continue;
+      B.box(MAT.metal, a.x, ay + .45, a.z, .08, .9, .08, 0, '#9ea3a6');
+      const b = R5[i + 1]; if (!b || b.gap || Math.hypot(b.x - a.x, b.z - a.z) > 3) continue;
+      const by = surfaceHeight(b.x, b.z), len = Math.hypot(b.x - a.x, b.z - a.z), rot = Math.atan2(-(b.z - a.z), b.x - a.x), my = Math.max(ay, by);
+      B.place(PRIMS.box, MAT.metal, (a.x + b.x) / 2, (ay + by) / 2 + .72, (a.z + b.z) / 2, len + .04, .3, .05, rot, '#b9bdbf', true, 0, Math.atan2(by - ay, len));
+      kit.collide(Math.min(a.x, b.x) - .12, Math.max(a.x, b.x) + .12, Math.min(a.z, b.z) - .12, Math.max(a.z, b.z) + .12, my - .3, my + 1.1);
+    } }
+
+  // ——— The garden path: 1.8 m paved, draped on the terrain, from Mandu's east gate to the Hannah Szenes garden ———
+  { const pts: P2[] = []; const gp = ZEID.gardenPath;
+    for (let i = 1; i < gp.length; i++) { const [ax, az] = gp[i - 1], [bx, bz] = gp[i], n = Math.max(1, Math.round(Math.hypot(bx - ax, bz - az) / 1)); for (let j = i === 1 ? 0 : 1; j <= n; j++) pts.push([ax + (bx - ax) * j / n, az + (bz - az) * j / n]); }
+    const pos: number[] = [], col: number[] = [], idx: number[] = [], c = new THREE.Color('#cdbb9c');
+    pts.forEach((p, i) => {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1;
+      for (const s of [.9, -.9]) { const x = p[0] + dz / l * s, z = p[1] - dx / l * s; pos.push(x, surfaceHeight(x, z) + .07, z); col.push(c.r, c.g, c.b); }
+      if (i > 0) { const k = (i - 1) * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+    });
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, MAT.paving); m.receiveShadow = true; kit.root.add(m);
+    // Simple stone steps wherever the slope is steeper than 20%.
+    for (let i = 1; i < pts.length; i++) {
+      const [ax, az] = pts[i - 1], [bx, bz] = pts[i], ya = surfaceHeight(ax, az), yb = surfaceHeight(bx, bz), l = Math.hypot(bx - ax, bz - az);
+      if (Math.abs(yb - ya) / l <= .2) continue;
+      const rot = Math.atan2(-(bz - az), bx - ax);
+      for (const t of [.25, .75]) { const x = ax + (bx - ax) * t, z = az + (bz - az) * t; B.place(PRIMS.box, MAT.stone, x, surfaceHeight(x, z) + .09, z, l * .5, .08, 1.8, rot, '#bdb29a', false); }
+    }
+    kit.occ.mark(...pts.reduce<[number, number, number, number]>((r, p) => [Math.min(r[0], p[0] - 1), Math.max(r[1], p[0] + 1), Math.min(r[2], p[1] - 1), Math.max(r[3], p[1] + 1)], [1e9, -1e9, 1e9, -1e9])); }
 
   // ——— Lower plaza and Zohar cinema, which faces the building ———
   for (const [x, z] of [[-152, -815], [-138, -814], [-148, -806.5]] as P2[]) tree(x, z, Lw);
