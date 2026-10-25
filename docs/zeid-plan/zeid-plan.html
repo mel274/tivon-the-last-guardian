@@ -1,0 +1,686 @@
+<title>Zeid Centre Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans+Hebrew:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a drafting sheet — revision notes first, then the plan large with the selected item's
+   card beside it, then the cuts and views; colours follow the owner's sketch. */
+:root {
+  --paper: #eef1ee; --sheet: #f8faf8; --ink: #1d2727; --ink-2: #4d5b5a; --rule: #c6cfcc; --grid: #dfe5e2;
+  --cinema: #2f6fb3; --mandu: #c43a35; --butcher: #8a5a2b; --upper: #3d8a4f; --stair: #d9a514; --lower: #8c7a52;
+  --osm: #8a9693; --road: #c9ccc4; --road-edge: #9aa19b; --pin: #b8286a; --check: #c96a12; --ok: #2d7a4a; --warn: #a3541b; --hedge: #4f7a43; --unit: #5f7486; --row: #b0602a; --drug: #c62d3a;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", "IBM Plex Sans Hebrew", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #141a1a; --sheet: #1b2322; --ink: #e4ebe8; --ink-2: #a3b1ae; --rule: #33403e; --grid: #222c2b;
+  --cinema: #5b9be0; --mandu: #ec6a60; --butcher: #d19a62; --upper: #63b676; --stair: #e8bd3c; --lower: #bba57a;
+  --osm: #7d8a87; --road: #39423f; --road-edge: #59645f; --pin: #f05b9f; --check: #f0a050; --ok: #5cc184; --warn: #e3924f; --hedge: #77a86a; --unit: #93a9bb; --row: #e0904f; --drug: #ef6a72; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #141a1a; --sheet: #1b2322; --ink: #e4ebe8; --ink-2: #a3b1ae; --rule: #33403e; --grid: #222c2b;
+  --cinema: #5b9be0; --mandu: #ec6a60; --butcher: #d19a62; --upper: #63b676; --stair: #e8bd3c; --lower: #bba57a;
+  --osm: #7d8a87; --road: #39423f; --road-edge: #59645f; --pin: #f05b9f; --check: #f0a050; --ok: #5cc184; --warn: #e3924f; --hedge: #77a86a; --unit: #93a9bb; --row: #e0904f; --drug: #ef6a72; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 22px }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .01em }
+h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.1 }
+h2 { font-size: 21px } h3 { font-size: 16px }
+p { margin: 0 }
+.he { font-family: "IBM Plex Sans Hebrew", var(--f-body) }
+.eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2) }
+header { display: grid; gap: 10px }
+header .lede { max-width: 72ch; color: var(--ink-2) }
+.status { font-family: var(--f-mono); font-size: 12px; color: var(--ink-2) }
+.status.ok { color: var(--ok) } .status.warn { color: var(--warn) }
+.sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; padding: 16px; display: grid; gap: 12px; min-width: 0 }
+.sheet-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px }
+.changes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px 22px; margin: 0; padding: 0; list-style: none }
+.changes li { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 8px; font-size: 13.5px; padding-top: 8px; border-top: 1px solid var(--rule) }
+.changes .tag { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding-top: 2px }
+.changes .tag.done { color: var(--ok) } .changes .tag.check { color: var(--check) }
+.plan-grid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; align-items: start }
+@media (max-width: 920px) { .plan-grid { grid-template-columns: 1fr } }
+.scroll-x { overflow-x: auto; min-width: 0 }
+svg text { font-family: var(--f-body) }
+#plan { display: block; width: 100%; min-width: 560px; height: auto; touch-action: none; user-select: none; background: var(--sheet) }
+.toolbar { display: flex; flex-wrap: wrap; gap: 6px }
+button { font: 500 13px var(--f-body); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 6px 10px; cursor: pointer }
+button:hover { border-color: var(--ink-2) }
+button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink) }
+button:focus-visible, input:focus-visible, textarea:focus-visible, .pin:focus-visible { outline: 2px solid var(--pin); outline-offset: 2px }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-2) }
+.legend i { display: inline-block; width: 14px; height: 10px; margin-inline-end: 5px; vertical-align: -1px; border-radius: 2px }
+.card { display: grid; gap: 10px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px) }
+.card .who { display: flex; gap: 10px; align-items: baseline }
+.card .who b { font-family: var(--f-mono); color: var(--pin); font-weight: 500 }
+.card .now { font-size: 13.5px; color: var(--ink-2) }
+.card .now strong { color: var(--ink); font-weight: 600 }
+.badge { display: inline-block; font-family: var(--f-mono); font-size: 11px; letter-spacing: .05em; padding: 1px 6px; border-radius: 2px; border: 1px solid currentColor }
+.badge.done { color: var(--ok) } .badge.check { color: var(--check) }
+.moved { font-family: var(--f-mono); font-size: 12px; color: var(--pin) }
+label { font-size: 12.5px; color: var(--ink-2); display: grid; gap: 4px }
+textarea, input[type="text"] { font: 14px var(--f-body); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 7px 9px; width: 100% }
+textarea { min-height: 76px; resize: vertical }
+.pinlist { display: grid; gap: 2px; max-height: 340px; overflow: auto; border-top: 1px solid var(--rule); padding-top: 8px }
+.pinlist button { display: grid; grid-template-columns: 26px 1fr auto; text-align: start; gap: 6px; background: none; border: 0; padding: 4px 6px; border-radius: 3px; font-size: 13px }
+.pinlist button[aria-current="true"] { background: var(--paper) }
+.pinlist .k { font-family: var(--f-mono); color: var(--pin) }
+.pinlist .flag { font-family: var(--f-mono); font-size: 11px }
+.pinlist .flag.check { color: var(--check) } .pinlist .flag.done { color: var(--ok) } .pinlist .flag.you { color: var(--pin) }
+.views { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 16px }
+.view { display: grid; gap: 6px; min-width: 0 }
+.view svg { display: block; width: 100%; min-width: 480px; height: auto }
+.note { font-size: 13px; color: var(--ink-2); max-width: 78ch }
+.note strong { color: var(--ink) }
+.qs { display: grid; gap: 14px }
+.q { display: grid; gap: 6px; grid-template-columns: 34px minmax(0, 1fr) }
+.q .n { font-family: var(--f-mono); color: var(--check); padding-top: 2px }
+.q p { font-weight: 500 }
+.q .why { font-size: 13px; color: var(--ink-2); font-weight: 400 }
+.q textarea { min-height: 56px }
+.photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px }
+.photo { display: grid; gap: 4px; font-size: 12.5px; color: var(--ink-2); min-width: 0; margin: 0 }
+.photo img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 3px; border: 1px solid var(--rule); max-width: 100% }
+.upload { display: flex; flex-wrap: wrap; gap: 8px; align-items: end }
+.upload label { flex: 1 1 200px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Kiryat Amal · Route 75 junction · revision 4.2 · ready to build</span>
+    <h1>Zeid Centre Plan</h1>
+    <p class="lede">Revision 4.2: you confirmed the drugstore and the garden path, and the Route 75 railing runs from the bus stop to the Kiryat Amal junction, about 460 m east. The corner is ready to build. Revision 4.1 made your corrections to the corner by Alexander Zaid St. The pizza sticks out at the end of the row, with its window facing the lane’s entrance from the street. The drugstore is straight, shorter, and has a balcony facing the lane. The unnamed shop is for rent. The railing runs along Route 75, and a path leads from the backyard down to the Hannah Szenes garden. Press <strong>Falafel corner</strong> to zoom in. Orange rings mark what is still a guess.</p>
+    <p class="status" id="status" role="status">Connecting…</p>
+  </header>
+
+  <section class="sheet" aria-labelledby="ch-h">
+    <div class="sheet-head"><h2 id="ch-h">What changed from revision 1</h2><span class="eyebrow">From your corrections</span></div>
+    <ul class="changes">
+      <li><span class="tag done">Pizza</span><span>A unit that sticks out north of the row past Beit Chabad, with its window on its west side facing the lane’s entrance from Alexander Zaid St.</span></li>
+      <li><span class="tag done">Drugstore</span><span>Straight, and ends sooner instead of reaching deep into the plaza. Its side facing the lane is a balcony.</span></li>
+      <li><span class="tag done">For rent</span><span>The shop between Falafel Luli and Beit Chabad is empty, with a “להשכרה” sign.</span></li>
+      <li><span class="tag done">Railing</span><span>Moved off Mandu’s backyard onto Route 75: from the bus stop east to the Kiryat Amal junction, about 460 m (beyond the edge of this plan).</span></li>
+      <li><span class="tag done">Backyard path</span><span>From the backyard’s east end down to the Hannah Szenes garden.</span></li>
+      <li><span class="tag done">Unchanged</span><span>The row’s order, the lane, and everything approved in revision 3.1.</span></li>
+    </ul>
+  </section>
+
+  <section class="sheet" aria-labelledby="plan-h">
+    <div class="sheet-head"><h2 id="plan-h">Plan · top view</h2><span class="eyebrow">North up · grid 10 m · OSM © contributors</span></div>
+    <div class="toolbar" role="group" aria-label="Plan layers and tools">
+      <button type="button" id="t-corner" aria-pressed="false">Falafel corner</button>
+      <button type="button" id="t-up" aria-pressed="true">Upper level</button>
+      <button type="button" id="t-gr" aria-pressed="false">Ground floor</button>
+      <button type="button" id="t-v1" aria-pressed="false">Show revision 1</button>
+      <button type="button" id="t-osm" aria-pressed="true">OSM buildings &amp; paths</button>
+      <button type="button" id="t-labels" aria-pressed="true">Labels</button>
+      <button type="button" id="t-add" aria-pressed="false">+ Add a pin</button>
+    </div>
+    <div class="plan-grid">
+      <div class="scroll-x"><svg id="plan" viewBox="-246 -868 152 104" role="img" aria-label="Revised plan of the Zeid centre"></svg></div>
+      <aside class="card" aria-live="polite"><div id="card"></div><div class="pinlist" id="pinlist" aria-label="All pins"></div></aside>
+    </div>
+    <div class="legend">
+      <span><i style="background:color-mix(in srgb, var(--upper) 30%, transparent);outline:1px solid var(--upper)"></i>Upper plaza walkway</span>
+      <span><i style="background:color-mix(in srgb, var(--lower) 30%, transparent);outline:1px solid var(--lower)"></i>Lower plaza</span>
+      <span><i style="background:color-mix(in srgb, var(--mandu) 30%, transparent);outline:1px solid var(--mandu)"></i>Balcony and backyard</span>
+      <span><i style="background:var(--mandu)"></i>Mandu</span>
+      <span><i style="background:color-mix(in srgb, var(--unit) 30%, transparent)"></i>Other upper-floor businesses</span>
+      <span><i style="background:color-mix(in srgb, var(--cinema) 25%, transparent)"></i>Ground-floor shops</span>
+      <span><i style="background:repeating-linear-gradient(45deg, var(--lower) 0 2px, transparent 2px 5px)"></i>Roofed strip under the balcony</span>
+      <span><i style="background:color-mix(in srgb, var(--butcher) 35%, transparent)"></i>Butcher Tivon</span>
+      <span><i style="background:var(--stair)"></i>Stairs</span>
+      <span><i style="background:color-mix(in srgb, var(--cinema) 30%, transparent);outline:1px solid var(--cinema)"></i>Zohar cinema</span>
+      <span><i style="background:var(--hedge)"></i>Bushes</span>
+      <span><i style="background:color-mix(in srgb, var(--row) 30%, transparent);outline:1px solid var(--row)"></i>Falafel row</span>
+      <span><i style="background:color-mix(in srgb, var(--drug) 30%, transparent);outline:1px solid var(--drug)"></i>Drugstore</span>
+      <span>● upper level · ■ ground floor</span>
+    </div>
+  </section>
+
+  <section class="sheet" aria-labelledby="v-h">
+    <div class="sheet-head"><h2 id="v-h">Cuts and views</h2><span class="eyebrow">Heights drawn ×2 · 0 = Route 75 · your levels kept</span></div>
+    <div class="views">
+      <div class="view"><h3>A · Cut through the stair (west part)</h3><div class="scroll-x"><svg id="cutA" viewBox="0 0 640 240" role="img" aria-label="North-south cut through the west part with the stair"></svg></div></div>
+      <div class="view"><h3>B · Cut through the pharmacy and Pilates (east part)</h3><div class="scroll-x"><svg id="cutB" viewBox="0 0 640 240" role="img" aria-label="North-south cut through the east part with the shops under the balcony"></svg></div></div>
+      <div class="view"><h3>C · Standing on the upper plaza, looking east</h3><div class="scroll-x"><svg id="viewC" viewBox="0 0 640 240" role="img" aria-label="The building's west end seen from the upper plaza"></svg></div>
+        <p class="note">As you described it, from left to right: the building's second floor, the balcony entrance, the stairs down.</p></div>
+      <div class="view" style="grid-column:1/-1"><h3>E · Standing in the lane, looking south at the falafel row</h3><div class="scroll-x"><svg id="viewE" viewBox="-4 -7.5 40 9" role="img" aria-label="The falafel row seen from the lane"></svg></div>
+        <p class="note">One storey under a flat canopy. On the left, the pizza unit sticks out toward the lane, with its window facing the street entrance. Widths are my guesses from your photos.</p></div>
+      <div class="view"><h3>D · Standing on the lower plaza, looking north</h3><div class="scroll-x"><svg id="viewD" viewBox="-24 -11.5 48 13" role="img" aria-label="South face with balcony, stair and ground-floor shops"></svg></div>
+        <p class="note">The widths are my guesses. The roofed strip and the Rav-Kav entrance are drawn as you described them.</p></div>
+    </div>
+  </section>
+
+  <section class="sheet" aria-labelledby="q-h">
+    <div class="sheet-head"><h2 id="q-h">Last check</h2><span class="eyebrow">Optional · answers save as you type</span></div>
+    <div class="qs" id="qs"></div>
+  </section>
+
+  <section class="sheet" aria-labelledby="ph-h">
+    <div class="sheet-head"><h2 id="ph-h">Photos</h2><span class="eyebrow">Select a pin first to link a photo to it</span></div>
+    <div class="upload" id="upload">
+      <label for="ph-file">Photo<input type="file" id="ph-file" accept="image/*"></label>
+      <label for="ph-cap">What it shows<input type="text" id="ph-cap" placeholder="e.g. the stair from the lower plaza"></label>
+      <button type="button" id="ph-go">Upload photo</button>
+    </div>
+    <p class="status" id="ph-status"></p>
+    <div class="photos" id="photos"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  // ——— Geometry: game metres (x east, z south); the plan SVG uses the same axes, so north is up ———
+  const C = [-144.2, -831.6], U = [0.9954, 0.0963], V = [-0.0963, 0.9954]; // Mandu building frame: lx east, lz south
+  const at = (lx, lz) => [C[0] + lx * U[0] + lz * V[0], C[1] + lx * U[1] + lz * V[1]];
+  const rect = (x0, x1, z0, z1) => [at(x0, z0), at(x1, z0), at(x1, z1), at(x0, z1)];
+  const HW = 21.3, HD = 8.25, BAL = 4.1;           // balcony strip lz 4.1 … 8.25
+  const ST0 = -HW, ST1 = -10.5, STW = 2.4;          // stair runs lx −21.3 → −10.5, south of the face
+  const LV = { road: 0, upper: -1.2, lower: -5.4 }; // owner: "heights are fine"
+
+  const OSM_BUILDINGS = [
+    { id: 'mandu', p: [[-164.6,-841.8],[-122.2,-837.7],[-123.8,-821.3],[-166.2,-825.5]] },
+    { id: 'cinema', p: [[-133.9,-810.4],[-108.7,-807.1],[-114,-767.4],[-133.6,-770],[-129.9,-797.5],[-135.5,-798.3]] },
+    { id: 'drugstore', p: [[-216.8,-839.6],[-203.9,-835.1],[-200.4,-845.1],[-211.9,-849.1],[-213.7,-844],[-215.1,-844.4]] },
+    { id: 'falafel', p: [[-216.5,-835.5],[-219.8,-826.6],[-206.4,-821.6],[-203,-830.6]] },
+    { id: 'h1', p: [[-223.4,-820],[-226.8,-810.1],[-211.6,-804.9],[-208.2,-814.8]] },
+    { id: 'h2', p: [[-194,-792.9],[-197.7,-781.4],[-179.3,-775.5],[-175.5,-787.1]] },
+    { id: 'h3', p: [[-229.4,-805.4],[-233,-795.8],[-218.2,-790.3],[-214.6,-799.8]] },
+    { id: 'h4', p: [[-189.7,-809.9],[-193.3,-798.3],[-169.4,-790.9],[-165.8,-802.4]] },
+    { id: 'h5', p: [[-235.1,-791.2],[-239.3,-780.1],[-230,-776.6],[-225.8,-787.8]] },
+  ];
+  const ROADS = [
+    { w: 7.5, p: [[-252,-911],[-241,-896],[-230,-886],[-217,-874],[-207,-867],[-194,-862],[-57,-846]] },
+    { w: 5, p: [[-229,-846],[-217,-856],[-212,-859],[-207,-860],[-194,-862]] },
+    { w: 7, p: [[-264,-781],[-257,-785],[-249,-799],[-212,-887]] },
+    { w: 5.5, p: [[-232,-838],[-232,-844],[-233,-846],[-235,-848],[-251,-859]] },
+  ];
+  const PATHS = [[[-149,-811],[-183,-819],[-182,-826]], [[-182,-826],[-231,-841],[-232,-844]], [[-182,-826],[-176,-859]], [[-151,-801],[-149,-811]]];
+  const PARKING = [[-170,-753],[-144,-753],[-136,-806],[-160,-811]];
+  const ARC0 = ST1; // the roofed strip runs from the Rav-Kav entrance (lx −10.5) to the east end
+  // Upper floor, west → east; every business opens onto the balcony.
+  const UP = [
+    ['butcher', -HW, -12.6, 'Butcher Tivon', '--butcher'], ['print', -12.6, -7.7, 'Printing', '--unit'], ['bar', -7.7, -2.3, 'Mandu', '--mandu'],
+    ['camera', -2.3, 4, 'Camera shop', '--unit'], ['pilates', 4, 12, 'Pilates', '--unit'], ['tambur', 12, HW, 'Building supplies', '--unit'],
+  ];
+  // Ground floor, west → east (as deep as the upper floor; the closed section also runs under the stair).
+  const GROUND = [['closed', -HW, ARC0, 'Rav-Kav · flowers'], ['zeid1', ARC0, -3.5, 'Zeid 1'], ['mishi', -3.5, 4, 'Mishi'], ['pharmacy', 4, HW, 'Oranim pharmacy']];
+  const R2 = {
+    // Upper plaza: the lane between the two shop buildings, widening east of them to Mandu's west end.
+    upper: [[-224.5,-839.9],[-209.6,-838.5],[-209.4,-841],[-208.6,-849.5],[-197,-848.6],[-180,-848.8], at(-HW - 2.5, -HD - 5.2), at(-HW - 2.5, -HD), at(-HW, -HD), at(-HW - .4, HD + STW), [-169.5,-812.5], [-196,-812], [-197.2,-821.5], [-196.9,-830.1], [-197.4,-835.3], [-203.3,-835.6], [-203,-830.6], [-231,-833.2], [-231.3,-838.6], [-226.4,-842.2]],
+    lower: [at(ARC0, HD + STW), at(HW, HD), [-110,-818.5], [-108.7,-807.1], [-133.9,-810.4], [-133,-801], [-160,-802.5], [-161.5,-810], at(ARC0, HD + STW + 1.4)],
+    backyard: rect(-HW, HW, -HD - 5.2, -HD),
+    bank: rect(-HW - 2, HW + 1, -HD - 9.5, -HD - 5.2),
+    building: rect(-HW, HW, -HD, BAL),
+    balcony: rect(-HW, HW, BAL, HD),
+    arcade: rect(ARC0, HW, BAL, HD),
+    closed: rect(-HW, ARC0, -HD, HD + STW),
+    stair: rect(ST0, ST1, HD, HD + STW),
+    busStair: [[-177.5,-852.5],[-174.5,-852.5],[-174.5,-849],[-177.5,-849]],
+    sideEntry: rect(-HW - 2.5, -HW, -HD - 4, -HD - 1.5),
+  };
+  const V1 = {
+    upper: [[-230,-843.5],[-166.8,-843.5],[-166.8,-826],[-170.5,-818.5],[-200,-813],[-230,-818]],
+    lower: [[-165.5,-821.2],[-123.5,-817.4],[-108.5,-813.5],[-108.8,-806.5],[-136,-804.5],[-178,-797],[-178,-812],[-167,-817]],
+    balcony: rect(-12.5, 3.5, HD, HD + 4.2), stair: rect(-21.5, -14.3, HD + .4, HD + 2.8),
+  };
+  const r1 = v => Math.round(v * 10) / 10;
+  // lvl: 'u' upper floor, 'g' ground floor, 'o' outdoors; s: 'done' (from you) or 'check' (my inference)
+  const P = (k, n, he, xz, lvl, s, now) => ({ k, n, he, x: r1(xz[0]), z: r1(xz[1]), lvl, s, now });
+  // Revision 4: the falafel row and the drugstore, authored (OSM had both wrong here).
+  const ROW = { A: [-231, -833.2], B: [-203, -830.6], D: [-233.2, -823.5] };
+  const ROW_UNITS = [[0, 7, 'Falafel Chen', 'פלאפל חן', '#b8321f'], [7, 10.6, 'AURUM · clocks', 'AURUM', '#2b2b28'], [10.6, 14.2, 'Barber', 'מספרת סלים', '#1d2b3a'], [14.2, 18.2, 'Falafel Luli', 'פלאפל לולי', '#e0261f'], [18.2, 21.8, 'For rent', 'להשכרה', '#9a3a2c'], [21.8, 28.1, 'Beit Chabad', 'בית חב״ד', '#5a3a2a']];
+  const along = (t, off = 0) => { const [ax, az] = ROW.A, [bx, bz] = ROW.B, L = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / L, uz = (bz - az) / L; return [ax + ux * t + uz * off, az + uz * t - ux * off]; };
+  // The row ends straight after the pizza unit, which sticks out 5 m north of the shopfronts.
+  const ROW_POLY = () => [ROW.A, along(28.1, 0), along(28.1, 5), along(34, 5), along(34, -9.6), ROW.D];
+  const PIZZA = () => [along(28.1, 0), along(28.1, 5), along(34, 5), along(34, 0)];
+  // The drugstore: straight and square to the row, 2 m off the street, ending near x −209; a balcony along its lane side.
+  const DRUG = [[-224.3, -842.4], [-209.4, -841], [-208.6, -849.5], [-223.5, -850.9]];
+  const DRUG_BALCONY = [[-224.3, -842.4], [-209.4, -841], [-209.6, -838.5], [-224.5, -839.9]];
+  const RAILING = [[-158.5, -853.6], [-140, -851.4], [-120, -849.1], [-90, -845.6]];
+  const PARK_PATH = () => [at(HW - .5, -HD - 2.6), at(HW + 6, -HD - 1), [-112, -834], [-104, -827]];
+  const PINS = [
+    P('busstop', 'Bus stop', 'צומת קריית טבעון', [-156.4, -852.4], 'o', 'done', 'On Route 75’s south kerb, where you put it. The railing starts here and runs east along the road.'),
+    P('railing', 'Railing along Route 75', 'מעקה', [-128, -850.6], 'o', 'done', 'From the bus stop east along Route 75 to the Kiryat Amal junction, about 460 m away.'),
+    P('parkpath', 'Path to the Hannah Szenes garden', 'שביל לגינת חנה סנש', [-112, -834], 'o', 'done', 'From the backyard’s east end down to the garden. Steps, a slope, or both?'),
+    P('busstair', 'Stair from the bus stop', 'מדרגות מהתחנה', [-176, -850.6], 'o', 'done', 'A few metres west of where Mandu’s building ends, down to the upper plaza.'),
+    P('upperplaza', 'Upper plaza walkway', 'הרחבה העליונה', [-184, -832], 'o', 'done', 'A wide walkway with benches and picnic tables.'),
+    P('drugstore', 'Drugstore Hatzomet', 'דראגסטור הצומת', [-216.5, -846], 'o', 'done', 'Straight and shorter, with red Coca-Cola signs: candy, drinks, Toto, ATM. Its side facing the lane is a balcony: is that a roofed porch at plaza level (as drawn), or raised?'),
+    P('lane', 'The lane from the street', 'המעבר מהרחוב', along(9, 5.2), 'o', 'done', 'Picnic tables, closed umbrellas and a shade tree; it opens up past the drugstore toward the pizza.'),
+    P('chen', 'Falafel Chen', 'פלאפל חן', along(3.5, 1.4), 'o', 'done', 'On the corner with Alexander Zaid St. Its big signboard faces the street and the lane.'),
+    P('aurum', 'AURUM · clocks', 'AURUM · שעונים', along(8.8, 1.4), 'o', 'done', 'A clock shop.'),
+    P('barber', 'Barber “Salim”', 'מספרת סלים', along(12.4, 1.4), 'o', 'done', 'Arched door.'),
+    P('luli', 'Falafel Luli', 'פלאפל לולי', along(16.2, 1.4), 'o', 'done', 'Blue scalloped awning, yellow arched sign.'),
+    P('shop7', 'For rent', 'להשכרה', along(20, 1.4), 'o', 'done', 'An empty store with a for-rent sign.'),
+    P('chabad', 'Beit Chabad', 'בית חב״ד', along(25, 1.4), 'o', 'done', 'The last unit before the corner.'),
+    P('pizza', 'Pizza', 'פיצה', [-200, -833.7], 'o', 'done', 'Sticks out north of the row past Beit Chabad; its window faces west, back along the lane to the street entrance.'),
+    P('balconyw', 'Balcony entrance from the upper plaza', 'כניסה למרפסת', [...at(-HW - 1.8, 6)], 'u', 'done', 'You step onto the balcony at the building’s west end, between the second-floor wall and the stair top.'),
+    P('butcher', 'Butcher Tivon', 'בוצ׳ר טבעון', [...at(-17, -6.4)], 'u', 'done', 'A restaurant at the upper floor’s west end. It uses the west part of the balcony.'),
+    P('bar', 'Mandu bar · Café Beinenu', 'מנדו · קפה בינינו', [...at(-5, -6.4)], 'u', 'done', 'A small shop: the narrow north–south bar strip, as in revision 1. Its door opens onto the balcony, and a side door leads to the backyard.'),
+    P('print', 'Printing shop', 'דפוס', [...at(-10.15, -6.4)], 'u', 'done', 'Between Butcher Tivon and Mandu.'),
+    P('camera', 'Itzik’s camera and photo shop', 'ביתן הצילום של איציק', [...at(.85, -6.4)], 'u', 'done', 'Next to Mandu, going east. Camera shop and photo developing.'),
+    P('pilates', 'Pilates studio', 'סטודיו פילאטיס', [...at(8, -6.4)], 'u', 'done', 'Between the camera shop and building supplies.'),
+    P('tambur', 'Building supplies (tamburia)', 'חלק טמבור', [...at(16.6, -6.4)], 'u', 'done', 'Paint and building supplies, at the east end.'),
+    P('backyard', 'Mandu backyard', 'החצר האחורית', [...at(4, -HD - 2.6)], 'o', 'done', 'Level with the upper plaza, behind a fence and a bank of bushes up to Route 75. There’s a railing at the road edge.'),
+    P('sideentry', 'Backyard side entrance', 'כניסה צדדית לחצר', [...at(-HW - 1.2, -HD - 2.8)], 'o', 'done', 'Small, with bushes around it, at the west end by the upper plaza.'),
+    P('balcony', 'Balcony', 'המרפסת', [...at(9, 6.2)], 'u', 'done', 'The full south side, about 4 m deep, with a railing. Every upper-floor business opens onto it.'),
+    P('stair', 'Stair down to the lower plaza', 'מדרגות לרחבה התחתונה', [...at(-17, HD + 1.2)], 'o', 'done', 'Outside the balcony, down from west to east, landing by Zeid 1.'),
+    P('arcade', 'Roofed strip under the balcony', 'המעבר המקורה', [...at(14, 6.2)], 'g', 'done', 'At lower-plaza level in front of Zeid 1, Mishi and the pharmacy. The balcony above is its roof.'),
+    P('entrance', 'Rav-Kav entrance', 'הכניסה לרב־קו', [...at(-9.4, 6.2)], 'g', 'done', 'Inside the roofed strip, facing east, with Zeid 1 on one side and the stair on the other. It opens into the closed section to the west.'),
+    P('ravkav', 'Rav-Kav centre', 'מרכז רב־קו', [...at(-18.4, -6.4)], 'g', 'done', 'In the closed section west of Zeid 1.'),
+    P('flowers', 'Flower shop', 'חנות פרחים', [...at(-13.2, -6.4)], 'g', 'done', 'In the closed section, next to the Rav-Kav centre.'),
+    P('zeid1', 'Zeid 1 youth centre', 'זייד 1', [...at(-7, -6.4)], 'g', 'done', 'Under construction. About 7 m wide.'),
+    P('mishi', 'Mishi chocolate', 'מישי', [...at(.25, -6.4)], 'g', 'done', 'About 7.5 m wide.'),
+    P('pharmacy', 'Oranim pharmacy', 'בית מרקחת אורנים', [...at(12.6, -6.4)], 'g', 'done', 'From Mishi all the way to the east end, about 17 m.'),
+    P('lowerplaza', 'Lower plaza', 'הרחבה התחתונה', [-147, -812], 'o', 'done', 'An open plaza with a few trees, wrapping in front of the cinema.'),
+    P('cinema', 'Zohar cinema', 'אולם זוהר', [-122, -789], 'o', 'done', 'Faces Mandu’s building across the lower plaza.'),
+    P('eva', 'Eva & Batya café', 'אווה ובתיה', [-125.1, -807.2], 'o', 'done', 'At the cinema’s north end.'),
+    P('parking', 'Car park', 'חניון', [-153.5, -781.4], 'o', 'done', 'Where it was.'),
+  ];
+  const QUESTIONS = [
+    ['q42-other', 'Anything else before I build the corner?', 'Optional.'],
+  ];
+
+  // ——— State and saving (revision 4.1 corrections go in pins42 / added42 / answers42) ———
+  const state = { pins: {}, added: {}, answers: {}, photos: [] };
+  let db = null, assets = null, selected = 'drugstore', addMode = false, showV1 = false, level = 'u';
+  const $ = s => document.querySelector(s);
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (parent) parent.appendChild(e); return e; };
+  const pts = p => p.map(q => q.join(',')).join(' ');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const pinNo = k => PINS.findIndex(p => p.k === k) + 1;
+  const pos = p => { const s = state.pins[p.k]; return s && s.moved ? [s.x, s.z] : [p.x, p.z]; };
+  const queues = {}, timers = {};
+  function write(path, data) {
+    if (!db) return;
+    queues[path] = (queues[path] || Promise.resolve()).then(() => db.doc(path).set(data)).then(
+      () => setStatus('Saved.', 'ok'),
+      e => setStatus(e && e.code === 'invalid_argument' ? 'This view can’t save changes.' : 'Couldn’t save. Try again in a moment.', 'warn'));
+  }
+  const later = (key, fn, ms = 700) => { clearTimeout(timers[key]); timers[key] = setTimeout(fn, ms); };
+  function setStatus(t, cls = '') { const s = $('#status'); s.textContent = t; s.className = 'status ' + cls; }
+  const mix = (v, p) => `color-mix(in srgb, var(${v}) ${p}%, transparent)`;
+
+  // ——— Plan ———
+  const svg = $('#plan'), layers = {};
+  function drawPlan() {
+    svg.textContent = '';
+    const defs = el('defs', {}, svg); const m = el('marker', { id: 'ah', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 5, markerHeight: 5, orient: 'auto' }, defs); el('path', { d: 'M0 0 L10 5 L0 10z', fill: 'var(--ink)' }, m);
+    for (const n of ['grid', 'areas', 'roads', 'osm', 'v1', 'r2', 'labels', 'pins']) layers[n] = el('g', {}, svg);
+    for (let x = -240; x <= -100; x += 10) el('line', { x1: x, y1: -868, x2: x, y2: -764, stroke: 'var(--grid)', 'stroke-width': .15 }, layers.grid);
+    for (let z = -860; z <= -770; z += 10) el('line', { x1: -246, y1: z, x2: -94, y2: z, stroke: 'var(--grid)', 'stroke-width': .15 }, layers.grid);
+    el('polygon', { points: pts(PARKING), fill: mix('--osm', 12) }, layers.areas);
+    for (const r of ROADS) {
+      el('polyline', { points: pts(r.p), fill: 'none', stroke: 'var(--road-edge)', 'stroke-width': r.w + .6, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, layers.roads);
+      el('polyline', { points: pts(r.p), fill: 'none', stroke: 'var(--road)', 'stroke-width': r.w, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, layers.roads);
+    }
+    for (const p of PATHS) el('polyline', { points: pts(p), fill: 'none', stroke: 'var(--osm)', 'stroke-width': .35, 'stroke-dasharray': '1 .8' }, layers.osm);
+    for (const b of OSM_BUILDINGS) {
+      const main = ['mandu', 'cinema'].includes(b.id);
+      el('polygon', { points: pts(b.p), fill: b.id === 'cinema' ? mix('--cinema', 22) : main ? mix('--ink', 8) : mix('--osm', 8), stroke: b.id === 'cinema' ? 'var(--cinema)' : main ? 'var(--ink)' : 'var(--osm)', 'stroke-width': main ? .4 : .3, 'stroke-dasharray': main ? '' : '1.2 .6' }, layers.osm);
+    }
+    // Revision 4: the drugstore pavilion, the row with its canopy and units, the pizza window on the angled corner.
+    { const g4 = layers.r2;
+      el('polygon', { points: pts(DRUG), fill: mix('--drug', 22), stroke: 'var(--drug)', 'stroke-width': .45 }, g4);
+      el('polygon', { points: pts(DRUG_BALCONY), fill: mix('--drug', 10), stroke: 'var(--drug)', 'stroke-width': .25, 'stroke-dasharray': '.6 .4' }, g4);
+      el('polygon', { points: pts(ROW_POLY()), fill: mix('--row', 16), stroke: 'var(--row)', 'stroke-width': .45 }, g4);
+      el('polygon', { points: pts([ROW.A, along(28.1, 0), along(28.1, 2.5), along(0, 2.5)]), fill: 'none', stroke: 'var(--row)', 'stroke-width': .25, 'stroke-dasharray': '.6 .4' }, g4);
+      for (const [t0, t1, , , col] of ROW_UNITS) { const a = along(t0, 0), b = along(t0, -6); el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: 'var(--row)', 'stroke-width': .2 }, g4); const c0 = along(t0 + .3, .05), c1 = along(t1 - .3, .05); el('line', { x1: c0[0], y1: c0[1], x2: c1[0], y2: c1[1], stroke: col, 'stroke-width': .7 }, g4); }
+      el('polygon', { points: pts(PIZZA()), fill: mix('--stair', 30), stroke: '#d9a514', 'stroke-width': .35 }, g4);
+      { const w0 = along(28.1, .6), w1 = along(28.1, 4.4); el('line', { x1: w0[0], y1: w0[1], x2: w1[0], y2: w1[1], stroke: '#d9a514', 'stroke-width': .9 }, g4);
+        const m = along(28.1, 2.5), q = along(23.5, 2.5); el('line', { x1: m[0] - .3, y1: m[1], x2: q[0], y2: q[1], stroke: 'var(--ink)', 'stroke-width': .25, 'marker-end': 'url(#ah)' }, g4); }
+      el('polyline', { points: pts(RAILING), fill: 'none', stroke: 'var(--ink)', 'stroke-width': .35, 'stroke-dasharray': '.9 .35' }, g4);
+      el('polyline', { points: pts(PARK_PATH()), fill: 'none', stroke: 'var(--lower)', 'stroke-width': 1.6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-opacity': .8 }, g4);
+      for (const [x, z] of [[-222.5, -837], [-214.5, -836.3], [-205.5, -838.2]]) { el('rect', { x: x - 1, y: z - .9, width: 2, height: 1.8, rx: .2, fill: 'var(--upper)', 'fill-opacity': .75, transform: `rotate(8 ${x} ${z})` }, g4); el('circle', { cx: x + 1.4, cy: z - 1, r: .45, fill: '#e6dccb', stroke: 'var(--ink-2)', 'stroke-width': .1 }, g4); }
+      el('circle', { cx: -218.5, cy: -837, r: 3.2, fill: 'var(--hedge)', 'fill-opacity': .45 }, g4);
+    }
+    // Revision 1, faint, for comparison.
+    const v = layers.v1;
+    for (const k of ['upper', 'lower', 'balcony', 'stair']) el('polygon', { points: pts(V1[k]), fill: 'none', stroke: 'var(--ink-2)', 'stroke-width': .35, 'stroke-dasharray': '1.4 .9' }, v);
+    // Revision 2.
+    const g = layers.r2;
+    el('polygon', { points: pts(R2.bank), fill: mix('--hedge', 35), stroke: 'none' }, g);
+    for (let i = 0; i < 16; i++) { const p = at(-HW + i * 2.8, -HD - 7.3); el('circle', { cx: p[0], cy: p[1], r: 1.2, fill: 'var(--hedge)', 'fill-opacity': .7 }, g); }
+    el('polygon', { points: pts(R2.upper), fill: mix('--upper', 22), stroke: 'var(--upper)', 'stroke-width': .4 }, g);
+    el('polygon', { points: pts(R2.lower), fill: mix('--lower', 26), stroke: 'var(--lower)', 'stroke-width': .4 }, g);
+    el('polygon', { points: pts(R2.backyard), fill: mix('--mandu', 16), stroke: 'var(--mandu)', 'stroke-width': .45 }, g);
+    { const a = at(-HW, -HD - 5.2), b = at(HW, -HD - 5.2); el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: 'var(--ink-2)', 'stroke-width': .3, 'stroke-dasharray': '.4 .4' }, g); }
+    el('polygon', { points: pts(R2.sideEntry), fill: mix('--mandu', 30), stroke: 'var(--mandu)', 'stroke-width': .35 }, g);
+    const lbl = (lx, lz, str, col, size = 1.45) => { const [x, z] = at(lx, lz); const e = el('text', { x, y: z, 'font-size': size, fill: col, 'text-anchor': 'middle', 'font-weight': 600, transform: `rotate(-84.5 ${x} ${z})`, style: 'paint-order:stroke;stroke:var(--sheet);stroke-width:.5px' }, g); e.textContent = str; };
+    const hatch = (x0, x1, z0, z1) => { for (let lx = x0 + .8; lx < x1; lx += 1.1) { const a = at(lx, z0), b = at(Math.min(lx + (z1 - z0), x1), z1); el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: 'var(--lower)', 'stroke-width': .18 }, g); } };
+    if (level === 'u') {
+      for (const [k, a, b, name, col] of UP) { el('polygon', { points: pts(rect(a, b, -HD, BAL)), fill: k === 'bar' ? 'var(--mandu)' : mix(col, 30), 'fill-opacity': k === 'bar' ? .85 : 1, stroke: 'var(--ink)', 'stroke-width': .22 }, g); lbl((a + b) / 2 + .55, -.6, name, k === 'bar' ? 'var(--sheet)' : `var(${col})`); }
+      el('polygon', { points: pts(R2.balcony), fill: mix('--mandu', 26), stroke: 'var(--mandu)', 'stroke-width': .45 }, g);
+      { const a = at(-HW, HD - .15), b = at(HW, HD - .15); el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: 'var(--ink)', 'stroke-width': .25, 'stroke-dasharray': '.25 .25' }, g); }
+      el('polygon', { points: pts(R2.stair), fill: 'var(--stair)', 'fill-opacity': .9 }, g);
+      for (let i = 1; i < 18; i++) { const lx = ST0 + i * (ST1 - ST0) / 18, a = at(lx, HD), b = at(lx, HD + STW); el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: 'var(--sheet)', 'stroke-width': .1 }, g); }
+    } else {
+      el('polygon', { points: pts(R2.closed), fill: mix('--ink', 14), stroke: 'var(--ink)', 'stroke-width': .3 }, g);
+      lbl(-15.4, .4, 'Rav-Kav · flowers (closed)', 'var(--ink)', 1.35);
+      for (const [k, a, b, name] of GROUND.slice(1)) { el('polygon', { points: pts(rect(a, b, -HD, BAL)), fill: mix('--cinema', 22), stroke: 'var(--cinema)', 'stroke-width': .25 }, g); lbl((a + b) / 2 + .55, -.6, name, 'var(--cinema)'); }
+      el('polygon', { points: pts(R2.arcade), fill: mix('--lower', 18), stroke: 'var(--lower)', 'stroke-width': .3 }, g); hatch(ARC0, HW, BAL, HD);
+      el('polygon', { points: pts(R2.balcony), fill: 'none', stroke: 'var(--mandu)', 'stroke-width': .3, 'stroke-dasharray': '.8 .5' }, g);
+      el('polygon', { points: pts(R2.stair), fill: 'none', stroke: 'var(--stair)', 'stroke-width': .45, 'stroke-dasharray': '.8 .5' }, g);
+      // The entrance: a door in the closed section's east wall, inside the roofed strip, facing east.
+      { const a = at(ARC0, BAL + .5), b = at(ARC0, HD - .5); el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: 'var(--pin)', 'stroke-width': .8 }, g);
+        const c = at(ARC0 + 3.2, (BAL + HD) / 2), d = at(ARC0 + .5, (BAL + HD) / 2); el('line', { x1: c[0], y1: c[1], x2: d[0], y2: d[1], stroke: 'var(--ink)', 'stroke-width': .3, 'marker-end': 'url(#ah)' }, g); }
+    }
+    { const a = at(ST0 + 1, HD + STW + .9), b = at(ST1 - 1, HD + STW + .9); el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: 'var(--ink)', 'stroke-width': .3, 'marker-end': 'url(#ah)' }, g); }
+    el('polygon', { points: pts(R2.busStair), fill: 'var(--stair)', 'fill-opacity': .9 }, g);
+    el('line', { x1: -173.6, y1: -852.4, x2: -173.6, y2: -849.2, stroke: 'var(--ink)', 'stroke-width': .3, 'marker-end': 'url(#ah)' }, g);
+    // Benches and picnic tables on the upper plaza, a few trees on the lower plaza.
+    for (const [x, z] of [[-190, -840], [-182, -846], [-188, -822], [-178, -818], [-196, -830]]) el('rect', { x: x - 1.2, y: z - .7, width: 2.4, height: 1.4, rx: .2, fill: 'var(--upper)', 'fill-opacity': .7 }, g);
+    for (const [x, z] of [[-152, -815], [-138, -814], [-148, -806], [-120, -814.5]]) el('circle', { cx: x, cy: z, r: 1.8, fill: 'var(--hedge)', 'fill-opacity': .55 }, g);
+
+    const L = layers.labels, t = (x, y, s, o = {}) => { const e = el('text', { x, y, 'font-size': o.size || 2.3, fill: o.fill || 'var(--ink-2)', 'text-anchor': o.anchor || 'middle', 'font-weight': o.weight || 400, transform: o.rot ? `rotate(${o.rot} ${x} ${y})` : '', style: 'paint-order:stroke;stroke:var(--sheet);stroke-width:.6px' }, L); e.textContent = s; };
+    t(-118, -856.6, 'ROUTE 75 · דרך העמקים', { rot: 6.6, size: 2.5, weight: 600, fill: 'var(--ink)' });
+    t(-226, -845.5, 'Alexander Zaid St', { rot: -62, size: 2 });
+    t(-189, -836.5, 'UPPER PLAZA', { size: 2.1, weight: 600, fill: 'var(--upper)' });
+    t(-146, -800.5, 'LOWER PLAZA', { size: 2.1, weight: 600, fill: 'var(--lower)' });
+    t(-121, -778, 'ZOHAR', { size: 2.3, weight: 600, fill: 'var(--cinema)', rot: -82 });
+    t(-155, -771, 'car park', { size: 2 });
+    { const p = at(-11, -HD - 2.6); t(p[0], p[1] + .7, 'backyard', { size: 1.9, fill: 'var(--mandu)', weight: 600 }); }
+    { const p = at(0, -HD - 7.4); t(p[0], p[1] + .7, 'bank of bushes', { size: 1.7, fill: 'var(--hedge)' }); }
+    t(-214, -825.8, 'falafel row · one storey', { size: 1.5, rot: 5, fill: 'var(--row)' });
+    t(-212, -845.6, 'Drugstore Hatzomet', { size: 1.6, rot: 15, fill: 'var(--drug)' });
+    t(-196.8, -834.6, 'pizza', { size: 1.3, fill: 'var(--ink)' });
+    t(-124, -853.2, 'railing along Route 75 → to Kiryat Amal junction (460 m)', { size: 1.3, rot: 6.6 });
+    t(-108, -836.5, 'to the Hannah Szenes garden', { size: 1.3, rot: 40, fill: 'var(--lower)' });
+    t(-200, -800, 'private houses', { size: 2, fill: 'var(--osm)' });
+    el('rect', { x: -242, y: -768, width: 10, height: 1, fill: 'var(--ink)' }, L); el('rect', { x: -232, y: -768, width: 10, height: 1, fill: 'none', stroke: 'var(--ink)', 'stroke-width': .25 }, L);
+    t(-242, -769.5, '0', { size: 1.7 }); t(-232, -769.5, '10', { size: 1.7 }); t(-222, -769.5, '20 m', { size: 1.7 });
+    el('path', { d: 'M-99 -862 L-96.5 -855 L-99 -856.6 L-101.5 -855 Z', fill: 'var(--ink)' }, L); t(-99, -863.4, 'N', { size: 2.1, weight: 600, fill: 'var(--ink)' });
+    drawPins(); applyLayers();
+  }
+  function drawPins() {
+    const g = layers.pins; g.textContent = '';
+    const all = PINS.map(p => ({ ...p, cur: pos(p), moved: !!(state.pins[p.k] && state.pins[p.k].moved), no: pinNo(p.k) }))
+      .concat(Object.entries(state.added).map(([id, a], i) => ({ k: 'added:' + id, n: a.label || 'New pin', cur: [a.x, a.z], moved: false, no: '+' + (i + 1), lvl: 'u', s: 'you', added: true })));
+    for (const p of all) {
+      if (p.moved) { el('line', { x1: p.x, y1: p.z, x2: p.cur[0], y2: p.cur[1], stroke: 'var(--pin)', 'stroke-width': .25, 'stroke-dasharray': '.8 .6' }, g); el('circle', { cx: p.x, cy: p.z, r: .7, fill: 'none', stroke: 'var(--pin)', 'stroke-width': .25 }, g); }
+      // Pins inside the building show only on their own floor (the list still reaches them).
+      const sel = selected === p.k; if ((p.lvl === 'u' || p.lvl === 'g') && p.lvl !== level && !sel) continue;
+      const grp = el('g', { class: 'pin', 'data-k': p.k, tabindex: 0, role: 'button', 'aria-label': `Pin ${p.no}: ${p.n}`, style: 'cursor:grab' }, g);
+      const r = sel ? 2.4 : 1.9, [x, z] = p.cur;
+      if (p.s === 'check') el('circle', { cx: x, cy: z, r: r + .9, fill: 'none', stroke: 'var(--check)', 'stroke-width': .5 }, grp);
+      if (p.lvl === 'g') el('rect', { x: x - r, y: z - r, width: r * 2, height: r * 2, rx: .3, fill: 'var(--pin)', stroke: 'var(--sheet)', 'stroke-width': sel ? .6 : .3 }, grp);
+      else el('circle', { cx: x, cy: z, r, fill: 'var(--pin)', stroke: 'var(--sheet)', 'stroke-width': sel ? .6 : .3 }, grp);
+      const tx = el('text', { x, y: z + .7, 'font-size': String(p.no).length > 1 ? 1.7 : 2, 'text-anchor': 'middle', fill: 'var(--sheet)', 'font-weight': 600, style: 'pointer-events:none;font-family:var(--f-mono)' }, grp); tx.textContent = p.no;
+      if (sel) { const lb = el('text', { x: x + 3.4, y: z + .8, 'font-size': 2.1, fill: 'var(--ink)', 'font-weight': 600, style: 'pointer-events:none;paint-order:stroke;stroke:var(--sheet);stroke-width:.8px' }, grp); lb.textContent = p.n; }
+    }
+  }
+  function applyLayers() {
+    layers.v1.style.display = showV1 ? '' : 'none';
+    layers.osm.style.display = $('#t-osm').getAttribute('aria-pressed') === 'true' ? '' : 'none';
+    layers.labels.style.display = $('#t-labels').getAttribute('aria-pressed') === 'true' ? '' : 'none';
+  }
+  const toggle = b => { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); return on; };
+  $('#t-v1').addEventListener('click', e => { showV1 = toggle(e.currentTarget); applyLayers(); });
+  $('#t-corner').addEventListener('click', e => { const on = toggle(e.currentTarget); svg.setAttribute('viewBox', on ? '-240 -857 50 38' : '-246 -868 152 104'); });
+  const setLevel = l => {
+    level = l; $('#t-up').setAttribute('aria-pressed', String(l === 'u')); $('#t-gr').setAttribute('aria-pressed', String(l === 'g'));
+    const cur = PINS.find(q => q.k === selected); if (cur && (cur.lvl === 'u' || cur.lvl === 'g') && cur.lvl !== l) { selected = l === 'g' ? 'entrance' : 'bar'; renderCard(); renderList(); }
+    drawPlan();
+  };
+  $('#t-up').addEventListener('click', () => setLevel('u'));
+  $('#t-gr').addEventListener('click', () => setLevel('g'));
+  for (const id of ['#t-osm', '#t-labels']) $(id).addEventListener('click', e => { toggle(e.currentTarget); applyLayers(); });
+  $('#t-add').addEventListener('click', e => { addMode = toggle(e.currentTarget); svg.style.cursor = addMode ? 'crosshair' : ''; setStatus(addMode ? 'Click on the plan where the new pin goes.' : 'Ready.'); });
+
+  const toPlan = ev => { const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; const q = pt.matrixTransform(svg.getScreenCTM().inverse()); return [r1(q.x), r1(q.y)]; };
+  let drag = null;
+  svg.addEventListener('pointerdown', ev => {
+    const g = ev.target.closest('.pin');
+    if (addMode && !g) { const [x, z] = toPlan(ev); addPin(x, z); return; }
+    if (!g) return;
+    ev.preventDefault(); svg.setPointerCapture(ev.pointerId);
+    drag = { k: g.dataset.k, start: toPlan(ev), moved: false };
+  });
+  svg.addEventListener('pointermove', ev => {
+    if (!drag) return;
+    const [x, z] = toPlan(ev);
+    if (!drag.moved && Math.hypot(x - drag.start[0], z - drag.start[1]) < .8) return;
+    drag.moved = true; selected = drag.k;
+    if (drag.k.startsWith('added:')) { const id = drag.k.slice(6); state.added[id] = { ...state.added[id], x, z }; }
+    else state.pins[drag.k] = { ...(state.pins[drag.k] || {}), x, z, moved: true };
+    drawPins();
+  });
+  svg.addEventListener('pointerup', () => {
+    if (!drag) return;
+    const k = drag.k, moved = drag.moved; drag = null; selected = k;
+    if (moved) { if (k.startsWith('added:')) saveAdded(k.slice(6)); else savePin(k); }
+    drawPins(); renderCard(); renderList();
+  });
+  svg.addEventListener('keydown', ev => { const g = ev.target.closest && ev.target.closest('.pin'); if (g && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); select(g.dataset.k); } });
+  // Selecting a pin inside the building switches the plan to its floor.
+  function select(k) { selected = k; const p = PINS.find(q => q.k === k); if (p && (p.lvl === 'u' || p.lvl === 'g') && p.lvl !== level) setLevel(p.lvl); else drawPins(); renderCard(); renderList(); }
+  function savePin(k) { const p = PINS.find(q => q.k === k), s = state.pins[k] || {}; write('pins42/' + k, { x: s.x ?? p.x, z: s.z ?? p.z, moved: !!s.moved, note: s.note || '', ok: !!s.ok }); }
+  function saveAdded(id) { const a = state.added[id]; write('added42/' + id, { x: a.x, z: a.z, label: a.label || '', note: a.note || '' }); }
+  function addPin(x, z) {
+    const id = 'p' + Date.now().toString(36);
+    state.added[id] = { x, z, label: '', note: '' }; addMode = false; $('#t-add').setAttribute('aria-pressed', 'false'); svg.style.cursor = '';
+    saveAdded(id); select('added:' + id); setTimeout(() => { const i = $('#c-label'); if (i) i.focus(); }, 30);
+  }
+
+  function renderCard() {
+    const c = $('#card');
+    if (selected.startsWith('added:')) {
+      const id = selected.slice(6), a = state.added[id]; if (!a) { c.innerHTML = ''; return; }
+      c.innerHTML = `<div class="who"><b>+</b><h3>New pin</h3></div>
+        <label for="c-label">What is here<input type="text" id="c-label" value="${esc(a.label || '')}" placeholder="e.g. kiosk, ramp, bench"></label>
+        <label for="c-note">Notes<textarea id="c-note">${esc(a.note || '')}</textarea></label>
+        <button type="button" id="c-del">Remove this pin</button>`;
+      $('#c-label').addEventListener('input', e => { a.label = e.target.value; later('a' + id, () => saveAdded(id)); renderList(); });
+      $('#c-note').addEventListener('input', e => { a.note = e.target.value; later('a' + id, () => saveAdded(id)); });
+      $('#c-del').addEventListener('click', () => { delete state.added[id]; if (db) db.doc('added42/' + id).delete().catch(() => {}); selected = 'balcony'; drawPins(); renderCard(); renderList(); });
+      return;
+    }
+    const p = PINS.find(q => q.k === selected), s = state.pins[p.k] || {};
+    c.innerHTML = `<div class="who"><b>${pinNo(p.k)}</b><h3>${esc(p.n)} <span class="he" dir="rtl">${esc(p.he)}</span></h3></div>
+      <p><span class="badge ${p.s}">${p.s === 'done' ? 'from your corrections' : 'please check'}</span> <span class="eyebrow">${p.lvl === 'g' ? 'ground floor' : p.lvl === 'u' ? 'upper floor' : 'outdoors'}</span></p>
+      <p class="now"><strong>In revision 4.1:</strong> ${esc(p.now)}</p>
+      ${s.moved ? `<p class="moved">You moved this pin. <button type="button" id="c-reset">Put it back</button></p>` : ''}
+      ${p.s === 'check' ? `<label style="display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--ink)"><input type="checkbox" id="c-ok" ${s.ok ? 'checked' : ''}> That’s right</label>` : ''}
+      <label for="c-note">What’s wrong, or what it should be<textarea id="c-note">${esc(s.note || '')}</textarea></label>`;
+    const base = () => state.pins[p.k] || { x: p.x, z: p.z, moved: false };
+    $('#c-note').addEventListener('input', e => { state.pins[p.k] = { ...base(), note: e.target.value }; later('p' + p.k, () => savePin(p.k)); renderList(); });
+    const ok = $('#c-ok'); if (ok) ok.addEventListener('change', e => { state.pins[p.k] = { ...base(), ok: e.target.checked }; savePin(p.k); renderList(); });
+    const r = $('#c-reset'); if (r) r.addEventListener('click', () => { state.pins[p.k] = { ...base(), x: p.x, z: p.z, moved: false }; savePin(p.k); drawPins(); renderCard(); renderList(); });
+  }
+  function renderList() {
+    const l = $('#pinlist'); l.textContent = '';
+    const rows = PINS.map(p => { const s = state.pins[p.k] || {}; const f = s.moved ? ['you', 'moved'] : s.note ? ['you', 'note'] : s.ok ? ['done', 'ok'] : p.s === 'check' ? ['check', 'check'] : ['done', '']; return [p.k, pinNo(p.k), p.n, f]; })
+      .concat(Object.entries(state.added).map(([id, a], i) => ['added:' + id, '+' + (i + 1), a.label || 'New pin', ['you', 'new']]));
+    for (const [k, no, n, [cls, txt]] of rows) {
+      const b = document.createElement('button'); b.type = 'button'; if (k === selected) b.setAttribute('aria-current', 'true');
+      b.innerHTML = `<span class="k">${no}</span><span>${esc(n)}</span><span class="flag ${cls}">${txt}</span>`;
+      b.addEventListener('click', () => select(k)); l.appendChild(b);
+    }
+  }
+
+  // ——— Cuts and views (heights ×2) ———
+  const txt = (s, x, y, str, o = {}) => { const e = el('text', { x, y, 'font-size': o.size || 11, fill: o.fill || 'var(--ink-2)', 'text-anchor': o.anchor || 'middle', 'font-weight': o.weight || 400, style: o.mono ? 'font-family:var(--f-mono)' : '' }, s); e.textContent = str; return e; };
+  function cut(id, lxCut, upName, upCol, groundName) {
+    const s = $(id); s.textContent = '';
+    const Z0 = -24, Z1 = 24, W = 600, X = lz => 20 + (lz - Z0) / (Z1 - Z0) * W, px = W / (Z1 - Z0), Y0 = 78, Y = h => Y0 - h * px * 2;
+    const { road, upper, lower } = LV, ground = mix('--ink', 12), west = lxCut < ARC0;
+    const prof = [[Z0, road], [-17.8, road], [-HD - 5.2, upper], [-HD, upper], [-HD, lower], [Z1, lower]];
+    el('polygon', { points: prof.map(([z, h]) => `${X(z)},${Y(h)}`).join(' ') + ` ${X(Z1)},236 ${X(Z0)},236`, fill: ground, stroke: 'var(--ink)', 'stroke-width': 1.1 }, s);
+    el('rect', { x: X(Z0), y: Y(road) - 3, width: X(-17.8) - X(Z0), height: 3, fill: 'var(--road-edge)' }, s);
+    el('line', { x1: X(-17.9), y1: Y(road), x2: X(-17.9), y2: Y(road + 1), stroke: 'var(--ink)', 'stroke-width': 1.4 }, s);
+    for (let z = -17.2; z < -HD - 5.6; z += 1.4) el('circle', { cx: X(z), cy: Y(road + (upper - road) * ((z + 17.8) / (17.8 - HD - 5.2)) + .7), r: 6, fill: 'var(--hedge)', 'fill-opacity': .75 }, s);
+    el('line', { x1: X(-HD - 5.2), y1: Y(upper), x2: X(-HD - 5.2), y2: Y(upper + 1.4), stroke: 'var(--ink-2)', 'stroke-width': 1.2, 'stroke-dasharray': '3 2' }, s);
+    el('rect', { x: X(-HD - 5.2), y: Y(upper) - 2, width: X(-HD) - X(-HD - 5.2), height: 2, fill: 'var(--mandu)', 'fill-opacity': .4 }, s);
+    // Upper floor room and balcony.
+    el('rect', { x: X(-HD), y: Y(upper + 3.6), width: X(BAL) - X(-HD), height: Y(upper) - Y(upper + 3.6), fill: mix(upCol, 24), stroke: `var(${upCol})`, 'stroke-width': 1.2 }, s);
+    el('line', { x1: X(BAL), y1: Y(upper + 3.2), x2: X(HD), y2: Y(upper + 3.2), stroke: 'var(--mandu)', 'stroke-width': 2 }, s);
+    el('line', { x1: X(HD) - 1, y1: Y(upper), x2: X(HD) - 1, y2: Y(upper + 1), stroke: 'var(--ink)', 'stroke-width': 1.4 }, s);
+    txt(s, (X(-HD) + X(BAL)) / 2, Y(upper + 1.6), upName, { fill: `var(${upCol})`, weight: 600, size: 10.5 });
+    txt(s, (X(BAL) + X(HD)) / 2, Y(upper + 3.2) - 5, 'balcony', { fill: 'var(--mandu)', weight: 600, size: 10 });
+    txt(s, X(HD) + 6, Y(upper + 1) + 2, 'railing', { size: 9, anchor: 'start' });
+    // Ground floor.
+    if (west) {
+      const h = upper - (lxCut - ST0) / (ST1 - ST0) * (upper - lower);
+      el('rect', { x: X(-HD), y: Y(upper), width: X(HD + STW) - X(-HD), height: Y(lower) - Y(upper), fill: mix('--ink', 14), stroke: 'var(--ink)', 'stroke-width': 1 }, s);
+      el('rect', { x: X(HD), y: Y(upper) - .5, width: X(HD + STW) - X(HD), height: Y(h) - Y(upper) + .5, fill: 'var(--sheet)' }, s);
+      el('rect', { x: X(HD), y: Y(h), width: X(HD + STW) - X(HD), height: 4, fill: 'var(--stair)' }, s);
+      txt(s, X(HD + 1.2), Y(h) - 6, 'stair', { size: 10, fill: 'var(--ink)' });
+      txt(s, (X(-HD) + X(HD + STW)) / 2, (Y(upper) + Y(lower)) / 2 + 4, groundName, { size: 10.5, fill: 'var(--ink)', weight: 600 });
+    } else {
+      el('rect', { x: X(-HD), y: Y(upper), width: X(BAL) - X(-HD), height: Y(lower) - Y(upper), fill: mix('--cinema', 16), stroke: 'var(--cinema)', 'stroke-width': 1 }, s);
+      for (let z = BAL + .8; z < HD; z += 1) el('line', { x1: X(z), y1: Y(lower), x2: X(Math.min(z + 1.5, HD)), y2: Y(lower + .75), stroke: 'var(--lower)', 'stroke-width': 1 }, s);
+      txt(s, (X(-HD) + X(BAL)) / 2, (Y(upper) + Y(lower)) / 2 + 4, groundName, { size: 10.5, fill: 'var(--cinema)', weight: 600 });
+      txt(s, (X(BAL) + X(HD)) / 2, (Y(upper) + Y(lower)) / 2 - 4, 'roofed', { size: 9.5, fill: 'var(--lower)', weight: 600 });
+      txt(s, (X(BAL) + X(HD)) / 2, (Y(upper) + Y(lower)) / 2 + 8, 'strip', { size: 9.5, fill: 'var(--lower)', weight: 600 });
+      el('rect', { x: X(20.3), y: Y(lower + 8), width: X(Z1) - X(20.3), height: Y(lower) - Y(lower + 8), fill: mix('--cinema', 22), stroke: 'var(--cinema)', 'stroke-width': 1 }, s);
+      txt(s, (X(20.3) + X(Z1)) / 2, Y(lower + 4.5), 'Eva & Batya', { size: 9.5, fill: 'var(--cinema)', weight: 600 });
+      for (const z of [12.5, 16.5]) { el('line', { x1: X(z), y1: Y(lower), x2: X(z), y2: Y(lower + 2.2), stroke: 'var(--ink-2)', 'stroke-width': 1.2 }, s); el('circle', { cx: X(z), cy: Y(lower + 3), r: 8, fill: 'var(--hedge)', 'fill-opacity': .6 }, s); }
+    }
+    el('rect', { x: X(-HD) - 1, y: Y(upper) - 1, width: X(HD) - X(-HD) + 2, height: 3, fill: 'var(--ink)' }, s);
+    txt(s, X(-22.5), Y(road) - 8, 'Route 75', { fill: 'var(--ink)', weight: 600, anchor: 'start' });
+    txt(s, X(-15.6), Y(road) - 16, 'bushes', { size: 9.5, fill: 'var(--hedge)' });
+    txt(s, (X(-HD - 5.2) + X(-HD)) / 2, Y(upper) - 8, 'backyard', { fill: 'var(--mandu)', weight: 600, size: 9.5 });
+    txt(s, X(west ? 17 : 18.5), Y(lower) - 8, 'lower plaza', { fill: 'var(--ink)', weight: 600 });
+    txt(s, 24, 18, 'N', { anchor: 'start', weight: 600, fill: 'var(--ink)' }); txt(s, 616, 18, 'S', { anchor: 'end', weight: 600, fill: 'var(--ink)' });
+    const dim = (x, h1, h2, label) => { el('line', { x1: x, y1: Y(h1), x2: x, y2: Y(h2), stroke: 'var(--pin)', 'stroke-width': 1 }, s); for (const hh of [h1, h2]) el('line', { x1: x - 4, y1: Y(hh), x2: x + 4, y2: Y(hh), stroke: 'var(--pin)', 'stroke-width': 1 }, s); txt(s, x + 7, (Y(h1) + Y(h2)) / 2 + 4, label, { size: 10.5, fill: 'var(--pin)', anchor: 'start', mono: true }); };
+    dim(X(-19.2), road, upper, '1.2 m');
+    dim(X(HD + STW) + 30, upper, lower, '4.2 m');
+    el('line', { x1: X(Z0), y1: 232, x2: X(Z0 + 10), y2: 232, stroke: 'var(--ink)', 'stroke-width': 2 }, s); txt(s, X(Z0 + 5), 226, '10 m', { size: 10 });
+  }
+  function viewC() {
+    const s = $('#viewC'); s.textContent = '';
+    const Z0 = -16, Z1 = 14, W = 600, X = lz => 20 + (lz - Z0) / (Z1 - Z0) * W, px = W / (Z1 - Z0), Y = h => 205 - (h - LV.upper) * px;
+    el('rect', { x: 0, y: Y(0), width: 640, height: 240 - Y(0), fill: mix('--upper', 18) }, s);
+    el('line', { x1: 0, y1: Y(0), x2: 640, y2: Y(0), stroke: 'var(--upper)', 'stroke-width': 1.2 }, s);
+    // Second floor wall (north part), balcony opening, stair top going down away from the viewer.
+    el('rect', { x: X(-HD), y: Y(3.6), width: X(BAL) - X(-HD), height: Y(0) - Y(3.6), fill: mix('--butcher', 25), stroke: 'var(--ink)', 'stroke-width': 1.2 }, s);
+    for (let i = 0; i < 3; i++) el('rect', { x: X(-6 + i * 3.4), y: Y(2.6), width: px * 1.6, height: px * 1.3, fill: mix('--ink', 18) }, s);
+    el('rect', { x: X(BAL), y: Y(3.2), width: X(HD) - X(BAL), height: 4, fill: 'var(--mandu)' }, s);
+    el('rect', { x: X(BAL), y: Y(3.2) + 4, width: X(HD) - X(BAL), height: Y(0) - Y(3.2) - 4, fill: mix('--mandu', 10), stroke: 'var(--mandu)', 'stroke-width': 1, 'stroke-dasharray': '4 3' }, s);
+    el('polygon', { points: `${X(HD)},${Y(0)} ${X(HD + STW)},${Y(0)} ${X(HD + STW) - 18},${Y(0) + 26} ${X(HD) + 18},${Y(0) + 26}`, fill: 'var(--stair)' }, s);
+    for (let i = 1; i < 5; i++) { const y = Y(0) + i * 5.2, k = i * 3.6; el('line', { x1: X(HD) + k, y1: y, x2: X(HD + STW) - k, y2: y, stroke: 'var(--sheet)', 'stroke-width': .8 }, s); }
+    // Backyard side, bushes (left).
+    for (let z = -15; z < -HD - .6; z += 1.4) el('circle', { cx: X(z), cy: Y(.9), r: 11, fill: 'var(--hedge)', 'fill-opacity': .7 }, s);
+    el('rect', { x: X(-HD - 2.6), y: Y(1.6), width: px * 1.6, height: Y(0) - Y(1.6), fill: mix('--mandu', 25), stroke: 'var(--mandu)', 'stroke-width': 1.2 }, s);
+    txt(s, (X(-HD) + X(BAL)) / 2, Y(3.6) - 8, '1 · second floor (Butcher Tivon)', { fill: 'var(--ink)', weight: 600 });
+    txt(s, (X(BAL) + X(HD)) / 2, Y(3.2) - 10, '2 · balcony entrance', { fill: 'var(--mandu)', weight: 600 });
+    txt(s, X(HD + STW / 2) + 18, Y(0) + 42, '3 · stairs down', { fill: 'var(--ink)', weight: 600 });
+    txt(s, X(-HD - 1.8), Y(1.6) - 26, 'backyard side entrance', { size: 10, fill: 'var(--mandu)' });
+    txt(s, X(-13.5), Y(1.6) - 10, 'bushes', { size: 10, fill: 'var(--hedge)' });
+    txt(s, 24, 18, 'NORTH ←', { anchor: 'start', size: 10, fill: 'var(--ink-2)' }); txt(s, 616, 18, '→ SOUTH', { anchor: 'end', size: 10, fill: 'var(--ink-2)' });
+  }
+  function viewD() {
+    const s = $('#viewD'); s.textContent = '';
+    const F = 4.2, up = 3.6, top = -(F + up);
+    const t = (x, y, str, o = {}) => { const e = el('text', { x, y, 'font-size': o.size || .7, fill: o.fill || 'var(--ink)', 'text-anchor': 'middle', 'font-weight': o.weight || 500 }, s); e.textContent = str; return e; };
+    // Upper floor: the businesses behind the balcony, each with a door onto it.
+    for (const [k, a, b, name, col] of UP) {
+      el('rect', { x: a, y: top, width: b - a, height: up, fill: k === 'bar' ? 'var(--mandu)' : mix(col, 26), 'fill-opacity': k === 'bar' ? .6 : 1, stroke: 'var(--ink)', 'stroke-width': .06 }, s);
+      t((a + b) / 2, top + 1.2, name, { size: b - a < 5.6 ? .55 : .65, fill: k === 'bar' ? 'var(--sheet)' : `var(${col})`, weight: 600 });
+      el('rect', { x: (a + b) / 2 - .7, y: -F - 2.6, width: 1.4, height: 2.1, fill: mix('--ink', 22) }, s);
+    }
+    el('rect', { x: -HW, y: -F - .2, width: HW * 2, height: .3, fill: 'var(--ink)' }, s);
+    el('line', { x1: -HW, y1: -F - 1.1, x2: HW, y2: -F - 1.1, stroke: 'var(--ink)', 'stroke-width': .1 }, s);
+    for (let x = -HW; x <= HW; x += .5) el('line', { x1: x, y1: -F - 1.1, x2: x, y2: -F - .2, stroke: 'var(--ink)', 'stroke-width': .035 }, s);
+    t(-1, -F - 1.4, 'balcony with railing · the whole south side', { size: .55, fill: 'var(--mandu)', weight: 600 });
+    // Ground floor: the closed section (west), then the roofed strip with the shops set back behind it (east).
+    el('rect', { x: -HW, y: -F + .1, width: ARC0 + HW, height: F - .1, fill: mix('--ink', 14), stroke: 'var(--ink)', 'stroke-width': .06 }, s);
+    t(-17.8, -2.2, 'Rav-Kav · flowers', { size: .6 }); t(-17.8, -1.5, '(closed section)', { size: .48, fill: 'var(--ink-2)' });
+    el('rect', { x: ARC0, y: -F + .1, width: HW - ARC0, height: F - .1, fill: mix('--lower', 22) }, s);
+    for (const [k, a, b, name] of GROUND.slice(1)) {
+      el('rect', { x: a + .15, y: -F + .7, width: b - a - .3, height: F - .7, fill: 'var(--sheet)', stroke: 'var(--cinema)', 'stroke-width': .06 }, s);
+      t((a + b) / 2, -F + 1.8, name, { size: b - a < 7.2 ? .6 : .7, fill: 'var(--cinema)', weight: 600 });
+    }
+    t(12.6, -.35, 'roofed strip in front of the shops', { size: .45, fill: 'var(--lower)', weight: 600 });
+    // The entrance faces east, so from here it is seen edge-on, at the closed section's east wall.
+    el('rect', { x: ARC0 - .02, y: -2.4, width: .35, height: 2.4, fill: 'var(--pin)' }, s);
+    t(ARC0 + 1.6, -3.0, 'Rav-Kav entrance', { size: .48, fill: 'var(--pin)', weight: 600 }); t(ARC0 + 1.6, -2.45, 'faces east →', { size: .45, fill: 'var(--pin)' });
+    el('line', { x1: -HW, y1: -F, x2: ST1, y2: 0, stroke: 'var(--stair)', 'stroke-width': .55 }, s);
+    t(-15.6, -3.0, 'stair ↘', { size: .6, weight: 600 });
+    t(-HW, .9, 'WEST', { size: .5, fill: 'var(--ink-2)' }); t(HW, .9, 'EAST', { size: .5, fill: 'var(--ink-2)' });
+    el('line', { x1: -23.5, y1: 0, x2: 23.5, y2: 0, stroke: 'var(--ink)', 'stroke-width': .1 }, s);
+  }
+
+  function viewE() {
+    const s = $('#viewE'); s.textContent = '';
+    const H = 3.8, t = (x, y, str, o = {}) => { const e = el('text', { x, y, 'font-size': o.size || .55, fill: o.fill || 'var(--ink)', 'text-anchor': 'middle', 'font-weight': o.weight || 600 }, s); e.textContent = str; if (/[א-ת]/.test(str)) e.setAttribute('direction', 'rtl'); return e; };
+    // Read from the lane: west (Falafel Chen, the street) is on the right, so draw x = 28.1 − t.
+    const X = tt => 28.1 - tt;
+    el('rect', { x: X(28.1), y: -H, width: 28.1, height: H, fill: mix('--row', 10), stroke: 'var(--ink)', 'stroke-width': .05 }, s);
+    for (const [t0, t1, en, he, col] of ROW_UNITS) {
+      const x0 = X(t1), w = t1 - t0;
+      el('rect', { x: x0 + .1, y: -2.7, width: w - .2, height: 2.7, fill: 'var(--sheet)', stroke: 'var(--ink-2)', 'stroke-width': .04 }, s);
+      el('rect', { x: x0 + .15, y: -3.65, width: w - .3, height: .75, fill: col }, s);
+      t(x0 + w / 2, -3.12, he === '?' ? '?' : he, { size: w < 4 ? .42 : .5, fill: '#ffffff' });
+      t(x0 + w / 2, -.35, en, { size: .36, fill: 'var(--ink-2)', weight: 500 });
+    }
+    // Falafel Chen's big signboard on the corner, and Luli's yellow arched sign.
+    el('rect', { x: X(7) + .05, y: -4.9, width: 6.9, height: 1.25, fill: '#f4ecd6', stroke: '#b8321f', 'stroke-width': .08 }, s);
+    t(X(3.5), -4.35, 'פלאפל חן', { size: .62, fill: '#b8321f' }); t(X(3.5), -3.85, '30 שנות מוניטין', { size: .32, fill: '#1d3f8a' });
+    el('path', { d: `M${X(18.2) + .2} -3.75 L${X(14.2) - .2} -3.75 L${X(14.2) - .2} -3 Q${X(16.2)} -3.5 ${X(18.2) + .2} -3 Z`, fill: '#f5e23a' }, s);
+    t(X(16.2), -3.3, 'פלאפל לולי', { size: .42, fill: '#e0261f' });
+    // The canopy and its posts.
+    el('rect', { x: X(28.1) - .1, y: -H - .15, width: 28.3, height: .3, fill: 'var(--ink-2)' }, s);
+    for (let tt = 0; tt <= 28.1; tt += 3.5) el('rect', { x: X(tt) - .06, y: -H, width: .12, height: H, fill: 'var(--ink-2)' }, s);
+    // On the left the pizza unit sticks out toward the lane; its window faces the street (right), seen at an angle.
+    el('polygon', { points: `${X(28.1) - 3.2},${-H - .2} ${X(28.1)},${-H - .2} ${X(28.1) + 1.2},${-H + .3} ${X(28.1) + 1.2},.25 ${X(28.1) - 3.2},.25`, fill: mix('--stair', 22), stroke: 'var(--ink)', 'stroke-width': .05 }, s);
+    el('polygon', { points: `${X(28.1)},${-2.9} ${X(28.1) + 1.05},${-2.6} ${X(28.1) + 1.05},-.7 ${X(28.1)},-1.0`, fill: 'var(--sheet)', stroke: '#d9a514', 'stroke-width': .08 }, s);
+    el('rect', { x: X(28.1) - 3, y: -H + .2, width: 2.8, height: .7, fill: '#b8321f' }, s);
+    t(X(28.1) - 1.6, -H + .62, 'פיצה', { size: .45, fill: '#ffffff' }); t(X(28.1) - 1.6, -.35, 'pizza · window faces the street →', { size: .32, fill: 'var(--ink-2)', weight: 500 });
+    el('line', { x1: -1.4, y1: 0, x2: 35.4, y2: 0, stroke: 'var(--ink)', 'stroke-width': .06 }, s);
+    el('rect', { x: X(0), y: -.08, width: 6, height: .16, fill: 'var(--road-edge)' }, s);
+    t(X(0) + 3, .7, 'Alexander Zaid St →', { size: .4, fill: 'var(--ink-2)', weight: 500 });
+  }
+
+  // ——— Questions and photos ———
+  function renderQuestions() {
+    const q = $('#qs'); q.textContent = '';
+    QUESTIONS.forEach(([id, text, why], i) => {
+      const d = document.createElement('div'); d.className = 'q';
+      d.innerHTML = `<span class="n">Q${i + 1}</span><div style="display:grid;gap:6px;min-width:0"><p>${esc(text)} <span class="why">${esc(why)}</span></p><textarea id="${id}" aria-label="Answer to question ${i + 1}"></textarea></div>`;
+      q.appendChild(d);
+      const ta = d.querySelector('textarea'); ta.value = state.answers[id] || '';
+      ta.addEventListener('input', e => { state.answers[id] = e.target.value; later('q' + id, () => write('answers42/' + id, { text: e.target.value })); });
+    });
+  }
+  const syncAnswers = () => { for (const [id] of QUESTIONS) { const ta = document.getElementById(id); if (ta && document.activeElement !== ta) ta.value = state.answers[id] || ''; } };
+  function renderPhotos() {
+    const g = $('#photos'); g.textContent = '';
+    if (!state.photos.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = 'No photos yet.'; g.appendChild(p); return; }
+    for (const ph of state.photos) {
+      const d = document.createElement('figure'); d.className = 'photo';
+      const img = document.createElement('img'); img.src = ph.url; img.alt = ph.caption || 'Photo of the Zeid centre'; img.loading = 'lazy';
+      const cap = document.createElement('figcaption'); cap.textContent = ph.caption || '';
+      d.append(img, cap); g.appendChild(d);
+    }
+  }
+  $('#ph-go').addEventListener('click', async () => {
+    const f = $('#ph-file').files[0], st = $('#ph-status');
+    if (!f) { st.textContent = 'Choose a photo first.'; return; }
+    if (!assets || !db) { st.textContent = 'Photos can’t be uploaded in this view.'; return; }
+    st.textContent = 'Uploading…';
+    try { const a = await assets.upload(f); await db.collection('photos').add({ asset: a.id, url: a.url, caption: $('#ph-cap').value.trim(), pin: selected, at: Date.now() }); st.textContent = 'Uploaded.'; $('#ph-file').value = ''; $('#ph-cap').value = ''; }
+    catch (e) { st.textContent = 'The upload didn’t go through. Try a smaller photo.'; }
+  });
+
+  drawPlan(); renderCard(); renderList(); cut('#cutA', -16, 'Butcher Tivon', '--butcher', 'Rav-Kav · flowers (closed section, also under the stair)'); cut('#cutB', 10.8, 'Pilates', '--unit', 'Oranim pharmacy'); viewC(); viewD(); viewE(); renderQuestions(); renderPhotos();
+  setStatus('Loading saved corrections…');
+  (async () => {
+    const c = window.claude;
+    db = c && c.use ? await c.use('db') : null;
+    if (!db) { setStatus('This view can’t save. The drawing is read-only here.', 'warn'); $('#upload').hidden = true; return; }
+    assets = await c.use('assets'); if (!assets) $('#upload').hidden = true;
+    const onErr = () => setStatus('Lost the connection to saved data. Reload to reconnect.', 'warn');
+    db.collection('pins42').onSnapshot(snap => { for (const d of snap.docs) if (!drag || drag.k !== d.id) state.pins[d.id] = { ...d.data() }; drawPins(); renderList(); if (!document.activeElement || document.activeElement.id !== 'c-note') renderCard(); setStatus('Ready. Your changes save automatically.', 'ok'); }, onErr);
+    db.collection('added42').onSnapshot(snap => { const next = {}; for (const d of snap.docs) next[d.id] = { ...d.data() }; state.added = next; drawPins(); renderList(); }, onErr);
+    db.collection('answers42').onSnapshot(snap => { for (const d of snap.docs) state.answers[d.id] = d.data().text || ''; syncAnswers(); }, onErr);
+    db.collection('photos').orderBy('at').onSnapshot(snap => { state.photos = snap.docs.map(d => d.data()); renderPhotos(); }, onErr);
+  })();
+})();
+</script>

@@ -1,0 +1,1893 @@
+[
+  {
+    "name": "דרך העמקים",
+    "en": "Derekh HaAmakim",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "none",
+      "floorsTypical": 0,
+      "floorsMax": 0,
+      "redTileRoofShare": 0,
+      "walls": [],
+      "setbackM": 0,
+      "frontBoundary": "none",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "carob",
+        "eucalyptus"
+      ],
+      "hedges": false,
+      "ground": "rocky"
+    },
+    "notable": "Route 75 highway skirting the town: dual carriageway with concrete jersey barriers and steel guardrails, cut slopes of pale fractured limestone with rubble-stone toe walls, scrubby maquis and pines above; no houses face it."
+  },
+  {
+    "name": "אלונים",
+    "en": "Alonim",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "eucalyptus",
+        "cypress",
+        "aleppo pine",
+        "oak"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Old main artery of the garden town: huge mature shade trees (ficus/eucalyptus) overhanging the road, 1-2 storey older houses with red gable roofs set back behind greenery, a few small shops/kiosk and a bus shelter; red-white and yellow-red kerbs at junctions."
+  },
+  {
+    "name": "יצחק רבין",
+    "en": "Yitzhak Rabin",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster",
+        "jerusalem stone cladding"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "palm",
+        "ficus",
+        "cypress",
+        "oak"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Wide collector road with red-paver sidewalks and landscaped roundabouts (Washingtonia and date palms on lawns); long stretches of dense shrubbery and pines on embankments with stone-faced retaining walls, houses mostly glimpsed up-slope behind them."
+  },
+  {
+    "name": "השקדים",
+    "en": "HaShkedim",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.4,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "aleppo pine",
+        "ficus",
+        "carob"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "West end is the town-centre commercial strip: 2-storey cream plaster shop buildings with arcaded ground floor, paved pedestrian plaza with street trees and red-yellow kerbs; further east private houses behind field-stone retaining walls with steps, and the far east end runs through dense natural oak woodland."
+  },
+  {
+    "name": "מעלה אבשלום",
+    "en": "Maale Avshalom",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "red-white",
+      "parking": "none",
+      "slope": "steep",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "palm",
+        "olive"
+      ],
+      "hedges": false,
+      "ground": "rocky"
+    },
+    "notable": "Long winding ascent on the southern slope: raw limestone rock cuts and guardrails with open views over the Jezreel Valley, houses sparse and set up-slope (red-tile roofs at the top of the cuts); a small old single-storey red-roofed house near the bottom."
+  },
+  {
+    "name": "קרן קיימת לישראל",
+    "en": "Keren Kayemet LeIsrael",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.4,
+      "walls": [
+        "white plaster",
+        "cream plaster",
+        "grey plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "fence",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "palm",
+        "cypress",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Residential street of mixed-age detached houses: older red-gable-roof cottages next to modern flat-roofed 2-storey plaster cubes, white picket/slat fences, many tall Washingtonia and fan palms; terraced cream townhouses near the Rabin junction."
+  },
+  {
+    "name": "מוטה גור",
+    "en": "Motta Gur",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "jerusalem stone cladding"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "steep",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "cypress",
+        "olive"
+      ],
+      "hedges": true,
+      "ground": "rocky"
+    },
+    "notable": "Newer south-western hillside neighbourhood road: wide carriageway with red-white kerbs and broad paver sidewalks, raw limestone road cuts, houses stepped on terraces above stone-clad retaining walls with railings; open views to the valley and hills."
+  },
+  {
+    "name": "שיכון אלה",
+    "en": "Shikun Ela",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "carob",
+        "ficus",
+        "oak"
+      ],
+      "hedges": true,
+      "ground": "dry grass"
+    },
+    "notable": "Edge-of-town street on the south-east: pine-and-carob park strips with dry ground and boulders, dense overgrown shrubbery around a bus stop, and at the southern end open wheat stubble fields looking out to the valley and industrial zone."
+  },
+  {
+    "name": "דקל",
+    "en": "Dekel",
+    "spotsChecked": 1,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 8,
+      "frontBoundary": "low stone wall",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "palm",
+        "bougainvillea",
+        "ficus",
+        "olive",
+        "carob"
+      ],
+      "hedges": false,
+      "ground": "gardens"
+    },
+    "notable": "Only the east end has Street View: low rubble field-stone wall along the road, big informal garden plots with Washingtonia palms, bougainvillea and fruit trees, houses set far back. The long western part (north of Route 75, Elro'i side) has no coverage - estimated as low-rise semi-rural houses in large gardens."
+  },
+  {
+    "name": "בורוכוב",
+    "en": "Borochov",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "cream plaster",
+        "white plaster",
+        "ochre plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "palm",
+        "cypress",
+        "oak",
+        "aleppo pine"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Mixed central street: a large flat-roofed ochre/cream public building (school or community centre) with angled kerbside parking bays, 2-storey red-tile-roofed houses on the slope with palms and flowering shrubs, and a shady gravel stretch under dense trees with low stone walls."
+  },
+  {
+    "name": "הכלניות",
+    "en": "HaKalaniyot",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "steep",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "cypress",
+        "oak",
+        "bougainvillea"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Starts at Ben Gurion Square among 2-storey cafes with striped awnings and flower-bed traffic islands, then climbs/descends a pine-covered hillside: tall Aleppo pines, open carports, valley views, and lush gardens with hibiscus and agave behind low field-stone walls."
+  },
+  {
+    "name": "הבונים",
+    "en": "HaBonim",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "oak",
+        "aleppo pine",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Narrow old lane with no proper sidewalks: houses almost invisible behind thick hedges, wooden gates and chain-link fences, huge overhanging ficus/oak canopies, cars parked on dirt verges; occasional red-tile roof peeking through."
+  },
+  {
+    "name": "רמז",
+    "en": "Remez",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 8,
+      "frontBoundary": "low stone wall",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "forest",
+      "species": [
+        "oak",
+        "aleppo pine",
+        "carob",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "One of the greenest streets: native oak/pine woodland lots, ivy ground cover, dry-laid boulder walls and stone terraces with steps; houses largely hidden deep inside plots, red paver sidewalk on one side."
+  },
+  {
+    "name": "דרך קטיף",
+    "en": "Derekh Katif",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "commercial",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0,
+      "walls": [
+        "exposed concrete",
+        "metal cladding"
+      ],
+      "setbackM": 15,
+      "frontBoundary": "fence",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "flat",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "low",
+      "species": [
+        "olive",
+        "eucalyptus",
+        "carob"
+      ],
+      "hedges": false,
+      "ground": "dry grass"
+    },
+    "notable": "Unpaved/rough rural lane on the south-east edge: dirt road, olive grove and wheat fields, scrubby overgrown verges and a few farm/industrial sheds (blue metal buildings) - not a residential street."
+  },
+  {
+    "name": "שיבולים",
+    "en": "Shibolim",
+    "spotsChecked": 0,
+    "imageryYear": "unknown",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "olive",
+        "palm",
+        "cypress",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "no coverage - western neighbourhood north of Route 75 (Elro'i area) has no Street View; estimated as low-rise semi-rural detached houses in large gardens on narrow lanes."
+  },
+  {
+    "name": "יהודה הנשיא",
+    "en": "Yehuda HaNasi",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "cypress",
+        "oak",
+        "ficus",
+        "carob"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Classic garden-town street: 2-storey cream/white plaster houses with red-tile hip roofs behind tall clipped cypress hedges and low boulder walls, stone steps up to front doors, metal carport pergolas, red paver sidewalk."
+  },
+  {
+    "name": "יזרעאל",
+    "en": "Yizrael",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "aleppo pine",
+        "cypress",
+        "palm"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Older 2-storey cream apartment blocks and terraced townhouses with long continuous balconies on pilotis, split field-stone garden walls with grey steel gates, a roadside parking lot with bus shelter under big trees."
+  },
+  {
+    "name": "דרור",
+    "en": "deror",
+    "spotsChecked": 0,
+    "imageryYear": "unknown",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "olive",
+        "palm",
+        "cypress",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "no coverage - points snap to Route 75 next door; western neighbourhood north of the highway (Elro'i area) estimated as low-rise detached houses in large gardens."
+  },
+  {
+    "name": "אמנון ותמר",
+    "en": "Amnon ve Tamar",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "ficus",
+        "oak",
+        "jacaranda",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "2-storey white plaster houses with red-tile hip roofs and external stairs, a raised small apartment block above a split-stone retaining wall with overgrown slope garden, and a flat-roofed cream public building with a jacaranda out front."
+  },
+  {
+    "name": "הדגניות",
+    "en": "HaDganiyot",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.4,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "fence",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "cypress",
+        "ficus",
+        "bougainvillea"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Leafy street with a low institutional compound behind steel gates and a timber pergola, small 3-storey apartment buildings with green balcony railings set behind boulder rock gardens, plus older gabled cottages under big trees."
+  },
+  {
+    "name": "נרקיסים",
+    "en": "Narkisim",
+    "spotsChecked": 3,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster",
+        "jerusalem stone cladding"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "palm",
+        "cypress",
+        "oak",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Detached 2-storey houses, some white plaster over light stone-clad garage plinths with roof terraces, others older cream houses with low brown-tile roofs; split field-stone front walls, Washingtonia palms, agave and dense hedges hiding many plots."
+  },
+  {
+    "name": "הכרמל",
+    "en": "HaCarmel",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "cypress",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Quiet western residential street: older single-storey red-gable-roof cottages almost buried in big trees and tall hedges, low stone walls; ends in a small paved parking turnaround under pines with a power pylon."
+  },
+  {
+    "name": "כצנלסון",
+    "en": "Katznelson",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "apartment blocks",
+      "floorsTypical": 3,
+      "floorsMax": 4,
+      "redTileRoofShare": 0.1,
+      "walls": [
+        "white plaster",
+        "cream plaster",
+        "grey plaster"
+      ],
+      "setbackM": 8,
+      "frontBoundary": "fence",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "grey",
+      "parking": "lots",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "ficus",
+        "palm",
+        "cypress",
+        "oak"
+      ],
+      "hedges": true,
+      "ground": "lawns"
+    },
+    "notable": "One of the few apartment-block streets: 3-4 storey flat-roofed 'shikun' blocks with stacked balconies and rooftop solar heaters behind black steel railings, perpendicular parking bays, clipped hedges and lawn traffic islands with a few palms."
+  },
+  {
+    "name": "האורנים",
+    "en": "HaOranim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "ficus",
+        "eucalyptus",
+        "oak"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Pine-named street living up to it: stone steps climbing between split field-stone retaining walls into lush flowering gardens with small apartment buildings behind, and at the east end a single-storey public compound behind a blue fence under huge ficus and pine trees."
+  },
+  {
+    "name": "הרקפות",
+    "en": "HaRakafot",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "cream plaster",
+        "white plaster",
+        "jerusalem stone cladding"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "palm",
+        "jacaranda"
+      ],
+      "hedges": true,
+      "ground": "dry grass"
+    },
+    "notable": "Northern street with a small pocket park (benches, dry grass, pines and palms) behind a split-stone wall, small 3-storey apartment blocks behind; near Ben Gurion Square end a low flat-roofed commercial/post-office building with stone-clad pier, a jacaranda and red-white kerbs."
+  },
+  {
+    "name": "יגאל אלון",
+    "en": "Yigal Alon",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "low stone wall",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "aleppo pine",
+        "palm",
+        "carob"
+      ],
+      "hedges": true,
+      "ground": "rocky"
+    },
+    "notable": "Edge street mixing dense native maquis (oak/terebinth scrub over a rocky bank) with older houses behind low split-stone walls, a few palms and fruit trees; red-tile roofs peek through the greenery."
+  },
+  {
+    "name": "החורש",
+    "en": "HaHoresh",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 7,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "forest",
+      "species": [
+        "oak",
+        "aleppo pine",
+        "cypress",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "'The grove' street: houses swallowed by dense oak/pine canopy and shrubbery with wooden picket gates; near the town centre end a long dry-laid field-stone retaining wall topped by a planted garden strip, red-white kerbs and white market-style awnings behind."
+  },
+  {
+    "name": "מרדכי",
+    "en": "Mordehai",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "steep",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "aleppo pine",
+        "cypress",
+        "carob"
+      ],
+      "hedges": true,
+      "ground": "rocky"
+    },
+    "notable": "Hillside street on the southern slope: one side drops away into dense oak/terebinth scrub with green steel railings and views over the valley, houses mostly on the upper side; at the Golomb end clipped hedges, boulder rock gardens and a small lawn island."
+  },
+  {
+    "name": "שרת",
+    "en": "Sharett",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 7,
+      "frontBoundary": "low stone wall",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "oak",
+        "palm",
+        "olive"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Curving residential street with red-white kerbed corners, red paver sidewalks, low rubble-stone walls under rosemary/shrub beds and dense tree canopy; a boulder-ringed planted island with a large carob/oak at the far end; houses largely hidden."
+  },
+  {
+    "name": "השושנים",
+    "en": "HaShoshanim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 7,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "cypress",
+        "oak",
+        "ficus",
+        "aleppo pine"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Older 1-2 storey houses with red-tile gable roofs set back up-slope, reached by long stone stairways between rock outcrops and rubble walls; tall cypress/thuja hedges hide most fronts, big oaks overhead."
+  },
+  {
+    "name": "יצחק שדה",
+    "en": "Yitzhak Sadeh",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "cream plaster",
+        "jerusalem stone cladding",
+        "exposed concrete"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "low",
+      "species": [
+        "olive",
+        "aleppo pine",
+        "cypress"
+      ],
+      "hedges": false,
+      "ground": "gardens"
+    },
+    "notable": "New-build western neighbourhood (under construction in 2012): uniform 2-storey cream-plaster villas with red-tile hip roofs or flat tops, roller-shutter boxes, front porticoes, sitting on low dressed-stone plinth walls with steel railings; wide paver sidewalks with young staked saplings, few mature trees."
+  },
+  {
+    "name": "השומרים",
+    "en": "HaShomrim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "ficus",
+        "cypress",
+        "oak"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Older eastern street: houses behind solid rendered garden walls topped with reed/cane screening and wooden gates, 2-storey cream house with brown-red tile hip roof, plane/ficus trees; long stretches of overgrown shrubbery and tall pines with no visible houses."
+  },
+  {
+    "name": "חנה סנש",
+    "en": "Hannah Szenes",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "white plaster",
+        "cream plaster",
+        "grey plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "low stone wall",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "cypress",
+        "palm",
+        "olive"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Old core of the town: original 1940s-50s single-storey cottages with weathered brown-red tile hip roofs and grey-green plaster, a row of small single-storey shops with signboards, huge old Aleppo pines and cypresses, red-white kerbed traffic islands."
+  },
+  {
+    "name": "סמטת האחים פיש",
+    "en": "HaAchim Fish",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "cypress",
+        "ficus",
+        "olive"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Narrow alley joining Golomb: low red-roofed houses with timber carports half-hidden by shrubs, and a neighbourhood playground with rubber safety surface and steel railing under tall pines."
+  },
+  {
+    "name": "הציפורנים",
+    "en": "HaTzipornim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "bougainvillea",
+        "oak",
+        "ficus",
+        "aleppo pine"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Garden fronts with wooden slat fences smothered in magenta bougainvillea under big oaks, and a 2-storey flat-roofed white/cream block (older public or apartment building) raised above split field-stone retaining walls with concrete steps and a railing."
+  },
+  {
+    "name": "המגדל",
+    "en": "HaMigdal",
+    "spotsChecked": 1,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "low stone wall",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "cypress",
+        "olive"
+      ],
+      "hedges": true,
+      "ground": "dry grass"
+    },
+    "notable": "Runs past a sloping pine grove/park with dry needle-covered ground, scattered limestone boulders and rough stone steps, with the main road visible below; few buildings directly on the frontage (second spot failed to render)."
+  },
+  {
+    "name": "גולומב",
+    "en": "Golomb",
+    "spotsChecked": 1,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "cypress",
+        "oak",
+        "olive",
+        "aleppo pine"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Southern residential street: tall clipped hedges and purple-leaf plum, boulder rock-garden verges, paver sidewalk and a small lawn island at the junction with Mordechai; houses set back behind greenery (second spot failed to render)."
+  },
+  {
+    "name": "אלכסנדר זייד",
+    "en": "Alexander Zaid",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.6,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 5,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "olive",
+        "cypress",
+        "ficus",
+        "palm"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Central residential street: solid walls of clipped ivy/ficus hedge with wooden gates, red-tile roofs just visible behind, low white rendered garden walls, a large olive tree at the corner and red paver sidewalks with kerbside parking."
+  },
+  {
+    "name": "הרימונים",
+    "en": "HaRimonim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.7,
+      "walls": [
+        "cream plaster",
+        "white plaster"
+      ],
+      "setbackM": 8,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "ficus",
+        "palm",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Long unbroken flowering hedges along a rendered kerb, older single-storey cottages with red-tile gable roofs tucked deep in leafy gardens under big trees, metal-roofed carport pergolas, potted geraniums and cycads."
+  },
+  {
+    "name": "יפה נוף",
+    "en": "Yefe Nof",
+    "spotsChecked": 0,
+    "imageryYear": "unknown",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "stone wall + hedge",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "aleppo pine",
+        "oak",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "no coverage - short western street off HaCarmel ('beautiful view'); estimated like neighbouring HaCarmel: older 1-2 storey red-roofed houses under pines with views west, stone walls and hedges."
+  },
+  {
+    "name": "דולב",
+    "en": "Dolev",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 8,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "none",
+      "slope": "steep",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "forest",
+      "species": [
+        "oak",
+        "aleppo pine",
+        "carob",
+        "olive"
+      ],
+      "hedges": true,
+      "ground": "rocky"
+    },
+    "notable": "Narrow winding lane through thick natural oak/carob woodland with dry grass and rocky verges, white painted edge line, no sidewalks; houses invisible from the road behind vegetation."
+  },
+  {
+    "name": "השיטים",
+    "en": "HaShitim",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "mixed",
+      "floorsTypical": 2,
+      "floorsMax": 3,
+      "redTileRoofShare": 0.3,
+      "walls": [
+        "white plaster",
+        "jerusalem stone cladding"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "low stone wall",
+      "balconies": true,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": true
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "bougainvillea",
+        "oak",
+        "cypress"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Narrow lane without sidewalks: dense tall shrub/tree screens with a red fire hydrant, a tarp-covered carport between rubble stone walls, and a white 2-3 storey building with stone-clad base and big roller shutters; flowering shrubs (hibiscus) everywhere."
+  },
+  {
+    "name": "בן צבי",
+    "en": "Ben Zvi",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 1,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 8,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "ficus",
+        "oak",
+        "cypress",
+        "bougainvillea"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Short central street: low juniper ground-cover beds and paved driveways in front, big shade trees and flowering shrubs (oleander/hibiscus) hiding low houses; at the Katznelson end a small landscaped junction with cypress and paver sidewalks."
+  },
+  {
+    "name": "העמק",
+    "en": "HaEmek",
+    "spotsChecked": 1,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.5,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 6,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "both",
+      "kerbPaint": "grey",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "palm",
+        "olive",
+        "cypress",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "gardens"
+    },
+    "notable": "Short garden street off Rabin: red paver sidewalk, a pink-flowering Judas tree and date/fan palms in front gardens, paved paths and low rendered walls leading to houses hidden behind shrubs (second spot failed to render)."
+  },
+  {
+    "name": "נוריות",
+    "en": "Nuriyyot",
+    "spotsChecked": 2,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "private houses",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.4,
+      "walls": [
+        "white plaster",
+        "cream plaster"
+      ],
+      "setbackM": 7,
+      "frontBoundary": "hedge",
+      "balconies": false,
+      "solarHeaters": true,
+      "rollerShutters": true,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "none",
+      "kerbPaint": "none",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": false
+    },
+    "nature": {
+      "treeDensity": "high",
+      "species": [
+        "oak",
+        "olive",
+        "carob",
+        "ficus"
+      ],
+      "hedges": true,
+      "ground": "rocky"
+    },
+    "notable": "Small northern cul-de-sac: gravel/rubble verges, dense native oak and shrub thickets, white-plaster houses barely visible behind the greenery; no sidewalks."
+  },
+  {
+    "name": "זבולון",
+    "en": "Zevulun",
+    "spotsChecked": 1,
+    "imageryYear": "2012",
+    "buildings": {
+      "type": "public",
+      "floorsTypical": 2,
+      "floorsMax": 2,
+      "redTileRoofShare": 0.2,
+      "walls": [
+        "exposed concrete",
+        "grey plaster",
+        "white plaster"
+      ],
+      "setbackM": 4,
+      "frontBoundary": "fence",
+      "balconies": false,
+      "solarHeaters": false,
+      "rollerShutters": false,
+      "pergolas": false
+    },
+    "street": {
+      "sidewalks": "one",
+      "kerbPaint": "red-white",
+      "parking": "kerb",
+      "slope": "gentle",
+      "retainingWalls": true
+    },
+    "nature": {
+      "treeDensity": "medium",
+      "species": [
+        "oak",
+        "olive",
+        "ficus"
+      ],
+      "hedges": false,
+      "ground": "dry grass"
+    },
+    "notable": "Short street beside a plain flat-roofed grey concrete institutional building (school/sports hall) with tall ball-court fencing, steel gates and a concrete retaining plinth, a big oak on dry ground opposite (second spot failed to render)."
+  }
+]
