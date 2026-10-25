@@ -46,6 +46,30 @@ export const items: Record<string, { name: Text; description: Text }> = {
   memory_letter: { name: tx('מכתב שלא נשלח', 'Unsent letter'), description: tx('מכתב בדיוני: ״שמרו את הזיכרון, כדי שאוכל להניח לשמירה.״', 'An invented letter: “Keep the memory, so that I may set down the watch.”') },
   valley_archive: { name: tx('ארכיון העמק', 'Valley archive'), description: tx('האוצר הבדיוני: סיפורים, שמות וזיכרונות של קהילה. יש לשמרו, לא למכור אותו.', 'The fictional treasure: a community’s stories, names, and memories. To be preserved, not sold.') },
 };
+/** Shop keepers of the walk-in interiors (ids `keeper_<shop>`): a friendly line, then a second one on request.
+ *  Shops are game approximations and the people are fictional. `keys` match the id loosely so any shop id works. */
+interface KeeperTalk { keys: string[]; title: Text; lines: [Text, Text] }
+const KEEPERS: KeeperTalk[] = [
+  { keys: ['barista'], title: tx('אווה ובתיה · בריסטה', 'Eva & Batya · Barista'), lines: [tx('״אספרסו? הפוך? תשבו, הסרט רק מתחיל בעוד חצי שעה.״', '“Espresso? A flat white? Sit down, the film only starts in half an hour.”'), tx('״הקרואסון הזה יצא מהתנור לפני עשר דקות. אל תגידו לאף אחד.״', '“That croissant came out of the oven ten minutes ago. Don’t tell anyone.”')] },
+  { keys: ['cinema', 'zohar'], title: tx('קופה · קולנוע זוהר', 'Ticket desk · Zohar Cinema'), lines: [tx('״כרטיס אחד? יש מקומות טובים באמצע. פופקורן נמכר ליד, אצל הדוכן.״', '“One ticket? There are good seats in the middle. Popcorn is just over there.”'), tx('״אל תדאגו, אין פרסומות. רק חמישה טריילרים.״', '“Don’t worry, no adverts. Just five trailers.”')] },
+  { keys: ['restaurant', 'butcher'], title: tx('קצביית טבעון', 'Butcher Tivon'), lines: [tx('״האנטריקוט היום יצא מדהים. בינוני? אני כבר יודע — אתם נראים כמו בינוני.״', '“The entrecôte is wonderful today. Medium? I can tell — you look like a medium.”'), tx('״הגריל דולק מהבוקר, השכנים כבר לא מתלוננים. הם אוכלים כאן.״', '“The grill has been on since morning, and the neighbours stopped complaining. They eat here now.”')] },
+  { keys: ['print'], title: tx('דפוס והעתקות', 'Print & Copy'), lines: [tx('״צילום, הדפסה, כריכה? מה שצריך — רק תגידו כמה עותקים. ובלי פונט קומיק סאנס, בבקשה.״', '“Copies, prints, binding? Just say how many. And no Comic Sans, please.”'), tx('״הפלוטר הגדול בא עם מחיר — אבל הפוסטר יוצא כמו בסרטים.״', '“The big plotter isn’t cheap, but the poster comes out like in the movies.”')] },
+  { keys: ['camera', 'itzik'], title: tx('צילום איציק', 'Itzik’s Camera'), lines: [tx('״פילם? מצלמה דיגיטלית? אני עוד מפתח תמונות על נייר, כמו פעם.״', '“Film? Digital? I still print photos on paper, the old way.”'), tx('״העדשה הזאת? יש לה יותר היסטוריה ממני. וגם איכות.״', '“That lens? It has more history than I do. And better quality.”')] },
+  { keys: ['pilates'], title: tx('סטודיו פילאטיס', 'Pilates Studio'), lines: [tx('״בואו בנעלי גרביים. נשימה עמוקה — וכל השרירים שלא ידעתם שיש לכם יתעוררו.״', '“Come in grip socks. Deep breath — and every muscle you didn’t know you had will wake up.”'), tx('״הרפורמר נראה כמו מכשיר עינויים. הוא לא. טוב, קצת.״', '“The reformer looks like a torture device. It isn’t. Well, a little.”')] },
+  { keys: ['paint', 'tambor'], title: tx('חלק טמבור', 'Chelek Tambour'), lines: [tx('״צבע לסלון? תביאו דוגמה — נערבב לכם בדיוק את הגוון. לא נגיד ׳כמעט אותו דבר׳.״', '“Paint for the lounge? Bring a sample — we’ll mix the exact shade. We never say ‘almost the same’.”'), tx('״ברגים, ידיות, שפכטל, צבע — מי שלא מוצא אצלנו, כנראה לא צריך.״', '“Screws, handles, putty, paint — if you can’t find it here, you probably don’t need it.”')] },
+  { keys: ['chocolate', 'mishi'], title: tx('מישי · בוטיק שוקולד', 'Mishi · Chocolate Boutique'), lines: [tx('״טעימה? פרלין מרציפן או חמוץ־מתוק עם פסיפלורה? בלי אשמה, זה קקאו.״', '“A taste? Marzipan praline or sweet-and-sour passion fruit? No guilt, it’s cocoa.”'), tx('״מארז מתנה? תגידו לי למי, ואני אבחר לפי האופי.״', '“A gift box? Tell me who it’s for, and I’ll choose by character.”')] },
+  { keys: ['pharmacy'], title: tx('בית מרקחת', 'Pharmacy'), lines: [tx('״יש מרשם? תנו לי דקה. ועדיף לשתות מים, מה שזה לא יהיה.״', '“Got a prescription? Give me a minute. And drink some water, whatever it is.”'), tx('״לחץ הדם בפינה בחינם. תשבו, תרגעו — זה יעזור לתוצאה.״', '“The blood-pressure seat in the corner is free. Sit, relax — it helps the result.”')] },
+  { keys: ['flower'], title: tx('חנות הפרחים', 'The Flower Shop'), lines: [tx('״זר לשבת? לאמא? לסליחה? תגידו לי את האירוע — אני אדע איזה פרח.״', '“A bouquet for Shabbat? For Mum? For an apology? Tell me the occasion and I’ll pick the flower.”'), tx('״הרקפות בעונה. אבל אל תקטפו בחוץ — זה אסור, והן יותר יפות בהר.״', '“Cyclamens are in season. But don’t pick them outside — it’s forbidden, and they’re prettier on the hill.”')] },
+  { keys: ['alhakav', 'hakav', 'ravkav'], title: tx('על-הקו · מרכז שירות', 'Al HaKav · Service Centre'), lines: [tx('״רב־קו? טעינה, כרטיס אישי או עדכון פרופיל? קחו מספר, ואני איתכם.״', '“Rav-Kav? Top-up, a personal card or a profile update? Take a number and I’m with you.”'), tx('״כן, יש הנחה לסטודנטים ולאזרחים ותיקים — רק תביאו תעודה. והקו לחיפה כבר מגיע.״', '“Yes, there’s a discount for students and seniors — just bring ID. And the Haifa bus is almost here.”')] },
+  { keys: ['falafel'], title: tx('פלאפל הכיכר', 'Falafel HaKikar'), lines: [tx('״בפיתה או במנה? הכל חם, הסלטים חופשי. אל תחסכו בחריף — אני לא אספר לאמא שלכם.״', '“In a pita or a plate? Everything’s hot, salads are unlimited. Don’t skimp on the hot sauce — I won’t tell your mum.”'), tx('״הכדורים נוצרים מאפס כל שעה. פעם אחת ניסו לקנות ממני את המתכון. ניסו.״', '“The balls are made fresh every hour. Someone once tried to buy the recipe. Tried.”')] },
+  { keys: ['pizza'], title: tx('פיצה אל פורנו', 'Pizza al Forno'), lines: [tx('״מרגריטה? יוצאת מהתנור בתשעים שניות. לא מוסיפים אננס, ותודה על ההבנה.״', '“A Margherita? Out of the oven in ninety seconds. No pineapple, and thanks for understanding.”'), tx('״האש הזאת בוערת מעצי זית מהעמק. הריח של העמק, בפרוסה.״', '“That fire burns valley olive wood. The scent of the valley, in a slice.”')] },
+  { keys: ['barber'], title: tx('מספרת הגבעה', 'HaGiva Barber'), lines: [tx('״תספורת? זקן? שבו, תשתקו, ותספרו לי הכל. זה העסק שלנו.״', '“A haircut? A beard? Sit, relax and tell me everything. That’s our business.”'), tx('״מה שקורה בכיסא נשאר בכיסא. חוץ מהשיער, הוא על הרצפה.״', '“What happens in the chair stays in the chair. Except the hair — that’s on the floor.”')] },
+  { keys: ['clocks', 'aurum'], title: tx('אורום · שעונים', 'Aurum · Clocks'), lines: [tx('״כל השעונים כאן מראים שעה אחרת, ורק אחד נכון. תנחשו איזה.״', '“Every clock here shows a different time, and only one is right. Guess which.”'), tx('״שעון ישן אפשר להחיות. צריך סבלנות, שמן קטן ועין טובה.״', '“An old clock can be revived. It takes patience, a drop of oil and a good eye.”')] },
+  { keys: ['chabad'], title: tx('בית חב״ד', 'Beit Chabad'), lines: [tx('״שלום וברכה! שבת שלום בקרוב — יש מקום לכולם סביב השולחן. תשתו משהו?״', '“Shalom and welcome! Shabbat is coming — there’s room for everyone at the table. Something to drink?”'), tx('״ספרים, שיעורים, סעודות, וכוס יין. אין צורך להזמין, רק להגיע.״', '“Books, classes, meals and a glass of wine. No need to book — just come.”')] },
+  { keys: ['drugstore', 'junction'], title: tx('דראגסטור הצומת', 'Drugstore HaTzomet'), lines: [tx('״קולה קרה? חטיף? הלוטו נסגר בשמונה — אולי הפעם.״', '“A cold cola? A snack? The lottery closes at eight — maybe this time.”'), tx('״כספומט בפינה, והוא אוהב שטרות חדשים. אל תשאלו למה.״', '“The ATM’s in the corner, and it likes new notes. Don’t ask why.”')] },
+];
+const keeperFor = (id: string) => { const k = id.replace(/^keeper_/, '').toLowerCase(); return KEEPERS.find(t => t.keys.some(key => k.includes(key))); };
+const KEEPER_FALLBACK: KeeperTalk = { keys: [], title: tx('בעל/ת החנות', 'The shopkeeper'), lines: [tx('״ברוכים הבאים! תסתכלו בנחת, ואם צריך משהו — אני כאן.״', '“Welcome! Take your time, and if you need anything — I’m right here.”'), tx('״בטבעון כולם מכירים את כולם. אתם כבר כמעט תושבים.״', '“In Tivon everyone knows everyone. You’re almost a local already.”')] };
 const CHATTER: Text[] = [
   tx('שוב חזירי בר הפכו לי את הגינה. שלוש פעמים השבוע. מישהו מהמועצה קורא את הקבוצה בכלל?', 'Wild boars dug up my garden again. Third time this week. Does anyone at the council even read the group?'),
   tx('מי שמחנה כל בוקר על המדרכה ליד הכיכר — אני יודעת מי אתה. כולם יודעים.', 'Whoever parks on the pavement by the square every morning — I know who you are. Everyone knows.'),
@@ -366,6 +390,11 @@ export class GameModel {
         if (this.flag('treasureFound')) d.options.push(o('לשמור את הזיכרון', 'Carry the memory forward', 'finish'));
         break;
       default: {
+        if (id.startsWith('keeper_')) {
+          const t = keeperFor(id) ?? KEEPER_FALLBACK; d.title = t.title; d.text = t.lines[0];
+          d.options.push(o('ומה עוד?', 'Anything else?', 'keeperMore'), o('תודה, להתראות', 'Thanks, see you', 'keeperBye'));
+          break;
+        }
         if (id.startsWith('npc_')) {
           const n = this.chats.get(id) ?? 0, idx = (Number(id.slice(4)) * 7 + n) % CHATTER.length;
           d.title = tx('תושב/ת טבעון', 'A Tivon local'); d.text = CHATTER[idx];
@@ -435,6 +464,10 @@ export class GameModel {
         if (!this.flag('manduClue')) { this.mark('manduClue'); this.add('cave_note'); }
         return this.result('״שמעתי פרסות מתחת לבית שערים. לא צעד, לא מים — סוס.״ ביומן נוסף רמז. קנו פנס וסוללות בבית התוכנה והמחשב, הבונים 2, לפני ההליכה.', '“I heard hoofbeats beneath Beit She’arim. Not footsteps, not water—a horse.” A clue was added to your journal. Buy a flashlight and batteries from Beit HaTochna VeHaMachshev, HaBonim 2, before the walk.');
       case 'dimaChat': return this.result('״מה חדש? המעבדה. מתקנים מחשבים, טלפונים, מה שנשבר. ואם אתם הולכים לבית שערים בלילה — תיקחו סוללה רזרבית. תאמינו לי.״', '“What is new? The lab. We fix computers, phones, whatever breaks. And if you are going to Beit She’arim at night — take a spare battery. Trust me.”');
+      case 'keeperMore': case 'keeperBye': {
+        if (action === 'keeperBye') return this.result('״להתראות! תבואו שוב.״', '“See you! Come again.”');
+        const n = (this.chats.get(this.context) ?? 0) + 1; this.chats.set(this.context, n); return this.remember((keeperFor(this.context) ?? KEEPER_FALLBACK).lines[n % 2]);
+      }
       case 'chatMore': case 'agree': {
         const n = (this.chats.get(this.context) ?? 0) + 1; this.chats.set(this.context, n);
         if (action === 'agree') return this.result('״נכון?! סוף סוף מישהו מבין.״', '“Right?! Finally someone gets it.”');
