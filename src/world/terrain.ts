@@ -2,39 +2,47 @@ import * as THREE from 'three';
 import { AREAS, WORLD, elevation, pointInPolygon, type P2 } from './geo';
 import { worldMaterial } from './materials';
 import { STATIC_PADS } from './layout';
+import { distToPoly, roadDelta } from './roadGrade';
 import { CAVE_PLAN, CAVE_FACADE as FACE, CAVE_COURT as COURT } from './Caves';
 
-/** Real relief from the DEM (AWS Terrain Tiles, ~30 m source resampled to ~6 m), with game
+/** Real relief from the DEM (Copernicus GLO-30, ~30 m source resampled to ~6.7 m), smoothed along the roads (roadGrade.ts), with game
  *  y = 0 at the Beit She'arim catacomb courtyard. Flat pads are authored where the town is
  *  terraced (plazas, building platforms); the fictional cave plan stays under a covering hill. */
 const sstep = (e0: number, e1: number, x: number) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
 export const BASE = elevation(126, 84);
 
-export interface Pad { poly: P2[]; y: number; blend: number; box?: [number, number, number, number] }
-/** Terraces registered by districts before the terrain mesh is built (plazas, stairs landings). */
+export interface Pad { poly: P2[]; y: number; blend: number; box?: [number, number, number, number]; /** Per-edge blend (edge i runs poly[i-1] → poly[i]); 0 leaves a sharp edge for a retaining wall. */ edgeBlend?: number[]; /** House terraces: many, so they are left out of the mesh's step-hiding pass. */ terrace?: boolean }
+/** Terraces registered by districts before the terrain mesh is built (plazas, stairs landings, house terraces). */
 export const PADS: Pad[] = [...STATIC_PADS];
-export function addPad(poly: P2[], y: number, blend = 3) { PADS.push({ poly, y, blend }); padsBox = null; }
-function distToPoly(x: number, z: number, p: P2[]) {
-  let d = Infinity;
-  for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
-    const [ax, az] = p[j], [bx, bz] = p[i], vx = bx - ax, vz = bz - az, l2 = vx * vx + vz * vz || 1;
-    const t = Math.max(0, Math.min(1, ((x - ax) * vx + (z - az) * vz) / l2)); d = Math.min(d, Math.hypot(x - ax - vx * t, z - az - vz * t));
-  }
-  return d;
-}
+export function addPad(poly: P2[], y: number, blend = 3, extra?: Partial<Pad>) { PADS.push({ poly, y, blend, ...extra }); padIndex = null; }
+/** Hooks run once before the terrain mesh is built, so late pads (house terraces) exist in the ground it samples. */
+export const groundHooks: Array<() => void> = [];
 function padBox(pad: Pad) {
-  if (!pad.box) { const xs = pad.poly.map(q => q[0]), zs = pad.poly.map(q => q[1]); pad.box = [Math.min(...xs) - pad.blend, Math.max(...xs) + pad.blend, Math.min(...zs) - pad.blend, Math.max(...zs) + pad.blend]; }
+  if (!pad.box) { const xs = pad.poly.map(q => q[0]), zs = pad.poly.map(q => q[1]), b = pad.edgeBlend ? Math.max(...pad.edgeBlend) : pad.blend; pad.box = [Math.min(...xs) - b, Math.max(...xs) + b, Math.min(...zs) - b, Math.max(...zs) + b]; }
   return pad.box;
 }
-let padsBox: [number, number, number, number] | null = null;
+// Pads are bucketed on a 16 m grid (in registration order, which decides overlaps) so a lookup only tests the few nearby.
+const PCELL = 16, pkey = (gx: number, gz: number) => (gx + 500) * 1000 + gz + 500;
+let padIndex: Map<number, Pad[]> | null = null;
+function indexPads() {
+  padIndex = new Map();
+  for (const pad of PADS) { const b = padBox(pad); for (let gx = Math.floor(b[0] / PCELL); gx <= Math.floor(b[1] / PCELL); gx++) for (let gz = Math.floor(b[2] / PCELL); gz <= Math.floor(b[3] / PCELL); gz++) { const k = pkey(gx, gz); let a = padIndex.get(k); if (!a) { a = []; padIndex.set(k, a); } a.push(pad); } }
+}
 function padsAt(x: number, z: number, h: number) {
-  if (!padsBox) { padsBox = [Infinity, -Infinity, Infinity, -Infinity]; for (const p of PADS) { const b = padBox(p); padsBox = [Math.min(padsBox[0], b[0]), Math.max(padsBox[1], b[1]), Math.min(padsBox[2], b[2]), Math.max(padsBox[3], b[3])]; } }
-  if (x < padsBox[0] || x > padsBox[1] || z < padsBox[2] || z > padsBox[3]) return h;
-  for (const pad of PADS) {
+  if (!padIndex) indexPads();
+  const list = padIndex!.get(pkey(Math.floor(x / PCELL), Math.floor(z / PCELL))); if (!list) return h;
+  for (const pad of list) {
     const b = padBox(pad); if (x < b[0] || x > b[1] || z < b[2] || z > b[3]) continue;
-    const inside = pointInPolygon(x, z, pad.poly);
-    if (inside) return pad.y;
-    if (pad.blend > 0) { const d = distToPoly(x, z, pad.poly); if (d < pad.blend) h += (pad.y - h) * (1 - sstep(0, pad.blend, d)); }
+    if (pointInPolygon(x, z, pad.poly)) return pad.y;
+    if (pad.edgeBlend) {
+      const p = pad.poly; let k = 0;
+      for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+        const bl = pad.edgeBlend[i]; if (!(bl > 0)) continue;
+        const [ax, az] = p[j], [bx, bz] = p[i], vx = bx - ax, vz = bz - az, l2 = vx * vx + vz * vz || 1, t = Math.max(0, Math.min(1, ((x - ax) * vx + (z - az) * vz) / l2)), d = Math.hypot(x - ax - vx * t, z - az - vz * t);
+        if (d < bl) k = Math.max(k, 1 - sstep(0, bl, d));
+      }
+      if (k > 0) h += (pad.y - h) * k;
+    } else if (pad.blend > 0) { const d = distToPoly(x, z, pad.poly); if (d < pad.blend) h += (pad.y - h) * (1 - sstep(0, pad.blend, d)); }
   }
   return h;
 }
@@ -60,16 +68,17 @@ function caveGround(x: number, z: number, h: number) {
 }
 
 export function surfaceHeight(x: number, z: number): number {
-  let h = elevation(x, z) - BASE;
+  let h = elevation(x, z) - BASE + roadDelta(x, z);
   if (x > 80 && x < 184 && z > 64 && z < 280) h = caveGround(x, z, h);
   return PADS.length ? padsAt(x, z, h) : h;
 }
 
 const AREA_COLOR: Record<string, string> = { forest: '#4f6339', park: '#7c9150', pitch: '#6f9a48', playground: '#c4ad7c', school: '#b8a879', parking: '#7d7c76', cemetery: '#7f8a62', farm: '#a99d62', heritage: '#b3a173', pool: '#8fb0a6', pedestrian: '#cfc6b4' };
 export function buildTerrain(scene: THREE.Scene) {
+  for (const hook of groundHooks) hook();
   const pad = 320, minX = WORLD.minX - pad, maxX = WORLD.maxX + pad, minZ = WORLD.minZ - pad, maxZ = WORLD.maxZ + pad;
   const step = 8, TILE = 320;
-  const nearPad = PADS.map(pad => { const xs = pad.poly.map(q => q[0]), zs = pad.poly.map(q => q[1]); return [Math.min(...xs) - 8, Math.max(...xs) + 8, Math.min(...zs) - 8, Math.max(...zs) + 8]; });
+  const nearPad = PADS.filter(p => !p.terrace).map(pad => { const xs = pad.poly.map(q => q[0]), zs = pad.poly.map(q => q[1]); return [Math.min(...xs) - 8, Math.max(...xs) + 8, Math.min(...zs) - 8, Math.max(...zs) + 8]; });
   const dry = new THREE.Color('#aba46e'), green = new THREE.Color('#6d8247'), wood = new THREE.Color('#566b3e');
   const boxed = AREAS.filter(a => AREA_COLOR[a.kind] && a.kind !== 'pedestrian').map(a => {
     const xs = a.points.map(q => q[0]), zs = a.points.map(q => q[1]);
