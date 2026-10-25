@@ -171,6 +171,7 @@ export function streetLamp(kit: Kit, x: number, z: number, faceRot: number, lit:
   B.place(kitBox, MAT.metal, ax, y + 5.85, az, .32, .12, .55, faceRot, '#2d3330');
   const bulb = new THREE.Mesh(kitBox, NIGHT.bulb); bulb.position.set(ax, y + 5.78, az); bulb.rotation.y = faceRot; bulb.scale.set(.26, .03, .45); kit.root.add(bulb);
   if (lit) kit.light(ax, y + 5.6, az, '#ffd49b', 18, 20);
+  kit.occ.markDisc(x, z, 2.5); // keeps street trees (and their crowns) off the lamp
 }
 export function streetSign(kit: Kit, x: number, z: number, rot: number, he: string, en: string) {
   const y = surfaceHeight(x, z);
