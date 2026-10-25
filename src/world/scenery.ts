@@ -133,6 +133,7 @@ export function buildFootprints(kit: Kit, skip: Set<string>) {
     roads: ROADS.filter(r => VEHICLE.has(r.kind) || r.kind === 'service'), paths: ROADS.filter(r => !VEHICLE.has(r.kind) && r.kind !== 'service'),
     pub: civic.map(c => c.a.points), keep: STATIC_PADS.map(p => p.poly), keepDiscs,
     // Occupied cells off the roads' own bands are authored ground; inside the districts, occupied near-road cells count as street.
+    blockFree: (x, z) => kit.occ.free(x, x, z, z),
     keepTest: (x, z, near) => kit.occ.free(x, x, z, z) ? null : districts.some(d => (x - d.x) ** 2 + (z - d.z) ** 2 < d.r2) ? (near ? 'road' : 'keep') : near ? null : 'keep',
   });
   PLOT_STATS.houses = homes.length; PLOT_STATS.layoutMs = Math.round(plots.ms);

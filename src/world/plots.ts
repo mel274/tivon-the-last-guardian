@@ -18,19 +18,22 @@ const TS = 64, NONE = -1, OTHER = -2, MAX_DIST = 18;
 const DX = [1, -1, 0, 0], DZ = [0, 0, 1, -1], DX8 = [1, -1, 0, 0, 1, 1, -1, -1], DZ8 = [0, 0, 1, -1, 1, -1, 1, -1], OFF8 = DX8.map((dx, s) => dx + (DZ8[s] << 6));
 export const FLAGS = { ROAD, PUB, BLD, KEEP, NEAR, RESV } as const;
 
-type Tile = { own: Int16Array; dist: Uint16Array; flag: Uint8Array };
+type Tile = { own: Int16Array; dist: Uint16Array; flag: Uint8Array; blk: Uint8Array; tx: number; tz: number; slot: number; nb: Array<Tile | undefined> };
 const tkey = (tx: number, tz: number) => (tx + 512) * 1024 + tz + 512;
 export class PlotGrid {
-  readonly tiles = new Map<number, Tile>();
+  readonly tiles = new Map<number, Tile>(); readonly all: Tile[] = [];
   private lk = NaN; private lt: Tile | undefined;
   ensure(x0: number, x1: number, z0: number, z1: number) {
     for (let tx = Math.floor(x0 / TS); tx <= Math.floor(x1 / TS); tx++) for (let tz = Math.floor(z0 / TS); tz <= Math.floor(z1 / TS); tz++) {
       const k = tkey(tx, tz); if (this.tiles.has(k)) continue;
-      this.tiles.set(k, { own: new Int16Array(TS * TS).fill(NONE), dist: new Uint16Array(TS * TS).fill(65535), flag: new Uint8Array(TS * TS) });
+      const t: Tile = { own: new Int16Array(TS * TS).fill(NONE), dist: new Uint16Array(TS * TS).fill(65535), flag: new Uint8Array(TS * TS), blk: new Uint8Array(TS * TS / 4), tx, tz, slot: this.all.length, nb: [] };
+      this.tiles.set(k, t); this.all.push(t);
     }
     this.lk = NaN;
   }
-  tile(ix: number, iz: number) { const k = tkey(Math.floor(ix / TS), Math.floor(iz / TS)); if (k !== this.lk) { this.lk = k; this.lt = this.tiles.get(k); } return this.lt; }
+  /** Wire every tile to its eight neighbours (index (dz + 1) * 3 + dx + 1), once all are allocated. */
+  link() { for (const t of this.all) for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) t.nb[(dz + 1) * 3 + dx + 1] = this.tiles.get(tkey(t.tx + dx, t.tz + dz)); }
+  tile(ix: number, iz: number) { const k = tkey(ix >> 6, iz >> 6); if (k !== this.lk) { this.lk = k; this.lt = this.tiles.get(k); } return this.lt; }
   own(ix: number, iz: number) { const t = this.tile(ix, iz); return t ? t.own[(ix & 63) + ((iz & 63) << 6)] : NONE; }
   flag(ix: number, iz: number) { const t = this.tile(ix, iz); return t ? t.flag[(ix & 63) + ((iz & 63) << 6)] : 0; }
   /** Owner (house index, −1 none, −2 another building's land) of the cell under a point. */
@@ -44,8 +47,10 @@ export class PlotGrid {
       for (let iz = az; iz <= bz; iz++) for (let ix = ax; ix <= bx; ix++) fn(t, (ix & 63) + ((iz & 63) << 6), ix, iz);
     }
   }
-  forAll(fn: (t: Tile, i: number, ix: number, iz: number) => void) {
-    this.tiles.forEach((t, k) => { const tx = Math.floor(k / 1024) - 512, tz = k % 1024 - 512; for (let i = 0; i < TS * TS; i++) fn(t, i, tx * TS + (i & 63), tz * TS + (i >> 6)); });
+  /** OR `m` into the flags of cells ix0…ix1 of row iz (a tile's row at a time). */
+  fillRow(iz: number, ix0: number, ix1: number, m: number) {
+    const tz = iz >> 6, o = (iz & 63) << 6;
+    for (let ix = ix0; ix <= ix1;) { const lx = ix & 63, n = Math.min(ix1 - ix, 63 - lx), t = this.tiles.get(tkey(ix >> 6, tz)); if (t) for (let k = 0, j = o + lx; k <= n; k++) t.flag[j + k] |= m; ix += n + 1; }
   }
 }
 
@@ -64,6 +69,8 @@ export interface PlotSpec {
   keep?: P2[][]; keepDiscs?: Array<[number, number, number]>;
   /** Extra authored ground per cell (e.g. a district's occupancy); `near` is true within a few metres of a road. */
   keepTest?: (x: number, z: number, near: boolean) => 'keep' | 'road' | null;
+  /** Fast path for keepTest: true when the 2 m block under the point is free of authored ground (keepTest is then skipped). */
+  blockFree?: (x: number, z: number) => boolean;
   maxDist?: number; seed?: number; driveShare?: number;
 }
 export type RunKind = 'street' | 'side' | 'back';
@@ -111,18 +118,25 @@ const centroid = (p: P2[]): P2 => [p.reduce((s, q) => s + q[0], 0) / p.length, p
 /** Unit cell edges → polylines (break at junctions), then Douglas–Peucker into straight runs. */
 const vk = (x: number, z: number) => (x + 8192) * 16384 + (z + 8192);
 function chains(e: number[]): P2[][] {
-  const n = e.length / 4, at = new Map<number, number[]>(), out: P2[][] = [], used = new Uint8Array(n);
-  for (let k = 0; k < n; k++) for (const o of [0, 2]) { const v = vk(e[k * 4 + o], e[k * 4 + o + 1]); let a = at.get(v); if (!a) { a = []; at.set(v, a); } a.push(k); }
+  const n = e.length / 4, out: P2[][] = [], used = new Uint8Array(n);
+  // Vertex → incident edges: the first two in plain maps (no array per vertex), a junction's full list in `multi`.
+  const f1 = new Map<number, number>(), f2 = new Map<number, number>(), multi = new Map<number, number[]>();
+  const add = (v: number, k: number) => { if (!f1.has(v)) f1.set(v, k); else if (!f2.has(v)) f2.set(v, k); else { const m = multi.get(v); if (m) m.push(k); else multi.set(v, [f1.get(v)!, f2.get(v)!, k]); } };
+  for (let k = 0; k < n; k++) { add(vk(e[k * 4], e[k * 4 + 1]), k); add(vk(e[k * 4 + 2], e[k * 4 + 3]), k); }
   const walk = (k0: number, x: number, z: number) => {
     const pts: P2[] = [[x, z]]; let k = k0;
     for (;;) {
       used[k] = 1; const o = k * 4, fwd = e[o] === x && e[o + 1] === z; x = fwd ? e[o + 2] : e[o]; z = fwd ? e[o + 3] : e[o + 1]; pts.push([x, z]);
-      const list = at.get(vk(x, z))!; if (list.length !== 2) break;
-      const nk = list[0] === k ? list[1] : list[0]; if (used[nk]) break; k = nk;
+      const v = vk(x, z), s2 = f2.get(v); if (s2 === undefined || multi.has(v)) break;
+      const s1 = f1.get(v)!, nk = s1 === k ? s2 : s1; if (used[nk]) break; k = nk;
     }
     return pts;
   };
-  at.forEach((list, v) => { if (list.length === 2) return; const x = Math.floor(v / 16384) - 8192, z = v % 16384 - 8192; for (const k of list) if (!used[k]) out.push(walk(k, x, z)); });
+  f1.forEach((k1, v) => {
+    const s2 = f2.get(v); if (s2 !== undefined && !multi.has(v)) return; // an interior vertex of a chain
+    const x = Math.floor(v / 16384) - 8192, z = v % 16384 - 8192;
+    for (const k of multi.get(v) ?? (s2 === undefined ? [k1] : [k1, s2])) if (!used[k]) out.push(walk(k, x, z));
+  });
   for (let k = 0; k < n; k++) if (!used[k]) out.push(walk(k, e[k * 4], e[k * 4 + 1]));
   return out;
 }
@@ -156,89 +170,128 @@ export function layoutPlots(spec: PlotSpec): PlotLayout {
   const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const H = spec.houses, boxes = H.map(bounds);
   for (const [x0, x1, z0, z1] of boxes) grid.ensure(Math.floor(x0 - R - 2), Math.ceil(x1 + R + 2), Math.floor(z0 - R - 2), Math.ceil(z1 + R + 2));
+  grid.link();
   const stages: Record<string, number> = {}; let lapT = performance.now(); const lap = (n: string) => { const t = performance.now(); stages[n] = Math.round(t - lapT); lapT = t; };
-  // ——— What is not garden land ———
-  const capsule = (ax: number, az: number, bx: number, bz: number, r: number, fn: (t: Tile, i: number, d2: number) => void) => {
-    const vx = bx - ax, vz = bz - az, l2 = vx * vx + vz * vz || 1, r2 = r * r;
-    grid.each(Math.floor(Math.min(ax, bx) - r), Math.floor(Math.max(ax, bx) + r), Math.floor(Math.min(az, bz) - r), Math.floor(Math.max(az, bz) + r), (t, i, ix, iz) => {
-      const x = ix + .5, z = iz + .5, s = Math.max(0, Math.min(1, ((x - ax) * vx + (z - az) * vz) / l2)), ex = x - ax - vx * s, ez = z - az - vz * s, d2 = ex * ex + ez * ez;
-      if (d2 < r2) fn(t, i, d2);
-    });
+  // ——— What is not garden land: every mask is rasterised by rows (one interval per row) instead of testing cells one by one ———
+  /** Rows of cells whose centres lie within r of the segment a→b: a capsule is convex, so each row is one interval. */
+  const capsule = (ax: number, az: number, bx: number, bz: number, r: number, row: (iz: number, ix0: number, ix1: number) => void) => {
+    const vx = bx - ax, vz = bz - az, l = Math.hypot(vx, vz), ux = l > 1e-9 ? vx / l : 0, uz = l > 1e-9 ? vz / l : 0, r2 = r * r;
+    for (let iz = Math.ceil(Math.min(az, bz) - r - .5), e = Math.floor(Math.max(az, bz) + r - .5); iz <= e; iz++) {
+      const zc = iz + .5; let lo = Infinity, hi = -Infinity, dz = zc - az, hw: number;
+      if (dz * dz < r2) { hw = Math.sqrt(r2 - dz * dz); lo = ax - hw; hi = ax + hw; }
+      dz = zc - bz; if (dz * dz < r2) { hw = Math.sqrt(r2 - dz * dz); lo = Math.min(lo, bx - hw); hi = Math.max(hi, bx + hw); }
+      if (l > 1e-9) { // the slab between the end caps: |perpendicular| < r and 0 ≤ along ≤ l, both linear in x
+        const dzc = zc - az, k = dzc * ux, kk = dzc * uz; let s0 = -Infinity, s1 = Infinity, empty = false;
+        if (Math.abs(uz) > 1e-9) { let p0 = (k - r) / uz, p1 = (k + r) / uz; if (p0 > p1) [p0, p1] = [p1, p0]; s0 = Math.max(s0, p0); s1 = Math.min(s1, p1); } else if (Math.abs(k) >= r) empty = true;
+        if (Math.abs(ux) > 1e-9) { let q0 = -kk / ux, q1 = (l - kk) / ux; if (q0 > q1) [q0, q1] = [q1, q0]; s0 = Math.max(s0, q0); s1 = Math.min(s1, q1); } else if (kk < 0 || kk > l) empty = true;
+        if (!empty && s0 < s1) { lo = Math.min(lo, ax + s0); hi = Math.max(hi, ax + s1); }
+      }
+      if (hi > lo) row(iz, Math.ceil(lo - .5), Math.floor(hi - .5));
+    }
   };
   const roadBands = (roads: Road[], hard: (r: Road) => number, near: (r: Road) => number, f: number) => {
-    for (const road of roads) { const c = hard(road), n = Math.max(c, near(road)); for (let k = 1; k < road.points.length; k++) { const [ax, az] = road.points[k - 1], [bx, bz] = road.points[k]; capsule(ax, az, bx, bz, n, (t, i, d2) => { t.flag[i] |= d2 < c * c ? f | NEAR : NEAR; }); } }
+    for (const road of roads) { const c = hard(road), n = Math.max(c, near(road)); for (let k = 1; k < road.points.length; k++) { const [ax, az] = road.points[k - 1], [bx, bz] = road.points[k]; capsule(ax, az, bx, bz, n, (iz, a, b) => grid.fillRow(iz, a, b, NEAR)); capsule(ax, az, bx, bz, c, (iz, a, b) => grid.fillRow(iz, a, b, f | NEAR)); } }
   };
   lap('alloc');
   roadBands(spec.roads, corridor, r => r.width / 2 + (r.kind === 'service' ? .6 : 2.2) + 3.2, ROAD);
   roadBands(spec.paths ?? [], r => r.width / 2 + 1.3, r => r.width / 2 + 3.8, PUB);
   lap('roads');
-  const fill = (poly: P2[], f: number) => { const [x0, x1, z0, z1] = bounds(poly); grid.each(Math.floor(x0), Math.floor(x1), Math.floor(z0), Math.floor(z1), (t, i, ix, iz) => { if (pointInPolygon(ix + .5, iz + .5, poly)) t.flag[i] |= f; }); };
+  const xs: number[] = [];
+  const fill = (poly: P2[], f: number) => {
+    const [, , z0, z1] = bounds(poly);
+    for (let iz = Math.ceil(z0 - .5), e = Math.floor(z1 - .5); iz <= e; iz++) {
+      const zc = iz + .5; xs.length = 0;
+      for (let a = 0, b = poly.length - 1; a < poly.length; b = a++) { const az = poly[a][1], bz = poly[b][1]; if ((az <= zc) !== (bz <= zc)) xs.push(poly[a][0] + (zc - az) * (poly[b][0] - poly[a][0]) / (bz - az)); }
+      xs.sort((p, q) => p - q);
+      for (let k = 0; k + 1 < xs.length; k += 2) grid.fillRow(iz, Math.ceil(xs[k] - .5), Math.ceil(xs[k + 1] - .5) - 1, f);
+    }
+  };
   for (const p of H) fill(p, BLD);
   for (const o of spec.others ?? []) fill(o.points, BLD);
   lap('bld');
   for (const p of spec.pub ?? []) fill(p, PUB);
   for (const p of spec.keep ?? []) fill(p, KEEP);
-  for (const [x, z, r] of spec.keepDiscs ?? []) capsule(x, z, x, z, r, (t, i) => { t.flag[i] |= KEEP; });
+  for (const [x, z, r] of spec.keepDiscs ?? []) capsule(x, z, x, z, r, (iz, a, b) => grid.fillRow(iz, a, b, KEEP));
   lap("mask");
   // ——— Every footprint floods outwards over free cells (8-connected, 1 and √2 steps, in cm) up to R: each cell goes to
   //     the nearest footprint, and a plot is connected to its house by construction (roads and paths cut it off). The
-  //     authored-ground test (spec.keepTest) runs lazily, once, on cells actually reached. ———
+  //     authored-ground test (spec.keepTest) runs lazily, once, on cells actually reached. Queue entries are bare
+  //     cell ids (tile slot × 4096 + index); the owner is read back from the cell. ———
   const kt = spec.keepTest, KMAX = Math.round(R * 100), BK = 25, queue: number[][] = Array.from({ length: Math.ceil(KMAX / BK) + 2 }, () => []);
-  const open = (t: Tile, i: number, x: number, z: number) => {
-    let f = t.flag[i]; if (f & BLOCK) return false;
-    if (kt && !(f & TESTED)) { f |= TESTED; const k = kt(x, z, !!(f & NEAR)); if (k) f |= k === 'keep' ? KEEP : ROAD; t.flag[i] = f; return !k; }
-    return true;
+  const bf = spec.blockFree;
+  const open = (t: Tile, i: number) => {
+    const f = t.flag[i]; if (!kt || f & TESTED) return true;
+    if (bf) { const lx = i & 63, lz = i >> 6, b = (lx >> 1) + ((lz >> 1) << 5); let m = t.blk[b]; if (!m) t.blk[b] = m = bf(t.tx * TS + (lx & 62) + 1, t.tz * TS + (lz & 62) + 1) ? 1 : 2; if (m === 1) { t.flag[i] = f | TESTED; return true; } }
+    const k = kt(t.tx * TS + (i & 63) + .5, t.tz * TS + (i >> 6) + .5, !!(f & NEAR)); t.flag[i] = f | TESTED | (k ? k === 'keep' ? KEEP : ROAD : 0); return !k;
   };
-  const pack = (ix: number, iz: number, c: number) => ((ix + 8192) * 16384 + iz + 8192) * 4096 + c + 2;
   const sow = (poly: P2[], c: number) => {
-    const [x0, x1, z0, z1] = bounds(poly);
-    grid.each(Math.floor(x0 - 2), Math.floor(x1 + 2), Math.floor(z0 - 2), Math.floor(z1 + 2), (t, i, ix, iz) => {
-      if (t.flag[i] & BLOCK) return;
-      const d2 = polyDist2(ix + .5, iz + .5, poly); if (d2 >= 2.56) return;
-      const q = Math.round(Math.sqrt(d2) * 100);
-      if (q < t.dist[i] && open(t, i, ix + .5, iz + .5)) { t.dist[i] = q; t.own[i] = c; queue[Math.floor(q / BK)].push(pack(ix, iz, c)); }
-    });
-  };
-  H.forEach((p, i) => sow(p, i));
-  for (const o of spec.others ?? []) if (o.claim) sow(o.points, OTHER);
-  lap('seed');
-  const cells: number[][] = H.map(() => []);
-  for (let bk = 0; bk < queue.length; bk++) {
-    const qb = queue[bk];
-    for (let e = 0; e < qb.length; e++) {
-      const v = qb[e], c = v % 4096 - 2, w = Math.floor(v / 4096), ix = Math.floor(w / 16384) - 8192, iz = w % 16384 - 8192, t0 = grid.tile(ix, iz)!, lx = ix & 63, lz = iz & 63, i0 = lx + (lz << 6), d = t0.dist[i0];
-      if (t0.own[i0] !== c || Math.floor(d / BK) !== bk || t0.flag[i0] & DONE) continue; // a nearer footprint took it, or this entry is out of date or already spread
-      t0.flag[i0] |= DONE;
-      if (c >= 0) cells[c].push(ix, iz);
-      for (let s = 0; s < 8; s++) {
-        const nx = ix + DX8[s], nz = iz + DZ8[s], nd = d + (s < 4 ? 100 : 141); if (nd >= KMAX) continue;
-        const inner = lx > 0 && lx < 63 && lz > 0 && lz < 63, t = inner ? t0 : grid.tile(nx, nz); if (!t) continue; const i = inner ? i0 + OFF8[s] : (nx & 63) + ((nz & 63) << 6);
-        if (nd < t.dist[i] && open(t, i, nx + .5, nz + .5)) { t.dist[i] = nd; t.own[i] = c; queue[Math.floor(nd / BK)].push(pack(nx, nz, c)); }
-      }
+    for (let a = 0, b = poly.length - 1; a < poly.length; b = a++) {
+      const ax = poly[b][0], az = poly[b][1], bx = poly[a][0], bz = poly[a][1], vx = bx - ax, vz = bz - az, l2 = vx * vx + vz * vz || 1;
+      capsule(ax, az, bx, bz, 1.6, (iz, x0, x1) => {
+        for (let ix = x0; ix <= x1; ix++) {
+          const t = grid.tile(ix, iz); if (!t) continue; const i = (ix & 63) + ((iz & 63) << 6);
+          if (t.flag[i] & BLOCK) continue;
+          const x = ix + .5, z = iz + .5, s = Math.max(0, Math.min(1, ((x - ax) * vx + (z - az) * vz) / l2)), ex = x - ax - vx * s, ez = z - az - vz * s, q = Math.round(Math.sqrt(ex * ex + ez * ez) * 100);
+          if (q < t.dist[i] && (c >= 0 || t.dist[i] < 65535) && open(t, i)) { t.dist[i] = q; t.own[i] = c; queue[(q / BK) | 0].push(t.slot << 12 | i); }
+        }
+      });
     }
-    qb.length = 0;
+  };
+  // One flood per footprint, in spatial order, so each one works inside a few tiles that are still in cache. A footprint's
+  // wave only goes where it is strictly nearer than whatever got there first, which gives the same shared-out land as one
+  // global nearest-first flood (a cell its wave skips is held by a nearer wave that has already spread on from it).
+  const all = grid.all, settled: number[] = [], srcs: Array<{ poly: P2[]; c: number; k: number }> = H.map((poly, c) => ({ poly, c, k: 0 }));
+  for (const o of spec.others ?? []) if (o.claim) srcs.push({ poly: o.points, c: OTHER, k: 0 });
+  for (const s of srcs) { const [x0, x1, z0, z1] = bounds(s.poly); s.k = (Math.floor((z0 + z1) / 2 / TS) + 512) * 1024 + Math.floor((x0 + x1) / 2 / TS) + 512; }
+  for (const s of srcs) if (s.c < 0) s.k += 1e9; // houses first; other buildings only claim cells a garden could reach
+  srcs.sort((a, b) => a.k - b.k);
+  for (const { poly, c } of srcs) {
+    sow(poly, c);
+    for (let bk = 0; bk < queue.length; bk++) {
+      const qb = queue[bk];
+      for (let e = 0; e < qb.length; e++) {
+        const v = qb[e], tt = all[v >> 12], i0 = v & 4095, d = tt.dist[i0], f0 = tt.flag[i0];
+        if (((d / BK) | 0) !== bk || f0 & DONE) continue; // it has come nearer since, or has already spread
+        tt.flag[i0] = f0 | DONE; settled.push(v);
+        const lx = i0 & 63, lz = i0 >> 6, inner = lx > 0 && lx < 63 && lz > 0 && lz < 63;
+        for (let s = 0; s < 8; s++) {
+          const nd = d + (s < 4 ? 100 : 141); if (nd >= KMAX) continue;
+          let t = tt, i: number;
+          if (inner) i = i0 + OFF8[s];
+          else { const nx = lx + DX8[s], nz = lz + DZ8[s]; t = tt.nb[((nz < 0 ? 0 : nz > 63 ? 2 : 1) * 3) + (nx < 0 ? 0 : nx > 63 ? 2 : 1)] as Tile; if (!t) continue; i = (nx & 63) + ((nz & 63) << 6); }
+          if (!(t.flag[i] & (BLOCK | DONE)) && nd < t.dist[i] && (c >= 0 || t.dist[i] < 65535) && open(t, i)) { t.dist[i] = nd; t.own[i] = c; queue[(nd / BK) | 0].push(t.slot << 12 | i); }
+        }
+      }
+      qb.length = 0;
+    }
+    for (const v of settled) all[v >> 12].flag[v & 4095] &= ~DONE;
+    settled.length = 0;
   }
   lap("flood");
   // A plot under ~30 m² is no garden to speak of.
-  H.forEach((_, h) => { if (cells[h].length < 60) { for (let q = 0; q < cells[h].length; q += 2) grid.tile(cells[h][q], cells[h][q + 1])!.own[(cells[h][q] & 63) + ((cells[h][q + 1] & 63) << 6)] = NONE; cells[h] = []; } });
+  const count = new Int32Array(H.length);
+  for (const t of all) for (let i = 0; i < TS * TS; i++) { const h = t.own[i]; if (h >= 0) count[h]++; }
+  const tiny = H.map((_, h) => count[h] < 60); if (tiny.some(Boolean)) for (const t of all) for (let i = 0; i < TS * TS; i++) { const h = t.own[i]; if (h >= 0 && tiny[h]) t.own[i] = NONE; }
+  H.forEach((_, h) => { if (tiny[h]) count[h] = 0; });
   lap("connect");
   // ——— Boundary edges where the owner changes ———
   const edges = new Map<number, number[]>(), push = (k: number, a: number, b: number, c: number, d: number) => { let l = edges.get(k); if (!l) { l = []; edges.set(k, l); } l.push(a, b, c, d); };
   const SIDE = 1e10, STREET = 2e10, BACK = 3e10;
-  for (let h = 0; h < H.length; h++) { const list = cells[h]; for (let q = 0; q < list.length; q += 2) {
-    const ix = list[q], iz = list[q + 1], t = grid.tile(ix, iz)!, i = (ix & 63) + ((iz & 63) << 6);
+  for (const t of all) for (let i = 0; i < TS * TS; i++) {
+    const h = t.own[i]; if (h < 0) continue;
+    const lx = i & 63, lz = i >> 6, ix = t.tx * TS + lx, iz = t.tz * TS + lz, inner = lx > 0 && lx < 63 && lz > 0 && lz < 63;
     for (let s = 0; s < 4; s++) {
-      const nx = ix + DX[s], nz = iz + DZ[s], lx = ix & 63, lz = iz & 63, inner = lx > 0 && lx < 63 && lz > 0 && lz < 63, j = inner ? t.own[i + DX[s] + (DZ[s] << 6)] : grid.own(nx, nz);
+      const j = inner ? t.own[i + DX[s] + (DZ[s] << 6)] : grid.own(ix + DX[s], iz + DZ[s]);
       if (j === h) continue;
       const ex = s === 0 ? ix + 1 : ix, ez = s === 2 ? iz + 1 : iz, [fx, fz] = s < 2 ? [ex, iz + 1] : [ix + 1, ez];
       if (j >= 0) { if (h < j) push(SIDE + h * 1e5 + j, ex, ez, fx, fz); continue; }
-      const f = inner ? t.flag[i + DX[s] + (DZ[s] << 6)] : grid.flag(nx, nz);
+      const f = inner ? t.flag[i + DX[s] + (DZ[s] << 6)] : grid.flag(ix + DX[s], iz + DZ[s]);
       if (f & (BLD | KEEP)) continue;
       if (j !== OTHER && !(f & (ROAD | PUB))) continue; // where the 18 m reach simply ends the garden fades into open land: no fence
       push((f & ROAD ? STREET : BACK) + h, ex, ez, fx, fz);
     }
-  } }
-  const plots: Plot[] = H.map((_, h) => ({ house: h, cells: cells[h].length / 2, runs: [], gate: null, path: null, drive: null, spots: [] }));
+  }
+  const plots: Plot[] = H.map((_, h) => ({ house: h, cells: count[h], runs: [], gate: null, path: null, drive: null, spots: [] }));
   edges.forEach((e, k) => {
     const kind: RunKind = k >= BACK ? 'back' : k >= STREET ? 'street' : 'side', rest = k - (kind === 'back' ? BACK : kind === 'street' ? STREET : SIDE);
     const h = kind === 'side' ? Math.floor(rest / 1e5) : rest, other = kind === 'side' ? rest % 1e5 : -1;
@@ -294,19 +347,23 @@ export function layoutPlots(spec: PlotSpec): PlotLayout {
     }
   }
   lap("gate");
-  // ——— Tree spots: well inside the plot, away from the house, path and driveway ———
+  // ——— Tree spots: well inside the plot, away from the house, path and driveway (only every other cell each way is a candidate; drawn in random order) ———
+  const cand: number[][] = H.map(() => []);
+  for (const t of all) for (let lz = 0; lz < TS; lz += 2) for (let lx = 0; lx < TS; lx += 2) {
+    const i = lx + (lz << 6), h = t.own[i]; if (h < 0 || t.dist[i] < 300 || t.flag[i] & RESV) continue;
+    cand[h].push((t.tx * TS + lx + 8192) * 16384 + t.tz * TS + lz + 8192);
+  }
   for (const p of plots) {
-    const list = cells[p.house], spots: P2[] = [];
-    for (let q = 0; q < list.length; q += 2) {
-      const ix = list[q], iz = list[q + 1]; if ((ix ^ iz) & 1 || ix & 1) continue; const t = grid.tile(ix, iz)!, i = (ix & 63) + ((iz & 63) << 6);
-      if (t.dist[i] < 300 || t.flag[i] & RESV) continue;
-      if (grid.own(ix + 2, iz) !== p.house || grid.own(ix - 2, iz) !== p.house || grid.own(ix, iz + 2) !== p.house || grid.own(ix, iz - 2) !== p.house || grid.own(ix + 1, iz + 1) !== p.house || grid.own(ix - 1, iz - 1) !== p.house || grid.own(ix + 1, iz - 1) !== p.house || grid.own(ix - 1, iz + 1) !== p.house) continue;
-      spots.push([ix + .5, iz + .5]);
+    const list = cand[p.house];
+    for (let k = list.length; k > 0 && p.spots.length < 24;) {
+      const j = Math.floor(rnd() * k), v = list[j]; list[j] = list[--k];
+      const ix = Math.floor(v / 16384) - 8192, iz = v % 16384 - 8192, h = p.house;
+      if (grid.own(ix + 2, iz) !== h || grid.own(ix - 2, iz) !== h || grid.own(ix, iz + 2) !== h || grid.own(ix, iz - 2) !== h || grid.own(ix + 1, iz + 1) !== h || grid.own(ix - 1, iz - 1) !== h || grid.own(ix + 1, iz - 1) !== h || grid.own(ix - 1, iz + 1) !== h) continue;
+      if (p.spots.every(o => Math.hypot(o[0] - ix - .5, o[1] - iz - .5) > 3.5)) p.spots.push([ix + .5, iz + .5]);
     }
-    for (let k = spots.length - 1; k > 0; k--) { const j = Math.floor(rnd() * (k + 1)); [spots[k], spots[j]] = [spots[j], spots[k]]; }
-    for (const s of spots) if (p.spots.length < 24 && p.spots.every(o => Math.hypot(o[0] - s[0], o[1] - s[1]) > 3.5)) p.spots.push(s);
   }
   lap("spots");
+  Object.assign(PLOT_STAGES, stages);
   return { grid, plots, ms: performance.now() - t0, stages };
 }
 
@@ -316,6 +373,7 @@ const HEDGE = ['#3f5a35', '#465f37', '#4e6a3b', '#3b5532', '#55703f'];
 const RUBBLE = ['#e3d3b0', '#d9c7a1', '#e8dbbd', '#d2c09a'];
 export interface PlotStats { houses: number; plots: number; gates: number; drives: number; carports: number; runs: number; colliders: number; lawnTris: number; trees: number; layoutMs: number; dressMs: number }
 export const PLOT_STATS: PlotStats = { houses: 0, plots: 0, gates: 0, drives: 0, carports: 0, runs: 0, colliders: 0, lawnTris: 0, trees: 0, layoutMs: 0, dressMs: 0 };
+export const PLOT_STAGES: Record<string, number> = {};
 
 /** A ground-following box strip along a→b, offset `inset` into the plot, `thick` deep, spanning
  *  y0…y1 above the ground. Split into pieces on slopes so walls and hedges step down the hill. */
@@ -379,7 +437,7 @@ function carport(kit: Kit, x: number, z: number, nx: number, nz: number) {
 /** Build the plots' boundaries, gates, paths, driveways and lawns; returns garden tree candidates
  *  (each tree's spots in order of preference) for buildTrees. */
 export function dressPlots(kit: Kit, L: PlotLayout, styleOf: (house: number) => StreetStyle, parkCar: (x: number, z: number, rot: number) => void) {
-  const t0 = performance.now(); let seed = 6061; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  (globalThis as any).__L = L; const t0 = performance.now(); let seed = 6061; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const pick = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)];
   const trees: Array<{ at: P2[]; kind: number }> = [], S = PLOT_STATS;
   // Side fences between neighbours: one style per pair (hedge, wooden slats or steel rails).
