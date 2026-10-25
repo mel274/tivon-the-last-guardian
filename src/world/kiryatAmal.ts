@@ -1,18 +1,19 @@
 import * as THREE from 'three';
-import { landmark, footprintAt, orientedBox, BUILDINGS, type P2 } from './geo';
+import { landmark, footprintAt, orientedBox, pointInPolygon, BUILDINGS, type P2 } from './geo';
 import { surfaceHeight } from './terrain';
 import { Kit, MAT, NIGHT, Frame, PRIMS, SHIRTS, PANTS } from './kit';
 import { shopUnit, enterableShop, type ShopSpec } from './shops';
 import { reserve, facingStreet } from './benGurion';
 import { extrude, groundRange } from './scenery';
 import { paveArea } from './streets';
-import { ZEID } from './layout';
+import { ZEID, ROUTE75_RAIL } from './layout';
 
 /** The Zeid commercial centre at the Kiryat Tivon junction, built to the plan the owner approved
- *  (layout.ts; docs/zeid-plan/zeid-plan.html, revision 3.1): the two-level building on Route 75
+ *  (layout.ts; docs/zeid-plan/zeid-plan.html, revision 4.2): the two-level building on Route 75
  *  with its full-length balcony, Mandu's bar strip (Café Beinenu by day) and backyard, the stair
  *  down to the lower plaza, the ground-floor shops behind a roofed strip, the closed Rav-Kav
- *  section, the upper-plaza walkway with the drugstore and the falafel row, and Zohar cinema. */
+ *  section, the upper plaza and its lane between the drugstore and the falafel row, the Route 75
+ *  guardrail, the garden path to the Hannah Szenes garden, and Zohar cinema. */
 const sub = (P: Frame, lx: number, lz: number, rot = 0, dy = 0) => { const [x, z] = P.at(lx, lz); return new Frame(x, z, P.rot + rot, P.y + dy); };
 export const MANDU_FLOOR = ZEID.upper - ZEID.lower;
 
@@ -36,6 +37,56 @@ function luliSign(c: CanvasRenderingContext2D, W: number, H: number) {
 function scallops(c: CanvasRenderingContext2D, W: number, H: number) {
   c.fillStyle = '#3d7fc4'; c.fillRect(0, 0, W, H * .5);
   const n = 12, r = W / n / 2; for (let i = 0; i < n; i++) { c.beginPath(); c.arc(r + i * 2 * r, H * .5, r, 0, Math.PI); c.fill(); }
+}
+/** Falafel Chen's corner board as photographed: "פלאפל חן" in red on cream, "30 שנות מוניטין" in
+ *  blue, a small red box "חם טרי ובריא", then a yellow strip over a blue "פלאפל הבית" banner. */
+function chenSign(c: CanvasRenderingContext2D, W: number, H: number) {
+  const by = H * .74;
+  c.fillStyle = '#f4ead2'; c.fillRect(0, 0, W, H);
+  c.fillStyle = '#f2c81e'; c.fillRect(0, by - H * .07, W, H * .07);
+  c.fillStyle = '#1f4f9c'; c.fillRect(0, by, W, H - by);
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.direction = 'rtl';
+  c.fillStyle = '#ffffff'; c.font = `800 ${H * .17}px Arial, sans-serif`; c.fillText('פלאפל הבית', W / 2, by + (H - by) / 2, W * .9);
+  c.fillStyle = '#d0251c'; c.fillRect(W * .03, H * .1, W * .22, H * .34);
+  c.fillStyle = '#ffffff'; c.font = `800 ${H * .12}px Arial, sans-serif`; c.fillText('חם טרי ובריא', W * .14, H * .27, W * .2);
+  c.fillStyle = '#d0251c'; c.font = `900 ${H * .38}px "Arial Black", Arial, sans-serif`; c.fillText('פלאפל חן', W * .62, H * .28, W * .68);
+  c.fillStyle = '#1f4f9c'; c.font = `700 ${H * .15}px Arial, sans-serif`; c.fillText('30 שנות מוניטין', W * .62, H * .56, W * .6);
+}
+/** A red Coca-Cola-style board: white lettering over a white ribbon sweeping along the bottom. */
+const redBoard = (main: string, sub = '') => (c: CanvasRenderingContext2D, W: number, H: number) => {
+  c.fillStyle = '#d0202a'; c.fillRect(0, 0, W, H);
+  c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(0, H * .8); c.bezierCurveTo(W * .3, H * .62, W * .6, H, W, H * .72); c.lineTo(W, H * .8);
+  c.bezierCurveTo(W * .6, H * 1.06, W * .3, H * .7, 0, H * .88); c.closePath(); c.fill();
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.direction = 'rtl';
+  c.font = `italic 900 ${H * (sub ? .4 : .5)}px Georgia, "Times New Roman", serif`; c.fillText(main, W / 2, H * (sub ? .3 : .4), W * .9);
+  if (sub) { c.font = `700 ${H * .15}px Arial, sans-serif`; c.fillText(sub, W / 2, H * .6, W * .9); }
+};
+/** AURUM's wall clock in the window. */
+function clockFace(c: CanvasRenderingContext2D, W: number, H: number) {
+  const r = Math.min(W, H) / 2 * .95, cx = W / 2, cy = H / 2;
+  c.fillStyle = '#d9b45a'; c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#fbf7ec'; c.beginPath(); c.arc(cx, cy, r * .86, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = '#1b1b1b'; c.lineCap = 'round';
+  for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; c.lineWidth = r * (i % 3 ? .03 : .06); c.beginPath(); c.moveTo(cx + Math.sin(a) * r * .68, cy - Math.cos(a) * r * .68); c.lineTo(cx + Math.sin(a) * r * .8, cy - Math.cos(a) * r * .8); c.stroke(); }
+  for (const [a, l, w] of [[-.6, .45, .07], [2.1, .65, .045]] as Array<[number, number, number]>) { c.lineWidth = r * w; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.sin(a) * r * l, cy - Math.cos(a) * r * l); c.stroke(); }
+}
+/** The barber's arched door: a stone surround, a dark wooden leaf and an arched glass top. */
+function archDoor(c: CanvasRenderingContext2D, W: number, H: number) {
+  const arch = (inset: number, bottom: number) => { const r = W / 2 - inset; c.beginPath(); c.moveTo(inset, bottom); c.lineTo(inset, W / 2); c.arc(W / 2, W / 2, r, Math.PI, 0); c.lineTo(W - inset, bottom); c.closePath(); };
+  c.fillStyle = '#e4d6b8'; arch(0, H); c.fill();
+  c.fillStyle = '#4a2f1f'; arch(W * .09, H); c.fill();
+  c.fillStyle = '#9fb5b0'; arch(W * .2, H * .55); c.fill();
+  c.fillStyle = '#d9b45a'; c.fillRect(W * .7, H * .62, W * .1, H * .025);
+}
+/** Small beige terrazzo tiles (4 × 4 per repeat, 30 cm each) for the balcony floor. */
+function terrazzo(c: CanvasRenderingContext2D, W: number) {
+  const n = 4, s = W / n; let seed = 7; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    const v = Math.floor(r() * 12); c.fillStyle = `rgb(${212 + v},${198 + v},${168 + v})`; c.fillRect(i * s, j * s, s, s);
+    for (let k = 0; k < 36; k++) { c.fillStyle = ['#a8987a', '#f1e9d6', '#8c7b62', '#c9b48e'][k % 4]; c.fillRect(i * s + r() * s, j * s + r() * s, 1 + r() * 2, 1 + r() * 2); }
+  }
+  c.strokeStyle = '#b4a585'; c.lineWidth = 1.5;
+  for (let i = 0; i <= n; i++) { c.beginPath(); c.moveTo(i * s, 0); c.lineTo(i * s, W); c.moveTo(0, i * s); c.lineTo(W, i * s); c.stroke(); }
 }
 
 /** Shopfronts in order along a footprint edge from a to b, facing away from the building.
@@ -72,7 +123,8 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
     [8, { type: 'office', width: 7.6, he: 'סטודיו פילאטיס', en: 'PILATES STUDIO', sign: '#e8efe9', ink: '#3d7a63', awning: null }],
     [16.65, { type: 'discount', width: 9, he: 'חלק טמבור', en: 'PAINT & BUILDING SUPPLIES', sign: '#f2c230', ink: '#1d1d1b', awning: null }],
   ];
-  for (const [lx, spec] of upperShops) shopUnit(kit, Mu, lx, BAL + .4, spec, .35, 3.2);
+  // Each shopfront has a roller-shutter box over its glazing, as photographed.
+  for (const [lx, spec] of upperShops) { shopUnit(kit, Mu, lx, BAL + .4, spec, .35, 3.2); B.lbox(Mu, MAT.plain, lx, 3.05, BAL + .62, spec.width - .2, .26, .24, '#d6d2c8'); }
 
   // ——— Mandu: the narrow north–south bar strip, open to the backyard (north) and the balcony (south) ———
   const Bf = sub(M, -5, (BAL - HD) / 2, 0, F), half = (BAL + HD) / 2; // strip local z runs −half … half
@@ -109,11 +161,29 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
 
   // ——— Balcony: the whole south side, railing, roof on slim posts ———
   B.lbox(Mu, MAT.paving, 0, .02, (BAL + HD) / 2, HW * 2, .04, HD - BAL, '#cbbfa8', false);
+  // The floor is small beige terrazzo tiles (a repeating painted texture).
+  { const canvas = document.createElement('canvas'); canvas.width = canvas.height = 128; terrazzo(canvas.getContext('2d')!, 128);
+    const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(HW * 2 / 1.2, (HD - BAL) / 1.2); tex.anisotropy = 4;
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(HW * 2, HD - BAL), new THREE.MeshStandardMaterial({ map: tex, roughness: .5 }));
+    const [x, z] = Mu.at(0, (BAL + HD) / 2); floor.position.set(x, Mu.y + .045, z); floor.rotation.set(-Math.PI / 2, Mu.rot, 0, 'YXZ'); floor.receiveShadow = true; kit.root.add(floor); }
   B.lbox(Mu, MAT.plain, 0, 4.3, (BAL + HD) / 2 + .05, HW * 2 + .2, .14, HD - BAL + .3, '#f1eee6');
   // Wooden-slat piers carry the roof; between them a stucco parapet with a wooden cap.
-  for (let x = -HW + .35; x <= HW; x += (HW * 2 - .7) / 10) {
+  const pier = (HW * 2 - .7) / 10;
+  for (let x = -HW + .35; x <= HW; x += pier) {
     for (let k = 0; k < 22; k++) B.lbox(Mu, MAT.wood, x + (k % 2 ? .04 : -.04), .1 + k * .19, HD - .32, .62, .15, .62, k % 2 ? '#4a3426' : '#36261b');
     kit.lcollide(Mu, x, 2.1, HD - .32, .62, 4.2, .62);
+  }
+  // Cream canvas awnings, half lowered, in a few bays between the piers; wall fans on two piers.
+  for (const k of [1, 6, 8]) {
+    const x = -HW + .35 + (k + .5) * pier, [ax, az] = Mu.at(x, HD + .19);
+    B.place(PRIMS.box, MAT.matte, ax, Mu.y + 3.57, az, pier - .66, 1.3, .02, Mu.rot, '#efe4c6', true, -.22);
+    B.lbox(Mu, MAT.metal, x, 2.94, HD + .34, pier - .66, .05, .05, '#8a8478');
+  }
+  for (const k of [3, 7]) {
+    const x = -HW + .35 + k * pier, [fx, fz] = Mu.at(x, HD - .78), [mx, mz] = Mu.at(x, HD - .7);
+    B.lbox(Mu, MAT.metal, x, 3.3, HD - .66, .06, .06, .08, '#7d7d78');
+    B.place(PRIMS.sphere, MAT.plain, mx, Mu.y + 3.3, mz, .09, .09, .09, 0, '#e9e8e2');
+    B.place(PRIMS.cyl, MAT.metal, fx, Mu.y + 3.3, fz, .26, .08, .26, Mu.rot, '#e9e8e2', true, Math.PI / 2);
   }
   B.lbox(Mu, MAT.plasterRough, 0, .5, HD - .14, HW * 2, 1, .24, '#ece7dc'); B.lbox(Mu, MAT.wood, 0, 1.03, HD - .2, HW * 2, .06, .42, '#a5774b');
   kit.lcollide(Mu, 0, .55, HD - .14, HW * 2, 1.1, .28);
@@ -149,32 +219,48 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   // Fence on Mandu's side; a gated side entrance with bushes at the west end, from the upper plaza.
   const fence = (lx: number, lz: number, w: number, d: number) => { B.lbox(Y, MAT.wood, lx, .6, lz, w, 1.2, d, '#7a5a3c'); kit.lcollide(Y, lx, .6, lz, w, 1.2, Math.max(d, .1)); };
   fence(-1.25, -bd / 2 + .05, HW * 2 + 2.5, .06);
-  fence(HW - .05, 0, .06, bd);
+  // The east fence has a 1.4 m gate (its leaf swung open into the yard) onto the garden path.
+  fence(HW - .05, -1.65, .06, bd / 2 - .7); fence(HW - .05, 1.65, .06, bd / 2 - .7);
+  for (const z of [-.75, .75]) B.lbox(Y, MAT.wood, HW - .05, .7, z, .12, 1.4, .12, '#5c4029');
+  B.lbox(Y, MAT.wood, HW - .7, .6, -.8, 1.25, 1.1, .05, '#7a5a3c');
   fence(-HW - 2.45, -1.85, .06, 1.5); fence(-HW - 2.45, 1.85, .06, 1.5);
   fence(-HW - 1.25, bd / 2 - .05, 2.5, .06);
   for (const z of [-1.9, 1.9]) for (const dz of [-.5, .5]) { const [x, zz] = Y.at(-HW - 3.3, z + dz); B.place(PRIMS.ico, MAT.foliage, x, Y.y + .6, zz, .9, .75, .9, z, '#4f7a43'); }
-  // The bank of bushes up to Route 75, with a railing at the road edge.
+  // The bank of bushes up to Route 75 (the guardrail now runs along the road itself, below).
   for (let x = -HW - 1; x <= HW; x += 2.2) for (const z of [-bd / 2 - 1.2, -bd / 2 - 3]) { const [bx, bz] = Y.at(x + (z > -4 ? 0 : 1.1), z); B.place(PRIMS.ico, MAT.foliage, bx, surfaceHeight(bx, bz) + .55, bz, 1.4, .9, 1.2, x, ['#4f7a43', '#5c7f45', '#46703c'][Math.abs(Math.round(x)) % 3]); }
-  { const R = sub(M, 0, -HD - 9.4); B.lbox(R, MAT.metal, 0, .9, 0, HW * 2, .06, .06, '#8a9093'); for (let x = -HW; x <= HW; x += 2) B.lbox(R, MAT.metal, x, .45, 0, .06, .9, .06, '#8a9093'); kit.lcollide(R, 0, .5, 0, HW * 2, 1, .1); }
   const local = kit.person(Y, 9, 1.4, { shirt: '#425b50', pants: '#3b3d3a', seed: 261, angle: Math.PI });
   kit.register('local', local.focus, { he: 'שיחה מקומית', en: 'A local conversation' }, 3.4);
 
   // ——— Stair outside the balcony: down from the upper plaza (west) to the lower plaza (east) ———
-  const steps = Math.ceil(F / .175), run = (ARC0 + HW) / steps;
-  for (let i = 0; i < steps; i++) {
-    const S = sub(M, -HW + i * run + run / 2, HD + STW / 2), h = F - (i + 1) * (F / steps);
-    if (h > .01) { B.lbox(S, MAT.stone, 0, h / 2 + .01, 0, run + .02, h + .02, STW, '#ddd0b3'); kit.lcollide(S, 0, h / 2, 0, run, h, STW); kit.lground(S, 0, 0, run, STW, h); }
-    B.lbox(S, MAT.plasterRough, 0, (h + .95) / 2, STW / 2 - .1, run + .02, h + .95, .22, '#ebe5d6'); B.lbox(S, MAT.metal, 0, h + 1.02, STW / 2 - .28, run + .02, .05, .05, '#b9bcbd');
-    kit.lcollide(S, 0, h + .55, STW / 2 - .1, run, 1.1, .22);
-  }
+  // A 1.5 m landing at the top; the flight starts after it and ends at lx = ARC0.
+  const L0 = 1.5, steps = Math.ceil(F / .175), run = (ARC0 + HW - L0) / steps;
+  const flight = (lx: number, w: number, h: number) => {
+    const S = sub(M, lx, HD + STW / 2);
+    if (h > .01) { B.lbox(S, MAT.stone, 0, h / 2 + .01, 0, w + .02, h + .02, STW, '#ddd0b3'); kit.lcollide(S, 0, h / 2, 0, w, h, STW); kit.lground(S, 0, 0, w, STW, h); }
+    B.lbox(S, MAT.plasterRough, 0, (h + .95) / 2, STW / 2 - .1, w + .02, h + .95, .22, '#ebe5d6'); B.lbox(S, MAT.metal, 0, h + 1.02, STW / 2 - .28, w + .02, .05, .05, '#b9bcbd');
+    kit.lcollide(S, 0, h + .55, STW / 2 - .1, w, 1.1, .22);
+  };
+  flight(-HW + L0 / 2, L0, F);
+  for (let i = 0; i < steps; i++) flight(-HW + L0 + i * run + run / 2, run, F - (i + 1) * (F / steps));
   // Retaining wall with a parapet where the upper plaza meets the lower plaza.
   { const [[ax, az], [bx, bz]] = ZEID.retaining, L = Math.hypot(bx - ax, bz - az), r = Math.atan2(-(bz - az), bx - ax), f = new Frame((ax + bx) / 2, (az + bz) / 2, r, Lw);
     kit.solid(f, MAT.stone, 0, (F + 1) / 2, 0, L, F + 1, .45, '#d8caa8'); }
 
   // ——— From the bus stop on Route 75 down to the upper plaza ———
-  { const { x: sx0, z0, z1 } = ZEID.busStair, top = ZEID.road + .14, n = Math.ceil((top - U) / .17), r = (z1 - z0) / n;
-    for (let i = 0; i < n; i++) { const z = z0 + (i + .5) * r, h = top - (i + 1) * (top - U) / n, f = new Frame(sx0, z, 0, U); B.lbox(f, MAT.stone, 0, (h - U) / 2 - .2, 0, 3, h - U + .4, r + .02, '#ddd0b3'); kit.ground(sx0 - 1.5, sx0 + 1.5, z - r / 2, z + r / 2, h); }
-    for (const sx of [-1.6, 1.6]) B.box(MAT.stone, sx0 + sx, U + .4, (z0 + z1) / 2, .2, 1.2, z1 - z0 + .4, 0, '#d8caa8');
+  // 14 treads cut into the kerb (ZEID.busStairWell), cheek walls flush with the kerb beside the
+  // upper flight, and green steel handrails on both sides.
+  { const { x: sx0, z0, z1 } = ZEID.busStair, top = ZEID.road + .14, n = 14, r = (z1 - z0) / n, rise = (top - U) / (n + 1), kerbEdge = ZEID.kerb[2][1];
+    for (let i = 0; i < n; i++) {
+      const z = z0 + (i + .5) * r, h = top - (i + 1) * rise, f = new Frame(sx0, z, 0, U), wall = z < kerbEdge ? top : h + .2;
+      B.lbox(f, MAT.stone, 0, (h - U) / 2 - .1, 0, 3, h - U + .2, r + .02, '#ddd0b3'); kit.ground(sx0 - 1.5, sx0 + 1.5, z - r / 2, z + r / 2, h);
+      for (const sx of [-1.6, 1.6]) B.lbox(f, MAT.stone, sx, (wall - U) / 2 - .1, 0, .2, wall - U + .2, r + .02, '#d8caa8');
+    }
+    const len = Math.hypot(z1 - z0, top - U), tilt = Math.atan2(top - U, z1 - z0);
+    for (const sx of [-1.6, 1.6]) {
+      for (const y of [.95, .5]) B.place(PRIMS.box, MAT.metal, sx0 + sx, (top + U) / 2 + y, (z0 + z1) / 2, .05, .05, len + .05, 0, '#2f6b3a', true, tilt);
+      for (let i = 0; i <= n; i += 2) B.box(MAT.metal, sx0 + sx, top - i * rise + .48, z0 + i * r, .05, .96, .05, 0, '#2f6b3a');
+      kit.collide(sx0 + sx - .12, sx0 + sx + .12, z0, z1, U - .2, top + 1);
+    }
     // Bushes along the plaza's top edge on either side of the stair.
     for (let x = -199; x <= -168; x += 1.8) if (Math.abs(x - sx0) > 2.4) { const z = -849.3 + (x + 199) * .035; B.place(PRIMS.ico, MAT.foliage, x, U + .5, z, 1.1, .8, .9, x, '#4f7a43'); } }
   { const f = new Frame(-171.4, -846.3, 0, U);
@@ -188,9 +274,18 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
     kit.sign(f, 2.4, 2.6, .5, .8, 1, 'צומת\nקריית טבעון', { bg: '#f2f2ee', fg: '#1c3f6b', weight: 700 });
     kit.person(f, -.8, -.4, { shirt: '#3d4f6b', pants: '#2f3b4f', seed: 560, seated: true, angle: 0 }); }
 
-  // ——— Upper plaza: walkway with benches and picnic tables; the drugstore and the falafel row ———
-  paveArea(kit, ZEID.upperPlaza, '#b8765f', .06, U); paveArea(kit, ZEID.lowerPlaza, '#a96d5c', .055, Lw);
-  for (const [cx, cz, r] of [[-150, -811, .62], [-150, -811, -.62], [-139, -812.5, .62], [-139, -812.5, -.62]] as Array<[number, number, number]>) B.lbox(new Frame(cx, cz, r, Lw), MAT.paving, 0, .07, 0, 15, .02, .35, '#ddd2bc', false);
+  // ——— Upper plaza: grey paving, red-brown along the falafel row and the drugstore porch ———
+  paveArea(kit, ZEID.upperPlaza, '#aaa69d', .06, U); paveArea(kit, ZEID.lowerPlaza, '#a96d5c', .055, Lw);
+  // The lower plaza's light stripes form a diamond grid (6 m), clipped to the plaza.
+  { const lp = ZEID.lowerPlaza, cx = lp.reduce((s, p) => s + p[0], 0) / lp.length, cz = lp.reduce((s, p) => s + p[1], 0) / lp.length;
+    for (const a of [M.rot + Math.PI / 4, M.rot - Math.PI / 4]) for (let k = -9; k <= 9; k++) {
+      const f = new Frame(cx + Math.sin(a) * k * 6, cz + Math.cos(a) * k * 6, a, Lw); let e0: number | null = null;
+      for (let e = -50; e <= 50; e += .5) {
+        const inside = e < 50 && pointInPolygon(...f.at(e, 0), lp);
+        if (inside && e0 === null) e0 = e;
+        else if (!inside && e0 !== null) { if (e - .5 - e0 > .4) B.lbox(f, MAT.paving, (e0 + e - .5) / 2, .07, 0, e - .5 - e0, .02, .3, '#ddd2bc', false); e0 = null; }
+      }
+    } }
   const tree = (x: number, z: number, y: number) => { const f = new Frame(x, z, 0, y); B.lbox(f, MAT.stone, 0, .25, 0, 1.6, .5, 1.6, '#ddd0b2'); B.cyl(MAT.plain, x, y + 2.2, z, .14, 3.6, '#6f6250'); for (let j = 0; j < 6; j++) { const a = j * 1.05 + x; B.place(PRIMS.ico, MAT.foliage, x + Math.cos(a) * 1.4, y + 4.3 + (j % 3) * .4, z + Math.sin(a) * 1.4, 1.8, 1.2, 1.8, a, j % 2 ? '#4e6e3a' : '#5c7c42'); } kit.collide(x - .8, x + .8, z - .8, z + .8, y, y + .5); };
   for (const [x, z] of [[-188, -826], [-181, -840.5], [-193, -816.5]] as P2[]) tree(x, z, U);
   const picnic = (x: number, z: number, r: number) => { const f = new Frame(x, z, r, U); B.lbox(f, MAT.wood, 0, .75, 0, 1.9, .06, .8, '#8a6a48'); for (const s of [-.75, .75]) B.lbox(f, MAT.wood, 0, .45, s, 1.9, .05, .3, '#8a6a48'); B.lbox(f, MAT.wood, 0, .36, 0, .1, .72, .1, '#6a4e34'); kit.lcollide(f, 0, .4, 0, 1.9, .8, 1.9); return f; };
@@ -200,34 +295,87 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
     B.lbox(new Frame(ux, uz, 0, U), MAT.stone, 0, .06, 0, .6, .12, .6, '#c9c6bd'); B.cyl(MAT.metal, ux, U + 1.3, uz, .03, 2.6, '#d9d9d6'); B.place(PRIMS.cone, MAT.plain, ux, U + 2.2, uz, .28, 1.5, .28, 0, '#e6dccb');
   }
   const seated = picnic(-195, -831.5, .35); kit.person(seated, 0, -.75, { shirt: '#c4b59a', pants: '#4a4038', seed: 570, seated: true, gray: true });
-  for (const [x, z, r] of [[-226, -838.6, Math.PI - .34], [-211, -834.4, -.34], [-170.5, -827, -Math.PI / 2]] as Array<[number, number, number]>) bench(x, z, r);
+
+  // ——— The falafel row: one storey under a flat canopy, facing north onto the lane ———
+  // R is the row's lane face: local x = −t (west), +z north, so along(t, off) = R.at(−t, off).
+  const { along, u } = ZEID.row, SH = 2.6; // glazing height, so the signboards fit under the canopy
+  const laneRot = Math.atan2(-u[1], u[0]), R = new Frame(ZEID.row.A[0], ZEID.row.A[1], laneRot + Math.PI, U);
+  extrude(kit, ZEID.row.footprint, U - 2, U + 3.8, '#eee7d6', false, { parapet: .4 });
+  const unit = (t0: number, t1: number, s: Omit<ShopSpec, 'width'>, depth = .35) => shopUnit(kit, R, -(t0 + t1) / 2, .3, { ...s, width: t1 - t0 }, depth, SH);
+  unit(0, 7, { type: 'falafel', he: 'פלאפל חן', en: 'FALAFEL CHEN', sign: '#f4ead2', ink: '#d0251c', awning: null });
+  unit(7, 10.6, { type: 'office', he: 'AURUM', en: 'שעונים · CLOCKS & WATCHES', sign: '#1b1b1b', ink: '#d9b45a', awning: null });
+  unit(10.6, 14.2, { type: 'salon', he: 'מספרת סלים', en: 'SALIM · BARBER', sign: '#1d2b3a', ink: '#f2f2ee', awning: null });
+  unit(14.2, 18.2, { type: 'falafel', he: ' ', sign: '#dcd8cf', ink: '#dcd8cf', awning: null }); // Luli's own painted sign is added below
+  unit(18.2, 21.8, { type: 'office', he: ' ', sign: '#e6e2d8', ink: '#e6e2d8', awning: null }, 1); // empty, so no goods behind the glass
+  unit(21.8, 27.8, { type: 'office', he: 'בית חב״ד', en: 'הכתובת לכל עניין יהודי', sign: '#5b3a22', ink: '#f3e2b6', awning: null }); // ends at the pizza's window
+  // Falafel Chen's big board stands on the corner, facing both the lane and Alexander Zaid St.
+  B.lbox(R, MAT.plain, -3.5, 4.5, 2.4, 6.9, 1.6, .08, '#e2d8c0'); kit.painted(R, -3.5, 4.5, 2.46, 6.8, 1.5, chenSign);
+  B.lbox(R, MAT.plain, .25, 4.5, .8, .08, 1.6, 3.5, '#e2d8c0'); kit.painted(R, .31, 4.5, .8, 3.4, 1.5, chenSign, Math.PI / 2);
+  kit.painted(R, -8.8, 1.85, .36, .6, .6, clockFace);
+  kit.painted(R, -11, 1.2, .36, .9, 2.3, archDoor);
+  kit.painted(R, -16.2, SH + .45, .53, 3.9, .9, luliSign);
+  kit.painted(R, -16.2, 3.43, 2.53, 4, .36, scallops);
+  kit.anchor(R, 'landmark_falafel_luli', -16.2, 2.3, 1.2, landmark('falafel_luli').name, 3.4);
+  kit.sign(R, -20, 1.5, .34, 1.3, .6, 'להשכרה', { bg: '#f4d03a', fg: '#c0201a', sub: 'FOR RENT', weight: 900 });
+  // The canopy: a flat slab 2.5 m deep on slim posts every 3.5 m, Luli's stretch in his blue.
+  for (const [t0, t1, c] of [[0, 14.2, '#f1ede4'], [14.2, 18.2, '#3d7fc4'], [18.2, 28.1, '#f1ede4']] as Array<[number, number, string]>) B.lbox(R, MAT.plain, -(t0 + t1) / 2, 3.68, 1.25, t1 - t0, .14, 2.5, c);
+  B.lbox(R, MAT.plain, -14.05, 3.6, 2.48, 28.1, .3, .05, '#e2dccf');
+  for (let t = .25; t < 28; t += 3.5) { B.lbox(R, MAT.metal, -t, 1.8, 2.35, .08, 3.6, .08, '#3a3f3c'); kit.lcollide(R, -t, 1.8, 2.35, .08, 3.6, .08); }
+  // Red-brown paving under the canopy and a metre beyond it, and in front of the pizza window.
+  B.lbox(R, MAT.paving, -14.05, .075, 1.75, 28.1, .03, 3.5, '#a5604a', false); B.lbox(R, MAT.paving, -27.35, .075, 4.5, 1.5, .03, 2, '#a5604a', false);
+  // The pizza unit sticks out north at the end; its window (west face) looks back along the lane.
+  const [px, pz] = along(28.1, 2.5), P = new Frame(px, pz, Math.atan2(-u[0], -u[1]), U); // +z west, local x south
+  shopUnit(kit, P, 0, .3, { type: 'pizza', width: 3.8, he: 'פיצה', en: 'PIZZA · 04-9830102', sign: '#b8321f', ink: '#fff3d6', awning: null }, .35, SH);
+  for (const s of [-1.7, 1.7]) B.lbox(P, MAT.metal, s, 4.3, -.6, .08, 1, .08, '#3a3f3c');
+  B.lbox(P, MAT.plain, 0, 5.1, -.62, 4.4, 1.4, .1, '#7a1f14'); kit.sign(P, 0, 5.1, -.55, 4.2, 1.25, 'פיצה', { bg: '#b8321f', fg: '#fff3d6', sub: '04-9830102', weight: 900, glow: .3 });
+  kit.sign(R, -31.05, 3.1, 5.06, 4.8, .8, 'פיצה · משלוחים', { bg: '#b8321f', fg: '#fff3d6', sub: '04-9830102', weight: 900 });
+
+  // ——— Drugstore "הצומת": red Coca-Cola-style boards; candy, cold drinks, Toto and an ATM ———
+  // Dg is its lane face: local x east, +z south onto the porch (lz 0 … 2.5).
+  const [d0, d1] = ZEID.drugstore.poly, dl = Math.hypot(d1[0] - d0[0], d1[1] - d0[1]);
+  const Dg = new Frame((d0[0] + d1[0]) / 2, (d0[1] + d1[1]) / 2, Math.atan2(-(d1[1] - d0[1]), d1[0] - d0[0]), U);
+  extrude(kit, ZEID.drugstore.poly, U - 2, U + 4, '#efe9df', false, { parapet: .4 });
+  shopUnit(kit, Dg, -3, .3, { type: 'discount', width: 8.4, he: 'דראגסטור הצומת', en: 'ממתקים · שתייה קרה · עיתונים', sign: '#d0202a', ink: '#ffffff', awning: null }, .35, 2.5);
+  shopUnit(kit, Dg, 3.1, .3, { type: 'office', width: 3.2, he: 'טוטו · לוטו', en: 'TOTO · LOTTO · CHANCE', sign: '#d0202a', ink: '#ffffff', awning: null }, .35, 2.5);
+  B.lbox(Dg, MAT.metal, 6.2, 1.1, .45, .8, 1.7, .6, '#5a6a72'); B.lbox(Dg, MAT.gloss, 6.2, 1.5, .76, .5, .3, .03, '#2a8ad1');
+  kit.sign(Dg, 6.2, 2.15, .78, .8, .3, 'כספומט', { bg: '#d0202a', fg: '#ffffff', weight: 800 }); kit.lcollide(Dg, 6.2, .85, .45, .8, 1.7, .6);
+  // A red drinks fridge and a sweets rack by the door.
+  B.lbox(Dg, MAT.gloss, -6.6, .95, .75, .75, 1.9, .6, '#c8202a'); B.lbox(Dg, MAT.gloss, -6.6, 1.1, 1.06, .6, 1.3, .02, '#d6e6ea');
+  kit.sign(Dg, -6.6, 1.82, 1.08, .6, .16, 'שתייה קרה', { bg: '#c8202a', fg: '#ffffff', weight: 800 }); kit.lcollide(Dg, -6.6, .95, .75, .75, 1.9, .6);
+  B.lbox(Dg, MAT.metal, -4.6, .6, .75, 1, 1.2, .4, '#8a8f92');
+  for (let k = 0; k < 3; k++) for (let i = 0; i < 6; i++) B.lbox(Dg, MAT.gloss, -5.02 + i * .17, .4 + k * .35, .92, .13, .2, .06, ['#e8c43a', '#d94a6a', '#4b86b5', '#6aa04a', '#f28a3a', '#9c4ad9'][(i + k * 2) % 6], false);
+  kit.lcollide(Dg, -4.6, .6, .75, 1, 1.2, .4);
+  // The roofed porch at plaza level along the lane: tiles, posts and the red fascia board.
+  B.lbox(Dg, MAT.paving, 0, .05, 1.25, dl, .1, 2.5, '#cdbb9c', false); kit.lground(Dg, 0, 1.25, dl, 2.5, .1);
+  for (const x of [-7.3, -2.45, 2.45, 7.3]) { B.lbox(Dg, MAT.metal, x, 1.75, 2.35, .1, 3.5, .1, '#3a3f3c'); kit.lcollide(Dg, x, 1.75, 2.35, .1, 3.5, .1); }
+  B.lbox(Dg, MAT.plain, 0, 3.55, 1.3, dl + .2, .14, 2.7, '#ece6da');
+  B.lbox(Dg, MAT.plain, 0, 3.85, 2.6, dl + .2, .74, .1, '#b81c25'); kit.painted(Dg, 0, 3.85, 2.67, dl, .7, redBoard('דראגסטור הצומת', 'ממתקים · שתייה קרה · טוטו · כספומט'));
+  kit.painted(Dg, -7.56, 2.6, -4.27, 4, 1, redBoard('דראגסטור', 'ממתקים · טוטו'), -Math.PI / 2);
+  B.lbox(Dg, MAT.paving, 0, .075, 3.1, dl, .03, 1.2, '#a5604a', false);
+  kit.person(Dg, -1.2, 1.3, { shirt: '#c8202a', pants: '#2b2b28', seed: 586, angle: 0 });
+
+  // ——— The lane: picnic tables with closed cream umbrellas, a shade tree ringed by a bench ———
+  for (const [x, z] of [[-223.2, -836.8], [-214.5, -837.7], [-205.5, -838.2]] as P2[]) {
+    const f = new Frame(x, z, laneRot, U);
+    B.lbox(f, MAT.wood, 0, .75, 0, 1.6, .06, .7, '#8a6a48'); for (const s of [-.62, .62]) B.lbox(f, MAT.wood, 0, .45, s, 1.6, .05, .26, '#8a6a48');
+    for (const s of [-.6, .6]) B.lbox(f, MAT.wood, s, .37, 0, .08, .74, 1.3, '#6a4e34');
+    kit.lcollide(f, 0, .4, 0, 1.6, .8, 1.5);
+    B.cyl(MAT.metal, x, U + 1.3, z, .025, 2.6, '#d9d9d6'); B.place(PRIMS.cone, MAT.plain, x, U + 2.05, z, .2, 1.3, .2, 0, '#efe6cf'); B.place(PRIMS.sphere, MAT.plain, x, U + 2.75, z, .05, .05, .05, 0, '#d9d9d6');
+  }
+  { const x = -218.5, z = -837, f = new Frame(x, z, laneRot, U);
+    B.cyl(MAT.stone, x, U + .25, z, .75, .5, '#d8cba9');
+    for (let j = 0; j < 14; j++) { const a = j / 14 * Math.PI * 2, bx = x + Math.cos(a) * 1.05, bz = z + Math.sin(a) * 1.05; B.box(MAT.wood, bx, U + .45, bz, .5, .06, .42, Math.PI / 2 - a, '#8a6a48'); B.box(MAT.stone, bx, U + .21, bz, .44, .42, .3, Math.PI / 2 - a, '#cfc3a5'); }
+    B.cyl(MAT.plain, x, U + 2.4, z, .2, 4.8, '#6f6250');
+    for (let j = 0; j < 8; j++) { const a = j * .8; B.place(PRIMS.ico, MAT.foliage, x + Math.cos(a) * 1.1, U + 4.9 + (j % 3) * .4, z + Math.sin(a) * 1.1, 1.7, 1.1, 1.7, a, j % 2 ? '#4e6e3a' : '#5c7c42'); }
+    kit.collide(x - 1.3, x + 1.3, z - 1.3, z + 1.3, U, U + .5);
+    kit.person(f, 1.05, 0, { shirt: '#6e8a82', pants: '#3b3d3a', seed: 588, seated: true, angle: Math.PI / 2 }); }
+  for (const [x, z, r] of [[-226, -838.6, Dg.rot + Math.PI], [-170.5, -827, -Math.PI / 2]] as Array<[number, number, number]>) bench(x, z, r);
+  // Passers-by walk the red strip along the shops, round the pizza and on to the plaza.
   for (let i = 0; i < 3; i++) {
-    kit.person(new Frame(-226 + i * 14, -837.8 + i * 1.2, 0, U), 0, 0, { shirt: SHIRTS[(i * 4 + 3) % SHIRTS.length], pants: PANTS[i % 6], seed: 575 + i });
+    kit.person(new Frame(...along(4 + i * 9, 3), 0, U), 0, 0, { shirt: SHIRTS[(i * 4 + 3) % SHIRTS.length], pants: PANTS[i % 6], seed: 575 + i });
     const npc = kit.ctx.npcs[kit.ctx.npcs.length - 1]; npc.kind = 'walk'; npc.speed = 1.1 + i * .15; npc.progress = i * .3;
-    npc.path = [[-229, U, -838.4], [-205, U, -835.4], [-182, U, -834 + i * 2]];
-  }
-  const drug = BUILDINGS.find(b => b.id === ZEID.drugstore.id), fal = BUILDINGS.find(b => b.id === ZEID.falafelRow.id);
-  if (drug) {
-    const row = rowOnEdge(kit, drug.points, [-216.8, -839.6], [-203.9, -835.1], U + .02, [
-      [4.1, { type: 'discount', width: 7.4, he: 'דראגסטור הצומת', en: 'DRUGSTORE · CANDY · TOTO', sign: '#c62d3a', ink: '#ffffff', awning: '#9a2430' }],
-      [9.6, { type: 'office', width: 3.2, he: 'טוטו · לוטו', en: 'TOTO · LOTTO', sign: '#1f5aa6', ink: '#ffffff', awning: null }],
-    ]);
-    B.lbox(row.f, MAT.metal, row.lx(12.2), 1.1, .45, .8, 1.7, .6, '#5a6a72'); B.lbox(row.f, MAT.gloss, row.lx(12.2), 1.5, .76, .5, .3, .03, '#2a8ad1');
-    kit.sign(row.f, row.lx(12.2), 2.25, .78, .8, .3, 'כספומט', { bg: '#1f5aa6', fg: '#ffffff', weight: 800 });
-    kit.lcollide(row.f, row.lx(12.2), .85, .45, .8, 1.7, .6);
-  }
-  if (fal) {
-    const row = rowOnEdge(kit, fal.points, [-216.5, -835.5], [-203, -830.6], U + .02, [
-      [1.9, { type: 'falafel', width: 3.4, he: 'פלאפל חן', en: 'FALAFEL CHEN', sign: '#f6d53b', ink: '#1d4d27', awning: '#2e7d3c' }],
-      [5.5, { type: 'salon', width: 3.4, he: 'מספרה', en: 'BARBER', sign: '#1d2b3a', ink: '#f2f2ee', awning: null }],
-      [9.1, { type: 'falafel', width: 3.4, he: ' ', sign: '#dcd8cf', ink: '#dcd8cf', awning: null }], // its own painted sign is added below
-      [12.6, { type: 'pizza', width: 3.4, he: 'פיצה', en: 'PIZZA', sign: '#b8321f', ink: '#fff3d6', awning: '#2e7d3c' }],
-    ]);
-    const lx = row.lx(9.1);
-    kit.painted(row.f, lx, 3.95, .58, 3.3, 1.05, luliSign);
-    { const [ax, az] = row.f.at(lx, 1.05); B.place(PRIMS.box, MAT.plain, ax, U + 4.72, az, 3.5, .05, 1.3, row.f.rot, '#3d7fc4', true, .3); }
-    kit.painted(row.f, lx, 4.42, 1.68, 3.5, .36, scallops);
-    kit.anchor(row.f, 'landmark_falafel_luli', lx, 2.3, 1.2, landmark('falafel_luli').name, 3.4);
+    const [ax, az] = along(1.5, 3), [bx, bz] = along(24.5, 3);
+    npc.path = [[ax, U, az], [bx, U, bz], [-201, U, -837.3], [-182, U, -834 + i * 2]];
   }
 
   // ——— Lower plaza and Zohar cinema, which faces the building ———
