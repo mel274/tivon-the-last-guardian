@@ -167,3 +167,13 @@ it('provides Hebrew and English text for every inventory item and quest', () => 
   for (const item of Object.values(items)) { expect(item.name.he).toBeTruthy(); expect(item.name.en).toBeTruthy(); expect(item.description.he).toBeTruthy(); expect(item.description.en).toBeTruthy(); }
   for (const quest of quests) { expect(quest.id).toBeTruthy(); expect(quest.title.he).toBeTruthy(); expect(quest.description.en).toBeTruthy(); }
 });
+
+it('gives every walk-in shop keeper a bilingual line, a second line and a fallback', () => {
+  const m = new GameModel();
+  for (const shop of ['restaurant', 'print', 'camera', 'pilates', 'paint', 'chocolate', 'pharmacy', 'flowers', 'alhakav', 'cinemaLobby', 'cinemaLobby_barista', 'falafel', 'pizza', 'barber', 'clocks', 'chabad', 'drugstore', 'somethingNew']) {
+    const d = m.interact(`keeper_${shop}`);
+    expect(d.title.he && d.title.en && d.text.he && d.text.en, shop).toBeTruthy();
+    expect(d.options.map(o => o.action)).toContain('keeperMore');
+    const more = m.act('keeperMore'); expect(more.he && more.en, shop).toBeTruthy(); expect(more.he).not.toBe(d.text.he);
+  }
+});
