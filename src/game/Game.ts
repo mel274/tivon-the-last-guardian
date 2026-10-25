@@ -227,7 +227,7 @@ export class Game {
   private zone() {
     const p=this.camera.position, g=this.world.groups;
     if(p.z>=261&&p.x>110&&p.x<142)return 'overlook';
-    if(p.z>89.5&&p.z<262&&p.x>99&&p.x<165&&p.y<9)return 'caves';
+    if(p.y<5&&p.z>89.2&&p.z<262&&p.x>100&&p.x<162&&(p.z>96.8||Math.abs(p.x-126)<3.2))return 'caves'; // from the corridor mouth; the hill above stays ≥ 9 m
     if(this.inside('mandu',46,26,g.mandu.position.y-1.2,g.mandu.position.y+4.5))return 'mandu';
     if(this.inside('amali',13,18,g.amali.position.y-1,g.amali.position.y+6))return 'amali';
     if(this.inside('shop',12,12,g.shop.position.y-1,g.shop.position.y+3.5))return 'shop';

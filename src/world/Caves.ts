@@ -4,6 +4,24 @@ import type { WorldContext, LocalText } from './types';
 import { horseAndRider } from './horse';
 import { worldMaterial } from './materials';
 
+/** The fictional plan as runs of 2 m cells [x0, x1, z0, z1] (cell centres, every 2 m); floor y = 0.
+ *  Shared with the terrain, which keeps the hill above every ceiling. */
+export const CAVE_PLAN: ReadonlyArray<readonly [number, number, number, number]> = [
+  [124,128,90,98],[120,132,98,110], // entrance corridor and first hall
+  [108,144,110,114],[102,114,116,126],[138,150,116,126],
+  [124,128,114,152],[106,110,126,148],[142,146,126,148],
+  [102,114,136,148],[120,132,128,146],[138,150,136,148],[108,144,140,144],
+  [150,160,120,122],[156,160,124,128], // quiet archaeological dead end
+  [120,132,152,164],[124,128,164,188], // seal hall and the hidden passage
+  [116,136,188,204],[124,128,204,214], // hidden crypt
+  [112,140,214,236],[124,128,236,246],[120,132,238,246],[124,128,246,260], // arena, archive, daylight stair
+];
+/** Ceiling height (underside) by z; the stone slab above it is 0.3 m thick. */
+export const caveCeiling = (z: number) => z < 170 ? 4.35 : z < 208 ? 5.5 : z < 238 ? 7.2 : 4.35;
+/** The carved façade (x span, front and back faces, cornice top) and the sunken courtyard before it. */
+export const CAVE_FACADE = { x0: 102, x1: 150, front: 88.8, back: 90, top: 9.6 } as const;
+export const CAVE_COURT = { x0: 118.5, x1: 133.5, z0: 74, z1: 89 } as const;
+
 /** Interpretation-space catacombs and an explicitly fictional underground network. */
 export function buildCaves(ctx: WorldContext): void {
   const cave = new THREE.Group(); cave.name = 'Catacombs • fictional connected plan';
@@ -63,15 +81,8 @@ export function buildCaves(ctx: WorldContext): void {
   // traversable and side chambers genuinely reconnect with the main gallery.
   const cells=new Map<string,{x:number;z:number}>();
   const fill=(x0:number,x1:number,z0:number,z1:number)=>{for(let x=x0;x<=x1;x+=2)for(let z=z0;z<=z1;z+=2)cells.set(`${x},${z}`,{x,z});};
-  fill(124,128,90,98); fill(120,132,98,110);
-  fill(108,144,110,114); fill(102,114,116,126);fill(138,150,116,126);
-  fill(124,128,114,152);fill(106,110,126,148);fill(142,146,126,148);
-  fill(102,114,136,148);fill(120,132,128,146);fill(138,150,136,148);fill(108,144,140,144);
-  fill(150,160,120,122);fill(156,160,124,128); // quiet archaeological dead end
-  fill(120,132,152,164);fill(124,128,164,188);
-  fill(116,136,188,204);fill(124,128,204,214);
-  fill(112,140,214,236);fill(124,128,236,246);fill(120,132,238,246);fill(124,128,246,260);
-  const ceiling=(z:number)=>z<170?4.35:z<208?5.5:z<238?7.2:4.35;
+  for(const r of CAVE_PLAN)fill(...r);
+  const ceiling=caveCeiling;
   cells.forEach(({x,z})=>{
     const h=ceiling(z), m=z<170?limestone:darkStone;
     box(cave,x,-.17,z,2,.3,2,floorMaterial,false);box(cave,x,h+.15,z,2.03,.3,2.03,m);
@@ -96,8 +107,8 @@ export function buildCaves(ctx: WorldContext): void {
 
   // Carved courtyard façade with three arches, after the arched fronts of Beit She'arim's
   // caves (e.g. the Cave of Coffins). The layout beyond is not a survey of the real park.
-  box(cave,126,-.09,81.5,15,.2,15,floorMaterial,false);ctx.grounds.push({minX:118.5,maxX:133.5,minZ:74,maxZ:89,y:.01});
-  for(const [a,b] of [[102,123.1],[128.9,150]]){box(cave,(a+b)/2,4.6,89.4,b-a,9.2,1.2,carved);collision((a+b)/2,4.6,89.4,b-a,9.2,1.2);}
+  box(cave,126,-.09,81.5,15,.2,15,floorMaterial,false);ctx.grounds.push({minX:CAVE_COURT.x0,maxX:CAVE_COURT.x1,minZ:CAVE_COURT.z0,maxZ:CAVE_COURT.z1,y:.01});
+  for(const [a,b] of [[CAVE_FACADE.x0,123.1],[128.9,CAVE_FACADE.x1]]){box(cave,(a+b)/2,4.6,89.4,b-a,9.2,1.2,carved);collision((a+b)/2,4.6,89.4,b-a,9.2,1.2);}
   box(cave,126,6.9,89.4,5.8,4.6,1.2,carved);box(cave,126,9.35,89.4,48,.5,1.6,limestone);
   for(const ax of [116,126,136]){
     for(const sd of [-1,1]){box(cave,ax+sd*2.65,2.3,88.6,.7,4.6,.5,limestone);collision(ax+sd*2.65,2.3,88.6,.7,4.6,.5);}

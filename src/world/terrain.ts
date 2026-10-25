@@ -2,10 +2,11 @@ import * as THREE from 'three';
 import { AREAS, WORLD, elevation, pointInPolygon, type P2 } from './geo';
 import { worldMaterial } from './materials';
 import { STATIC_PADS } from './layout';
+import { CAVE_PLAN, CAVE_FACADE as FACE, CAVE_COURT as COURT } from './Caves';
 
 /** Real relief from the DEM (AWS Terrain Tiles, ~30 m source resampled to ~6 m), with game
  *  y = 0 at the Beit She'arim catacomb courtyard. Flat pads are authored where the town is
- *  terraced (plazas, building platforms); the fictional cave plan gets a covering mound. */
+ *  terraced (plazas, building platforms); the fictional cave plan stays under a covering hill. */
 const sstep = (e0: number, e1: number, x: number) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
 export const BASE = elevation(126, 84);
 
@@ -38,13 +39,29 @@ function padsAt(x: number, z: number, h: number) {
   return h;
 }
 
+// ——— The fictional catacomb (floor y = 0) under the real hill ———
+// A height field cannot overhang, so it is kept off the plan: over every cave space and 8.5 m
+// around it (a whole 8 m mesh cell, so the interpolated mesh cannot sag through a ceiling) the
+// ground stays COVER m up, fading out over 9 m. The cover stops at the carved façade, and the
+// courtyard in front of it is sunk just below its paving.
+const COVER = 9.4; // above every ceiling slab (7.5 m at most); meets the façade's cornice (9.1–9.6 m)
+const FACE_Z = (FACE.front + FACE.back) / 2;
+type Rect = readonly [number, number, number, number];
+const CAVE_RECTS: Rect[] = [...CAVE_PLAN.map(([x0, x1, z0, z1]): Rect => [x0 - 1, x1 + 1, z0 - 1, z1 + 1]), [101, 161, 109, 261]]; // cells, and the hull of the body
+const rectDist = (x: number, z: number, [x0, x1, z0, z1]: Rect) => Math.max(x0 - x, x - x1, z0 - z, z - z1, 0);
+function caveGround(x: number, z: number, h: number) {
+  const pit = 1 - sstep(2.5, 8.5, rectDist(x, z, [COURT.x0, COURT.x1, COURT.z0, COURT.z1]));
+  if (pit > 0 && h > -.15) h += (-.15 - h) * pit;
+  let d = Infinity; for (const r of CAVE_RECTS) d = Math.min(d, rectDist(x, z, r));
+  let cover = 1 - sstep(8.5, 17.5, d);
+  // Before the façade line: nothing across its span (the stone face is the cliff), a short fade beside it.
+  if (z < FACE_Z) cover *= x >= FACE.x0 && x <= FACE.x1 ? 0 : 1 - sstep(0, 6, FACE_Z - z);
+  return Math.max(h, COVER * cover);
+}
+
 export function surfaceHeight(x: number, z: number): number {
   let h = elevation(x, z) - BASE;
-  // Cover over the fictional catacomb plan (floor y = 0), open at the carved courtyard.
-  if (x < 80 || x > 184 || z < 82 || z > 280) return PADS.length ? padsAt(x, z, h) : h;
-  const cave = sstep(86, 100, x) * (1 - sstep(164, 178, x)) * sstep(88, 98, z) * (1 - sstep(262, 274, z));
-  const notch = (1 - sstep(7, 10, Math.abs(x - 126))) * (1 - sstep(93, 99, z));
-  if (cave > 0) h = Math.max(h, 10 * cave * (1 - notch));
+  if (x > 80 && x < 184 && z > 64 && z < 280) h = caveGround(x, z, h);
   return PADS.length ? padsAt(x, z, h) : h;
 }
 
@@ -64,15 +81,20 @@ export function buildTerrain(scene: THREE.Scene) {
   const c = new THREE.Color(), n3 = new THREE.Vector3();
   const mat = worldMaterial('grass', { vertexColors: true, roughness: 1, scale: 6, strength: .8 });
   const ground = new THREE.Group(); ground.name = 'terrain'; scene.add(ground);
+  // The carved façade is a cliff the 8 m grid cannot follow: the rows either side of it are pulled
+  // onto its front and back faces and the strip between them (inside the stone, under the cornice)
+  // is left out, so no grass ramps over the courtyard or through the doorway.
+  const faceRow = (x: number, z: number) => x < FACE.x0 - step || x > FACE.x1 + step || Math.abs(z - FACE_Z) >= step ? 0 : z <= FACE_Z ? -1 : 1;
   // Tiles so the camera's frustum and draw distance can skip the parts out of view; normals come
   // from the height field itself, so tile edges meet without seams.
   for (let tx = minX; tx < maxX; tx += TILE) for (let tz = minZ; tz < maxZ; tz += TILE) {
     const W = Math.min(TILE, maxX - tx), D = Math.min(TILE, maxZ - tz);
     const geo = new THREE.PlaneGeometry(W, D, Math.max(1, Math.round(W / step)), Math.max(1, Math.round(D / step)));
     geo.rotateX(-Math.PI / 2); geo.translate(tx + W / 2, 0, tz + D / 2);
-    const p = geo.attributes.position, nrm = geo.attributes.normal, colors = new Float32Array(p.count * 3);
+    const p = geo.attributes.position, nrm = geo.attributes.normal, colors = new Float32Array(p.count * 3), inStone = new Uint8Array(p.count);
     for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i), z = p.getZ(i);
+      const x = p.getX(i), row = faceRow(x, p.getZ(i)), z = row < 0 ? FACE.front + .05 : row > 0 ? FACE.back - .05 : p.getZ(i);
+      if (row) { p.setZ(i, z); if (x >= FACE.x0 && x <= FACE.x1) inStone[i] = 1; }
       let y = surfaceHeight(x, z);
       // At a terrace's retaining wall the 8 m mesh would bridge the two levels and poke grass
       // through the lower paving; keep such vertices at the lower level (the wall hides the step).
@@ -81,13 +103,15 @@ export function buildTerrain(scene: THREE.Scene) {
         if (hi - lo > 2) y = lo;
       }
       p.setY(i, y - .08);
-      n3.set(surfaceHeight(x - step, z) - surfaceHeight(x + step, z), 2 * step, surfaceHeight(x, z - step) - surfaceHeight(x, z + step)).normalize(); nrm.setXYZ(i, n3.x, n3.y, n3.z);
+      const za = row > 0 ? z : z - step, zb = row < 0 ? z : z + step; // one-sided across the façade
+      n3.set(surfaceHeight(x - step, z) - surfaceHeight(x + step, z), 2 * step, (surfaceHeight(x, za) - surfaceHeight(x, zb)) * 2 * step / (zb - za)).normalize(); nrm.setXYZ(i, n3.x, n3.y, n3.z);
       const n = (Math.sin(x * .071) * Math.cos(z * .063) + Math.sin((x + z) * .021)) * .5 + .5;
       c.copy(dry).lerp(green, .3 + n * .55);
       const woods = Math.max(0, Math.sin(x * .011 + 1) * Math.cos(z * .009) - .2); c.lerp(wood, Math.min(1, woods * 1.4));
       for (const b of grid.get((Math.floor(x / 64) + 200) * 1000 + Math.floor(z / 64) + 200) ?? []) if (x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1 && pointInPolygon(x, z, b.a.points)) { c.lerp(b.c, .8); break; }
       colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
     }
+    if (inStone.includes(1)) { const idx = geo.index!, keep: number[] = []; for (let t = 0; t < idx.count; t += 3) { const a = idx.getX(t), b = idx.getX(t + 1), d = idx.getX(t + 2); if (!(inStone[a] && inStone[b] && inStone[d])) keep.push(a, b, d); } geo.setIndex(keep); }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.computeBoundingSphere(); geo.computeBoundingBox();
     const tile = new THREE.Mesh(geo, mat); tile.receiveShadow = true; tile.name = 'terrain'; ground.add(tile);
