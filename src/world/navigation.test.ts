@@ -1,7 +1,8 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { buildTown } from './Town';
-import { buildCaves } from './Caves';
+import { buildCaves, CAVE_PLAN, caveCeiling } from './Caves';
+import { buildTerrain, surfaceHeight } from './terrain';
 import { PlayerController } from '../player/PlayerController';
 import type { WorldContext, Interactable } from './types';
 import { rayDistance } from './collide';
@@ -12,6 +13,8 @@ import { ZEID } from './layout';
 let world: WorldContext;
 let player: PlayerController;
 const allOpen = { cavesEntered: true, hiddenOpened: true, spiritFreed: true };
+/** Floors through the catacomb: hall, chambers, hidden crypt, arena, archive, foot of the daylight stair. */
+const CAVE_FLOORS: Array<[number, number]> = [[126, 104], [108, 118], [144, 118], [108, 140], [126, 142], [144, 140], [126, 156], [126, 178], [126, 196], [126, 226], [126, 254], [126, 256]];
 
 beforeAll(() => {
   const noop = () => undefined;
@@ -96,11 +99,30 @@ describe('generated world navigation', () => {
     // The Mandu anchor (used for the story zone) is inside the bar strip on the upper floor.
     expect(r.on(...local('mandu', 0, 0), world.groups.mandu.position.y)).toBe(true);
   });
-  it('walks from the national park entrance down to the catacomb courtyard and in', () => {
-    const r = walk([150, -26], [40, 220, -60, 100], { cavesEntered: true });
-    expect(r.has(126, 84), 'courtyard reachable from the park entrance').toBe(true);
-    expect(r.has(126, 96), 'into the entrance corridor once the gate opens').toBe(true);
+  it('walks from the national park entrance down to the catacomb courtyard and through every space', () => {
+    const r = walk([150, -26], [90, 170, -60, 275]);
+    expect(r.on(126, 84, 0), 'courtyard reachable from the park entrance').toBe(true);
+    const missing = [[126, 92], [126, 96], ...CAVE_FLOORS].filter(([x, z]) => !r.on(x, z, 0)).map(p => p.join(','));
+    expect(missing, 'cave floors not reached on foot').toEqual([]);
   });
+  it('keeps the hill out of every cave space', () => {
+    // The ground is either under the floor or above the ceiling slab, never in the room between.
+    const clear = (x: number, z: number, y: number) => y <= .2 || y > caveCeiling(z) + .3 + .5;
+    const points: Array<[number, number]> = [];
+    for (let z = 86; z <= 110; z += .25) points.push([126, z]);
+    for (const [x0, x1, z0, z1] of CAVE_PLAN) { points.push([(x0 + x1) / 2, (z0 + z1) / 2]); for (let x = x0; x <= x1; x += 2) for (let z = z0; z <= z1; z += 2) points.push([x, z]); }
+    expect(points.filter(([x, z]) => !clear(x, z, surfaceHeight(x, z))).map(p => p.join(',')), 'ground inside a cave space').toEqual([]);
+    // The rendered mesh interpolates an 8 m grid: probe it too, from above and through the doorway.
+    const scene = new THREE.Scene(); buildTerrain(scene); scene.updateMatrixWorld(true);
+    const plan = new THREE.Box3(new THREE.Vector3(100, -1e3, 74), new THREE.Vector3(162, 1e3, 262));
+    const tiles = scene.getObjectsByProperty('name', 'terrain').filter(o => o instanceof THREE.Mesh && o.geometry.boundingBox!.intersectsBox(plan));
+    const ray = new THREE.Raycaster(), down = new THREE.Vector3(0, -1, 0), south = new THREE.Vector3(0, 0, 1);
+    const meshIn = points.filter(([x, z]) => { ray.set(new THREE.Vector3(x, 200, z), down); return ray.intersectObjects(tiles, false).some(h => !clear(x, z, h.point.y)); });
+    expect(meshIn.map(p => p.join(',')), 'terrain mesh inside a cave space').toEqual([]);
+    const doorway: string[] = [];
+    for (let x = 123.5; x <= 128.5; x += .5) for (let y = .3; y < 4.3; y += .5) { ray.set(new THREE.Vector3(x, y, 80), south); ray.far = 40; if (ray.intersectObjects(tiles, false).length) doorway.push(`${x},${y}`); }
+    expect(doorway, 'terrain seen through the entrance arch').toEqual([]);
+  }, 60000);
   it('blocks crossing every story gate until its matching flag is set', () => {
     for (const [z, flag] of [[93, 'cavesEntered'], [167, 'hiddenOpened'], [249, 'spiritFreed']] as const) {
       player.camera.position.y = 1.7;
@@ -110,9 +132,7 @@ describe('generated world navigation', () => {
   });
   it('connects the courtyard, chambers, hidden crypt, arena and overlook', () => {
     const r = walk([126, 80], [96, 168, 72, 275]);
-    for (const [x, z] of [[126, 104], [108, 118], [144, 118], [108, 140], [126, 142], [144, 140], [126, 156], [126, 178], [126, 196], [126, 226], [126, 254]]) {
-      expect(r.has(x, z), `unreachable floor ${x},${z}`).toBe(true);
-    }
+    for (const [x, z] of CAVE_FLOORS) expect(r.on(x, z, 0), `unreachable floor ${x},${z}`).toBe(true);
   });
   it('gives every interaction target an unobstructed standing spot', () => {
     const inaccessible: string[] = [];
