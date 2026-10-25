@@ -117,9 +117,11 @@ export function buildTerrain(scene: THREE.Scene) {
     const tile = new THREE.Mesh(geo, mat); tile.receiveShadow = true; tile.name = 'terrain'; ground.add(tile);
   }
   // The Carmel ridge to the west and the Nazareth hills across the Jezreel Valley to the east.
-  const ridgeMat = new THREE.MeshStandardMaterial({ color: '#6f8070', roughness: 1 });
-  const far = new THREE.MeshStandardMaterial({ color: '#8d9aa0', roughness: 1 });
+  // They lie beyond the fog and the draw distance, so they are drawn as hazy silhouettes: no fog,
+  // and depth pinned just inside the far plane so the camera never clips them into an arc.
+  const haze = (color: string) => { const m = new THREE.MeshBasicMaterial({ color, fog: false }); m.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n gl_Position.z = min(gl_Position.z, gl_Position.w * .99999);'); }; return m; };
+  const ridgeMat = haze('#9aa99c'), far = haze('#adb9bc');
   const hill = new THREE.SphereGeometry(1, 20, 10);
-  for (let i = 0; i < 12; i++) { const m = new THREE.Mesh(hill, ridgeMat); m.position.set(minX - 500 + Math.sin(i * 1.7) * 120, 20, minZ - 200 + i * 360); m.scale.set(520, 160 + (i % 4) * 40, 380); scene.add(m); }
-  for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(hill, far); m.position.set(maxX + 2600 + Math.sin(i) * 300, -40, minZ + i * 450); m.scale.set(700, 260 + (i % 3) * 60, 520); scene.add(m); }
+  for (let i = 0; i < 12; i++) { const m = new THREE.Mesh(hill, ridgeMat); m.position.set(minX - 500 + Math.sin(i * 1.7) * 120, 20, minZ - 200 + i * 360); m.scale.set(520, 160 + (i % 4) * 40, 380); m.renderOrder = -.5; m.frustumCulled = false; scene.add(m); }
+  for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(hill, far); m.position.set(maxX + 2600 + Math.sin(i) * 300, -40, minZ + i * 450); m.scale.set(700, 260 + (i % 3) * 60, 520); m.renderOrder = -.5; m.frustumCulled = false; scene.add(m); }
 }
