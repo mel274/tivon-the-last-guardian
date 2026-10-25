@@ -43,10 +43,15 @@ export const ZEID = (() => {
   const ul = Math.hypot(Bf[0] - A[0], Bf[1] - A[1]), u: P2 = [(Bf[0] - A[0]) / ul, (Bf[1] - A[1]) / ul];
   const along = (t: number, off = 0): P2 => [A[0] + u[0] * t + u[1] * off, A[1] + u[1] * t - u[0] * off];
   const busStair = { x: -176, z0: -852.6, z1: -848.4 };
+  // Zohar cinema's north face (a → b) on the lower plaza, and the entrance lobby cut into it: t metres east
+  // along the face, e metres in (south) from it. Lobby-local frame (kiryatAmal.ts): +z out to the plaza, +x west.
+  const ca: P2 = [-133.9, -810.4], cb: P2 = [-108.7, -807.1], cl = Math.hypot(cb[0] - ca[0], cb[1] - ca[1]), cu: P2 = [(cb[0] - ca[0]) / cl, (cb[1] - ca[1]) / cl], cn: P2 = [-cu[1], cu[0]];
+  const cat = (t: number, e: number): P2 => [ca[0] + cu[0] * t + cn[0] * e, ca[1] + cu[1] * t + cn[1] * e];
+  const lobby = { a: ca, b: cb, L: cl, t0: 3, t1: 22, depth: 10, at: cat, rot: Math.atan2(cu[1], -cu[0]), poly: [cat(3, -.3), cat(22, -.3), cat(22, 10.3), cat(3, 10.3)] as P2[] };
   return {
     road, upper, lower, frame: { x: box.cx, z: box.cz, rot, HW, HD, BAL, STW, ARC0 }, at, rect,
     building: { id: '326224826', poly },
-    cinema: { id: '326224821' },
+    cinema: { id: '326224821' }, lobby,
     /** One storey under a flat canopy, facing north onto the lane; the pizza unit sticks out 5 m
      *  north at its east end, its window on its west face looking back along the lane. */
     row: {
@@ -129,5 +134,7 @@ export const STATIC_PADS: Array<{ poly: P2[]; y: number; blend: number }> = [
   { poly: ZEID.drugstore.porch, y: ZEID.upper, blend: 0 },
   { poly: ZEID.backyard, y: ZEID.upper, blend: 1.5 },
   { poly: ZEID.kerb, y: ZEID.road, blend: 1 },
+  // The Zohar cinema's lobby floor stands at plaza level, inside the hillside.
+  { poly: ZEID.lobby.poly, y: ZEID.lower, blend: 0 },
   { poly: ZEID.lowerPlaza, y: ZEID.lower, blend: 4 },
 ];
