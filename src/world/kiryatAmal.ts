@@ -14,7 +14,11 @@ import { ZEID, ROUTE75_RAIL } from './layout';
  *  with its full-length balcony, Mandu's bar strip (Café Beinenu by day) and backyard, the stair
  *  down to the lower plaza, the ground-floor shops behind a roofed strip, the closed Rav-Kav
  *  section, the upper plaza and its lane between the drugstore and the falafel row, the Route 75
- *  guardrail, the garden path to the Hannah Szenes garden, and Zohar cinema. */
+ *  guardrail, the garden path to the Hannah Szenes garden, and Zohar cinema.
+ *  Every shop except Zeid 1 (behind its hoarding) is a walk-in room from interiors.ts; the rooms' furnishing
+ *  is built into the `zeid_interiors` group, which the game hides beyond 90 m. The shells and signs stay in
+ *  the town kit. Rooms on the ground floor and in the row are limited in depth (the 8 m terrain mesh rises
+ *  through a deeper floor); their back walls are measured against the rendered mesh. */
 const sub = (P: Frame, lx: number, lz: number, rot = 0, dy = 0) => { const [x, z] = P.at(lx, lz); return new Frame(x, z, P.rot + rot, P.y + dy); };
 export const MANDU_FLOOR = ZEID.upper - ZEID.lower;
 
@@ -131,7 +135,7 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   // Roof slab and a low parapet over each block; cream cladding on the faces that show (north, ends, Mandu's strip).
   for (const [x0, x1] of [[-HW, -7.7], [-2.3, HW]]) {
     const cx = (x0 + x1) / 2, w = x1 - x0, mz = MZ + .02, d = UD + .04;
-    B.lbox(Mu, MAT.plaster, cx, ROOF + .06, mz, w, .12, d, '#bcb8ad', false);
+    B.lbox(Mu, MAT.plaster, cx, ROOF + .06, mz, w, .12, d, '#bcb8ad');
     for (const [lx, lz, pw, pd] of [[cx, -HD + .1, w, .2], [x0 + .1, mz, .2, d], [x1 - .1, mz, .2, d], [cx, BAL + .1, w, .2]] as Array<[number, number, number, number]>) B.lbox(Mu, MAT.plaster, lx, ROOF + .37, lz, pw, .5, pd, CREAM, false);
     clad(Mu, cx, -HD - .03, w, .06, ROOF);
   }
@@ -310,28 +314,32 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
 
   // ——— The falafel row: one storey under a flat canopy, facing north onto the lane ———
   // R is the row's lane face: local x = −t (west), +z north, so along(t, off) = R.at(−t, off).
-  const { along, u } = ZEID.row, RH = 2.8, RD = 9.5, RTOP = 3.8; // walk-in rooms: ceiling height, depth, roof level
+  const { along, u } = ZEID.row, RH = 2.8, RD = 9.5, RTOP = 3.8, RL = .06; // walk-in rooms: ceiling height, depth, roof level, and the floor's lift (flush with the red apron)
   const laneRot = Math.atan2(-u[1], u[0]), R = new Frame(ZEID.row.A[0], ZEID.row.A[1], laneRot + Math.PI, U);
   // The roof and its parapet only; the rooms' own walls are the building (a lane-face wall would close the shopfronts).
   extrude(kit, ZEID.row.footprint, U + RTOP - .1, U + RTOP, '#eee7d6', false, { parapet: .4, collide: false });
   // Units west to east; each shares the previous unit's east wall (t0 − 0.2 overlaps it). door = t of the doorway's centre.
-  type Rw = { t0: number; t1: number; set: string; door: number; dw?: number; sign: { he: string; en?: string; bg: string; fg: string }; keeper: { id: string; he: string; en: string } | null };
+  type Rw = { t0: number; t1: number; d: number; set: string; door: number; dw?: number; sign: { he: string; en?: string; bg: string; fg: string }; keeper: { id: string; he: string; en: string } | null };
   const rowUnits: Rw[] = [
-    { t0: 0, t1: 7, set: 'falafel', door: 4.2, sign: { he: 'פלאפל חן', en: 'FALAFEL CHEN', bg: '#f4ead2', fg: '#d0251c' }, keeper: { id: 'chen', he: 'פלאפל חן', en: 'Falafel Chen' } },
-    { t0: 7, t1: 10.6, set: 'clocks', door: 9.6, sign: { he: 'AURUM', en: 'שעונים · CLOCKS & WATCHES', bg: '#1b1b1b', fg: '#d9b45a' }, keeper: { id: 'aurum', he: 'AURUM · שעונים', en: 'AURUM · clocks' } },
-    { t0: 10.6, t1: 14.2, set: 'barber', door: 11.6, dw: 1, sign: { he: 'מספרת סלים', en: 'SALIM · BARBER', bg: '#1d2b3a', fg: '#f2f2ee' }, keeper: { id: 'barber_salim', he: 'סלים הספר', en: 'Salim the barber' } },
-    { t0: 14.2, t1: 18.2, set: 'falafel', door: 15.4, sign: { he: ' ', bg: '#dcd8cf', fg: '#dcd8cf' }, keeper: { id: 'luli', he: 'פלאפל לולי', en: 'Falafel Luli' } }, // Luli's own painted sign is added below
-    { t0: 18.2, t1: 21.8, set: 'empty', door: 20.6, sign: { he: ' ', bg: '#e6e2d8', fg: '#e6e2d8' }, keeper: null }, // for rent: empty
-    { t0: 21.8, t1: 28.1, set: 'chabad', door: 24.6, sign: { he: 'בית חב״ד', en: 'הכתובת לכל עניין יהודי', bg: '#5b3a22', fg: '#f3e2b6' }, keeper: { id: 'chabad', he: 'בית חב״ד', en: 'Beit Chabad' } }, // ends at the pizza's window
+    { t0: 0, t1: 7, d: 9.5, set: 'falafel', door: 4.2, sign: { he: 'פלאפל חן', en: 'FALAFEL CHEN', bg: '#f4ead2', fg: '#d0251c' }, keeper: { id: 'chen', he: 'פלאפל חן', en: 'Falafel Chen' } },
+    { t0: 7, t1: 10.6, d: 9.5, set: 'clocks', door: 9.6, sign: { he: 'AURUM', en: 'שעונים · CLOCKS & WATCHES', bg: '#1b1b1b', fg: '#d9b45a' }, keeper: { id: 'aurum', he: 'AURUM · שעונים', en: 'AURUM · clocks' } },
+    { t0: 10.6, t1: 14.2, d: 7.8, set: 'barber', door: 11.6, dw: 1, sign: { he: 'מספרת סלים', en: 'SALIM · BARBER', bg: '#1d2b3a', fg: '#f2f2ee' }, keeper: { id: 'barber_salim', he: 'סלים הספר', en: 'Salim the barber' } },
+    { t0: 14.2, t1: 18.2, d: 7, set: 'falafel', door: 15.4, sign: { he: ' ', bg: '#dcd8cf', fg: '#dcd8cf' }, keeper: { id: 'luli', he: 'פלאפל לולי', en: 'Falafel Luli' } }, // Luli's own painted sign is added below
+    { t0: 18.2, t1: 21.8, d: 6, set: 'empty', door: 20.6, sign: { he: ' ', bg: '#e6e2d8', fg: '#e6e2d8' }, keeper: null }, // for rent: empty
+    { t0: 21.8, t1: 28.1, d: 5.3, set: 'chabad', door: 24.6, sign: { he: 'בית חב״ד', en: 'הכתובת לכל עניין יהודי', bg: '#5b3a22', fg: '#f3e2b6' }, keeper: { id: 'chabad', he: 'בית חב״ד', en: 'Beit Chabad' } }, // ends at the pizza's window
   ];
   rowUnits.forEach((r, i) => {
-    const ta = i ? r.t0 - .2 : r.t0, w = r.t1 - ta, tc = (ta + r.t1) / 2, f = sub(R, -tc, 0);
-    shop(f, r.set, { w, d: RD, h: RH, door: { lx: tc - r.door, width: r.dw }, shared: { right: i > 0 }, sign: { ...r.sign, y: 3.2, w: w - .3 }, keeper: r.keeper && { id: r.keeper.id, label: { he: r.keeper.he, en: r.keeper.en } } });
-    attic(f, 0, w, RD, RH + .1, RTOP);
+    const ta = i ? r.t0 - .2 : r.t0, w = r.t1 - ta, tc = (ta + r.t1) / 2, f = sub(R, -tc, 0, 0, RL);
+    shop(f, r.set, { w, d: r.d, h: RH, door: { lx: tc - r.door, width: r.dw }, shared: { right: i > 0 }, sign: { ...r.sign, y: 3.2, w: w - .3 }, keeper: r.keeper && { id: r.keeper.id, label: { he: r.keeper.he, en: r.keeper.en } } });
+    attic(f, 0, w, r.d, RH + .1, RTOP - RL);
   });
-  // The unfurnished mass behind the pizza unit, and cream cladding on the faces that show (west end, back, east end, pizza walls).
+  B.lbox(R, MAT.paving, -14.05, .045, -.08, 28.1, .09, .2, '#a5604a', false); // the sill under the shopfronts
+  // The ground behind the lane rises (the 8 m terrain mesh would show through a deep floor), so the rooms stop short of the footprint's
+  // back edge: a plain back wall closes the unused strip behind them. The unfurnished mass behind the pizza unit, and cream cladding
+  // on the faces that show (west end, back, east end, pizza walls).
   kit.solid(R, MAT.plaster, -31.05, RTOP / 2, -RD / 2, 5.9, RTOP, RD, CREAM);
   clad(R, .03, -RD / 2, .06, RD, RTOP); clad(R, -17.05, -RD - .03, 34.2, .06, RTOP); clad(R, -34.03, (5 - RD) / 2, .06, RD + 5, RTOP); clad(R, -31.05, 5.03, 5.9, .06, RTOP);
+  kit.lcollide(R, -14.05, RTOP / 2, -RD - .03, 28.1, RTOP, .2);
   // Falafel Chen's big board stands on the corner, facing both the lane and Alexander Zaid St.
   B.lbox(R, MAT.plain, -3.5, 4.5, 2.4, 6.9, 1.6, .08, '#e2d8c0'); kit.painted(R, -3.5, 4.5, 2.46, 6.8, 1.5, chenSign);
   B.lbox(R, MAT.plain, .25, 4.5, .8, .08, 1.6, 3.5, '#e2d8c0'); kit.painted(R, .31, 4.5, .8, 3.4, 1.5, chenSign, Math.PI / 2);
@@ -348,9 +356,9 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   // Red-brown paving under the canopy and a metre beyond it, and in front of the pizza window.
   B.lbox(R, MAT.paving, -14.05, .075, 1.75, 28.1, .03, 3.5, '#a5604a', false); B.lbox(R, MAT.paving, -27.35, .075, 4.5, 1.5, .03, 2, '#a5604a', false);
   // The pizza unit sticks out north at the end; its window (west face) looks back along the lane.
-  const [px, pz] = along(28.1, 2.5), P = new Frame(px, pz, Math.atan2(-u[0], -u[1]), U); // +z west, local x south
-  shop(P, 'pizza', { w: 5, d: 5.9, h: RH, door: { lx: -.9 }, sign: { he: 'פיצה', en: 'PIZZA · 04-9830102', bg: '#b8321f', fg: '#fff3d6', y: 3.2, w: 4.6 }, keeper: { id: 'pizza', label: { he: 'פיצה', en: 'Pizza' } } });
-  attic(P, 0, 5, 5.9, RH + .1, RTOP);
+  const [px, pz] = along(28.1, 2.5), P = new Frame(px, pz, Math.atan2(-u[0], -u[1]), U), PL = new Frame(px, pz, P.rot, U + RL); // +z west, local x south
+  shop(PL, 'pizza', { w: 5, d: 5.9, h: RH, door: { lx: -.9 }, sign: { he: 'פיצה', en: 'PIZZA · 04-9830102', bg: '#b8321f', fg: '#fff3d6', y: 3.2, w: 4.6 }, keeper: { id: 'pizza', label: { he: 'פיצה', en: 'Pizza' } } });
+  attic(PL, 0, 5, 5.9, RH + .1, RTOP - RL); B.lbox(P, MAT.paving, 0, .045, -.08, 5, .09, .2, '#a5604a', false);
   for (const s of [-1.7, 1.7]) B.lbox(P, MAT.metal, s, 4.3, -.6, .08, 1, .08, '#3a3f3c');
   B.lbox(P, MAT.plain, 0, 5.1, -.62, 4.4, 1.4, .1, '#7a1f14'); kit.sign(P, 0, 5.1, -.55, 4.2, 1.25, 'פיצה', { bg: '#b8321f', fg: '#fff3d6', sub: '04-9830102', weight: 900, glow: .3 });
   kit.sign(R, -31.05, 3.1, 5.06, 4.8, .8, 'פיצה · משלוחים', { bg: '#b8321f', fg: '#fff3d6', sub: '04-9830102', weight: 900 });
@@ -360,10 +368,10 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   const [d0, d1] = ZEID.drugstore.poly, dl = Math.hypot(d1[0] - d0[0], d1[1] - d0[1]);
   const Dg = new Frame((d0[0] + d1[0]) / 2, (d0[1] + d1[1]) / 2, Math.atan2(-(d1[1] - d0[1]), d1[0] - d0[0]), U);
   // One room as wide as the building (roof and parapet drawn alone; the room's walls, clad cream, are the building), its door onto the porch.
-  const DD = 8.5, DH = 2.8;
+  const DD = 8.5, DH = 2.8, DL = new Frame(Dg.x, Dg.z, Dg.rot, U + .08); // the floor is flush with the porch tiles
   extrude(kit, ZEID.drugstore.poly, U + 3.9, U + 4, '#efe9df', false, { parapet: .4, collide: false });
-  shop(Dg, 'drugstore', { w: dl, d: DD, h: DH, door: { lx: 1.2 }, sign: { he: 'דראגסטור הצומת', en: 'ממתקים · שתייה קרה · טוטו · עיתונים', bg: '#d0202a', fg: '#ffffff', y: 3.1, w: dl - .6 }, keeper: { id: 'drugstore', label: { he: 'דראגסטור הצומת', en: 'Drugstore HaTzomet' } } });
-  attic(Dg, 0, dl, DD, DH + .1, 4);
+  shop(DL, 'drugstore', { w: dl, d: DD, h: DH, door: { lx: 1.2 }, sign: { he: 'דראגסטור הצומת', en: 'ממתקים · שתייה קרה · טוטו · עיתונים', bg: '#d0202a', fg: '#ffffff', y: 3, w: dl - .6 }, keeper: { id: 'drugstore', label: { he: 'דראגסטור הצומת', en: 'Drugstore HaTzomet' } } });
+  attic(DL, 0, dl, DD, DH + .1, 4 - .08); B.lbox(Dg, MAT.paving, 0, .05, -.08, dl, .1, .2, '#cdbb9c', false);
   for (const x of [-dl / 2 - .02, dl / 2 + .02]) clad(Dg, x, -DD / 2, .04, DD, 4); clad(Dg, 0, -DD - .02, dl + .08, .04, 4);
   B.lbox(Dg, MAT.metal, 6.2, 1.1, .45, .8, 1.7, .6, '#5a6a72'); B.lbox(Dg, MAT.gloss, 6.2, 1.5, .76, .5, .3, .03, '#2a8ad1');
   kit.sign(Dg, 6.2, 2.15, .78, .8, .3, 'כספומט', { bg: '#d0202a', fg: '#ffffff', weight: 800 }); kit.lcollide(Dg, 6.2, .85, .45, .8, 1.7, .6);
@@ -456,24 +464,24 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
     const tc = (LB.t0 + LB.t1) / 2, LW = LB.t1 - LB.t0, L0 = new Frame(...LB.at(tc, 0), LB.rot, Lw), LF = sub(L0, 0, 0, 0, .06), lxOf = (t: number) => tc - t;
     shop(LF, 'cinemaLobby', { w: LW, d: LB.depth, h: LH, door: { lx: 0, width: 2.2 }, sign: null, keeper: { id: 'cinema_zohar', label: { he: 'קופה · קולנוע זוהר', en: 'Ticket desk · Zohar Cinema' } } });
     B.lbox(L0, MAT.paving, 0, .04, -.08, LW, .08, .2, '#a96d5c', false);
-    for (const [t, w, he, en, bg, fg] of [[6, 6.8, 'אווה ובתיה', 'EVA & BATYA · CAFÉ', '#f3e9d6', '#6b3f2a'], [17, 9.8, 'אולם זוהר', 'ZOHAR HALL · CINEMA', '#1c2230', '#ffd27a']] as Array<[number, number, string, string, string, string]>) {
+    for (const [t, w, he, en, bg, fg] of [[9, 5.8, 'אווה ובתיה', 'EVA & BATYA · CAFÉ', '#f3e9d6', '#6b3f2a'], [17, 9.8, 'אולם זוהר', 'ZOHAR HALL · CINEMA', '#1c2230', '#ffd27a']] as Array<[number, number, string, string, string, string]>) {
       B.lbox(LF, MAT.plain, lxOf(t), LH + .45, .1, w, .86, .14, bg); kit.sign(LF, lxOf(t), LH + .45, .18, w - .2, .72, he, { bg, fg, sub: en, weight: 800, glow: .2 });
     }
     // Two café tables on the plaza in front of Eva & Batya.
-    for (const [t, d1, d2] of [[4.6, 11, 12], [8, 13, 14]] as Array<[number, number, number]>) {
+    for (const [t, d1, d2] of [[7.6, 11, 12], [10.4, 13, 14]] as Array<[number, number, number]>) {
       const x = lxOf(t); kit.table(LF, x, 2.6, { square: .8, top: '#f3e9d6', cups: 2 });
       for (const [s, a, i] of [[-1, Math.PI / 2, d1], [1, -Math.PI / 2, d2]] as Array<[number, number, number]>) { kit.chair(LF, x + s * .62, 2.6, a, '#2a2d30'); kit.person(LF, x + s * .64, 2.6, { shirt: SHIRTS[(i * 3) % SHIRTS.length], pants: PANTS[i % PANTS.length], seed: 640 + i, seated: true, angle: a, dress: s > 0 }); }
     }
     kit.anchor(LF, 'landmark_zohar', lxOf(17), 2.3, 2, landmark('zohar').name, 4.2);
   }
   kit.occ.mark(-235, -100, -858, -795);
-  zk.B.flush();
+  zk.B.flush(); zg.traverse(o => { if (o instanceof THREE.Mesh) o.castShadow = false; }); // the furnishing is under a roof: no need to cast sun shadows (the shells do)
   return { M, U, Lw, bar: sub(M, -5, (BAL - HD) / 2, 0, F), plaza: sub(M, 0, HD + 6) };
 }
 
 /** Ground floor at the lower plaza, from the west: the closed section (Rav-Kav centre, flower
  *  shop) entered by an east-facing door inside the roofed strip; then Zeid 1 (building site),
- *  Mishi and Oranim pharmacy, as deep as the upper floor, behind the roofed strip under the
+ *  Mishi and Oranim pharmacy (walk-in rooms), behind the roofed strip under the
  *  balcony. The slab overhead is the upper floor and the balcony. */
 function groundFloor(kit: Kit, M: Frame, shop: ShopFn, attic: (f: Frame, lx: number, w: number, d: number, y0: number, top: number, color?: string) => void) {
   const B = kit.B, F = MANDU_FLOOR, { HW, HD, BAL, STW, ARC0 } = ZEID.frame, wall = '#e6dcc8', SH = 3; // shopfront height under the slab
@@ -514,10 +522,10 @@ function groundFloor(kit: Kit, M: Frame, shop: ShopFn, attic: (f: Frame, lx: num
   kit.sign(M, z1 + 2.6, 2.3, BAL + .33, 1.2, .8, 'זהירות!\nאתר בנייה', { bg: '#d63a2c', fg: '#ffffff', weight: 800 });
   for (let i = 0; i < 3; i++) B.lbox(M, MAT.gloss, z1 - 2.4 + i * 2.4, .5, BAL + 1, .9, 1, .4, i % 2 ? '#ffffff' : '#d63a2c');
   // Mishi and the pharmacy, which runs to the building's east end.
-  // Both run the full depth, to the north wall; their side walls are the dividers' faces (−3.375, 3.875 | 4.125 and the east end wall's).
-  { const dep = BAL + HD - .1, room = (x0: number, x1: number, set: string, door: number, sign: { he: string; en: string; bg: string; fg: string; w: number }, keeper: { id: string; he: string; en: string }) => {
+  // Side walls are the dividers' faces (−3.375, 3.875 | 4.125 and the east end wall's); the rooms stop 8.3 m in, because the terrain mesh rises through the floor nearer the north wall.
+  { const dep = 8.3, room = (x0: number, x1: number, set: string, door: number, sign: { he: string; en: string; bg: string; fg: string; w: number }, keeper: { id: string; he: string; en: string }) => {
       const f = sub(M, (x0 + x1) / 2, BAL, 0, .04);
-      shop(f, set, { w: x1 - x0, d: dep, h: SH, door: { lx: door - (x0 + x1) / 2 }, shared: { left: true, right: true, back: true }, sign: { ...sign, y: SH + .45 }, keeper: { id: keeper.id, label: { he: keeper.he, en: keeper.en } } });
+      shop(f, set, { w: x1 - x0, d: dep, h: SH, door: { lx: door - (x0 + x1) / 2 }, shared: { left: true, right: true }, sign: { ...sign, y: SH + .45 }, keeper: { id: keeper.id, label: { he: keeper.he, en: keeper.en } } });
       attic(f, 0, x1 - x0, dep, SH + .1, F - .3, wall); B.lbox(M, MAT.paving, (x0 + x1) / 2, .03, BAL - .08, x1 - x0, .06, .2, '#d6ccb8', false); };
     room(-3.375 - .2, 3.875 + .2, 'chocolate', 1.9, { he: 'מישי · בוטיק שוקולד', en: 'MISHI CHOCOLATE', bg: '#3b2416', fg: '#f2d9b0', w: 7 }, { id: 'mishi', he: 'מישי · בוטיק שוקולד', en: 'Mishi · chocolate boutique' });
     room(4.125 - .2, HW - .3 + .2, 'pharmacy', 9.4, { he: 'בית מרקחת אורנים', en: 'ORANIM PHARMACY', bg: '#f4f6f2', fg: '#1f8a4c', w: 12 }, { id: 'pharmacy', he: 'הרוקח · בית מרקחת אורנים', en: 'The pharmacist · Oranim pharmacy' }); }
