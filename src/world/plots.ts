@@ -459,6 +459,7 @@ function carport(kit: Kit, x: number, z: number, nx: number, nz: number, ht: HFn
 /** Build the plots' boundaries, gates, paths, driveways and lawns; returns garden tree candidates
  *  (each tree's spots in order of preference) for buildTrees. */
 export function dressPlots(kit: Kit, L: PlotLayout, styleOf: (house: number) => StreetStyle, parkCar: (x: number, z: number, rot: number) => void) {
+  if (import.meta.env?.DEV) (globalThis as any).__L = L;
   const t0 = performance.now(); let seed = 6061; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const pick = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)];
   const trees: Array<{ at: P2[]; kind: number }> = [], S = PLOT_STATS;
