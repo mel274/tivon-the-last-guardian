@@ -3,6 +3,7 @@ import { AREAS, WORLD, elevation, pointInPolygon, type P2 } from './geo';
 import { worldMaterial } from './materials';
 import { STATIC_PADS } from './layout';
 import { distToPoly, roadDelta } from './roadGrade';
+import { conformTerrain, cutSegments } from './terrainCuts';
 import { CAVE_PLAN, CAVE_FACADE as FACE, CAVE_COURT as COURT } from './Caves';
 
 /** Real relief from the DEM (Copernicus GLO-30, ~30 m source resampled to ~6.7 m), smoothed along the roads (roadGrade.ts), with game
@@ -76,6 +77,8 @@ export function surfaceHeight(x: number, z: number): number {
 const AREA_COLOR: Record<string, string> = { forest: '#4f6339', park: '#7c9150', pitch: '#6f9a48', playground: '#c4ad7c', school: '#b8a879', parking: '#7d7c76', cemetery: '#7f8a62', farm: '#a99d62', heritage: '#b3a173', pool: '#8fb0a6', pedestrian: '#cfc6b4' };
 export function buildTerrain(scene: THREE.Scene) {
   for (const hook of groundHooks) hook();
+  // Sharp pad edges (building floors, retaining walls) become mesh edges, so an 8 m triangle cannot cut through a floor or leave a wall floating.
+  const cuts = cutSegments(PADS);
   const pad = 320, minX = WORLD.minX - pad, maxX = WORLD.maxX + pad, minZ = WORLD.minZ - pad, maxZ = WORLD.maxZ + pad;
   const step = 8, TILE = 320;
   const nearPad = PADS.filter(p => !p.terrace).map(pad => { const xs = pad.poly.map(q => q[0]), zs = pad.poly.map(q => q[1]); return [Math.min(...xs) - 8, Math.max(...xs) + 8, Math.min(...zs) - 8, Math.max(...zs) + 8]; });
@@ -122,6 +125,8 @@ export function buildTerrain(scene: THREE.Scene) {
     }
     if (inStone.includes(1)) { const idx = geo.index!, keep: number[] = []; for (let t = 0; t < idx.count; t += 3) { const a = idx.getX(t), b = idx.getX(t + 1), d = idx.getX(t + 2); if (!(inStone[a] && inStone[b] && inStone[d])) keep.push(a, b, d); } geo.setIndex(keep); }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const tileCuts = cuts.filter(s => s.x1 >= tx - 1 && s.x0 <= tx + W + 1 && s.z1 >= tz - 1 && s.z0 <= tz + D + 1);
+    if (tileCuts.length) conformTerrain(geo, tileCuts);
     geo.computeBoundingSphere(); geo.computeBoundingBox();
     const tile = new THREE.Mesh(geo, mat); tile.receiveShadow = true; tile.name = 'terrain'; ground.add(tile);
   }
