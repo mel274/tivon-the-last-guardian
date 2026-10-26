@@ -1,5 +1,43 @@
 # Changelog
 
+## Unreleased (branch `world-pass`)
+
+### Added
+- Walk-in shops across the Zeid centre, built with a shared interior kit (`src/world/interiors.ts`, 17 sets):
+  - Upper floor: Butcher Tivon, printing, Itzik's camera shop, Pilates and building supplies.
+  - Ground floor: Mishi, Oranim pharmacy, the על-הקו (Rav-Kav) service centre and the flower shop.
+  - The Zohar cinema lobby with Eva & Batya inside.
+  - The falafel row (Falafel Chen, AURUM clocks, מספרת סלים, Falafel Luli, a for-rent unit, Beit Chabad), the pizza unit and Drugstore HaTzomet.
+  - Each shop has a keeper to talk to. Zeid 1 stays closed, and Mandu's interior waits for the owner's drawing (Mandu Interior Plan, revision 3).
+  - Furnishings are hidden beyond 90 m.
+- The falafel-row corner to plan revision 4.2:
+  - the one-storey row with its canopy, the pizza unit facing the lane's street entrance, and the drugstore with red Coca-Cola boards and a porch;
+  - the paved lane with picnic tables;
+  - the Route 75 guardrail to the Kiryat Amal junction, and the garden path down to the Hannah Szenes garden.
+- More details from the owner's photos: beige balcony tiles, canvas awnings, roller shutters, a landing on the lower-plaza stair, and a longer bus-stop stair with green railings.
+- Private houses on their own garden plots (`src/world/plots.ts`):
+  - a street wall, hedge or fence from the survey;
+  - side fences, a gate and path, a driveway or carport;
+  - lawn and garden trees.
+- House terraces (`src/world/terraces.ts`): each private house sits on a flat pad, with rubble-stone retaining walls on its downhill edges.
+- GitHub Pages deployment (base-path-aware asset loads and a deploy workflow).
+
+### Changed
+- The DEM is now Copernicus GLO-30, replacing AWS Terrain Tiles:
+  - it gives smoother ground and a closer Zeid drop (5.2 m against the real 5.4 m);
+  - `docs/gis/build-dem.mjs` rebuilds it, and the old builder is kept as `build-dem-terrarium.mjs`.
+- Road beds are smoothed along each road and held to 12% grade (`src/world/roadGrade.ts`).
+- The street survey covers all 81 streets (20 more from Street View, 15 estimated).
+- Shopkeepers use the real shop names.
+
+### Fixed
+- The cave entrance is open: the hill stays above every cave space, and the walk test reaches every chamber.
+- Distant ridges are drawn as unclipped haze, so there is no sky arc on the horizon.
+
+### Known
+- House plots make the town slower to build (about 28 s to load in the browser). A speed-up is half done on branch `worktree-agent-a7d8f80b132bf05e1`.
+- Some Zeid rooms were cut short where the old ground poked through their floors. They have not been re-checked against the new DEM.
+
 ## 0.3.0 — Tivon at 1:1, 2026-10-24
 
 ### Changed

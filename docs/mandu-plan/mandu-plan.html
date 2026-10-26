@@ -1,0 +1,465 @@
+<title>Mandu Interior Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans+Hebrew:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a drafting sheet for one room. The narrow bar strip drawn large (backyard at the top,
+   balcony at the bottom) with the selected item's card beside it, then the wall views and questions.
+   Palette: Mandu's night sign (deep green and gold) and Café Beinenu's day sign (cream and brown). */
+:root {
+  --paper: #eff0ec; --sheet: #f9faf7; --ink: #1f2522; --ink-2: #55605b; --rule: #c9cfca; --grid: #e2e6e2;
+  --night: #1f2a26; --gold: #c99a2e; --wood: #7a5638; --wood-2: #b08560; --cream: #efe6d2; --brown: #4b3a26;
+  --glass: #8fb7c2; --green: #4f7a43; --pin: #b8286a; --check: #c96a12; --ok: #2d7a4a; --warn: #a3541b;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", "IBM Plex Sans Hebrew", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #121615; --sheet: #191f1d; --ink: #e5ebe7; --ink-2: #a2aea8; --rule: #313b37; --grid: #212926;
+  --night: #0c1210; --gold: #e3b84e; --wood: #b3825a; --wood-2: #d0a57d; --cream: #3b3428; --brown: #e2cfa9;
+  --glass: #6e9aa6; --green: #77a86a; --pin: #f05b9f; --check: #f0a050; --ok: #5cc184; --warn: #e3924f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #121615; --sheet: #191f1d; --ink: #e5ebe7; --ink-2: #a2aea8; --rule: #313b37; --grid: #212926;
+  --night: #0c1210; --gold: #e3b84e; --wood: #b3825a; --wood-2: #d0a57d; --cream: #3b3428; --brown: #e2cfa9;
+  --glass: #6e9aa6; --green: #77a86a; --pin: #f05b9f; --check: #f0a050; --ok: #5cc184; --warn: #e3924f; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 22px }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; text-wrap: balance; margin: 0 }
+h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.1 } h2 { font-size: 21px } h3 { font-size: 16px }
+p { margin: 0 }
+.he { font-family: "IBM Plex Sans Hebrew", var(--f-body) }
+.eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2) }
+header { display: grid; gap: 10px }
+.lede { max-width: 72ch; color: var(--ink-2) }
+.status { font-family: var(--f-mono); font-size: 12px; color: var(--ink-2) }
+.status.ok { color: var(--ok) } .status.warn { color: var(--warn) }
+.sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; padding: 16px; display: grid; gap: 12px; min-width: 0 }
+.sheet-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px }
+.plan-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start }
+@media (max-width: 880px) { .plan-grid { grid-template-columns: 1fr } }
+.scroll-x { overflow-x: auto; min-width: 0 }
+svg text { font-family: var(--f-body) }
+#plan { display: block; width: 100%; max-width: 640px; margin: 0 auto; height: auto; touch-action: none; user-select: none }
+.toolbar { display: flex; flex-wrap: wrap; gap: 6px }
+button { font: 500 13px var(--f-body); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 6px 10px; cursor: pointer }
+button:hover { border-color: var(--ink-2) }
+button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink) }
+button:focus-visible, input:focus-visible, textarea:focus-visible, .pin:focus-visible { outline: 2px solid var(--pin); outline-offset: 2px }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-2) }
+.legend i { display: inline-block; width: 14px; height: 10px; margin-inline-end: 5px; vertical-align: -1px; border-radius: 2px }
+.card { display: grid; gap: 10px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px) }
+.card .who { display: flex; gap: 10px; align-items: baseline }
+.card .who b { font-family: var(--f-mono); color: var(--pin); font-weight: 500 }
+.now { font-size: 13.5px; color: var(--ink-2) } .now strong { color: var(--ink); font-weight: 600 }
+.badge { display: inline-block; font-family: var(--f-mono); font-size: 11px; padding: 1px 6px; border-radius: 2px; border: 1px solid currentColor }
+.badge.done { color: var(--ok) } .badge.check { color: var(--check) }
+.moved { font-family: var(--f-mono); font-size: 12px; color: var(--pin) }
+label { font-size: 12.5px; color: var(--ink-2); display: grid; gap: 4px }
+textarea, input[type="text"] { font: 14px var(--f-body); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 7px 9px; width: 100% }
+textarea { min-height: 76px; resize: vertical }
+.pinlist { display: grid; gap: 2px; max-height: 360px; overflow: auto; border-top: 1px solid var(--rule); padding-top: 8px }
+.pinlist button { display: grid; grid-template-columns: 26px 1fr auto; text-align: start; gap: 6px; background: none; border: 0; padding: 4px 6px; border-radius: 3px; font-size: 13px }
+.pinlist button[aria-current="true"] { background: var(--paper) }
+.pinlist .k { font-family: var(--f-mono); color: var(--pin) }
+.pinlist .flag { font-family: var(--f-mono); font-size: 11px; color: var(--pin) }
+.views { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr)); gap: 16px }
+.view { display: grid; gap: 6px; min-width: 0 }
+.view svg { display: block; width: 100%; min-width: 460px; height: auto }
+.note { font-size: 13px; color: var(--ink-2); max-width: 78ch }
+.qs { display: grid; gap: 14px }
+.q { display: grid; gap: 6px; grid-template-columns: 34px minmax(0, 1fr) }
+.q .n { font-family: var(--f-mono); color: var(--check); padding-top: 2px }
+.q p { font-weight: 500 } .q .why { font-size: 13px; color: var(--ink-2); font-weight: 400 }
+.q textarea { min-height: 56px }
+.photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px }
+.photo { display: grid; gap: 4px; font-size: 12.5px; color: var(--ink-2); min-width: 0; margin: 0 }
+.photo img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 3px; border: 1px solid var(--rule); max-width: 100% }
+.upload { display: flex; flex-wrap: wrap; gap: 8px; align-items: end }
+.upload label { flex: 1 1 200px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Zeid centre · upper floor · Mandu / Café Beinenu · revision 3</span>
+    <h1>Mandu Interior Plan</h1>
+    <p class="lede">Revision 3 takes in your shapes and notes. Behind the bar is a snack counter with one big shelf above it. The east wall has the kegs, a standing wine cooler and two lamps, and an L-shaped bench with small tables fills the front corner. Clothes hangers are spread across the loft. The balcony-tables and hanging-sign pins are back in their places, and the cooler and kegs are now boxes of their own. As before, click a box and drag it to move it, or drag its corner to resize it.</p>
+    <p class="status" id="status" role="status">Connecting…</p>
+  </header>
+
+  <section class="sheet" aria-labelledby="plan-h">
+    <div class="sheet-head"><h2 id="plan-h">Plan · the bar strip from above</h2><span class="eyebrow">North (backyard) up · grid 1 m</span></div>
+    <div class="toolbar" role="group" aria-label="Plan tools">
+      <button type="button" id="t-night" aria-pressed="true">Night · Mandu</button>
+      <button type="button" id="t-day" aria-pressed="false">Day · Café Beinenu</button>
+      <button type="button" id="t-labels" aria-pressed="true">Labels</button>
+      <button type="button" id="t-add" aria-pressed="false">+ Add a pin</button>
+      <button type="button" id="t-addbox" aria-pressed="false">+ Add a box</button>
+    </div>
+    <div class="plan-grid">
+      <div class="scroll-x"><svg id="plan" viewBox="-10.5 -12.6 21 24.4" role="img" aria-label="Plan of the Mandu bar strip"></svg></div>
+      <aside class="card" aria-live="polite"><div id="card"></div><div class="pinlist" id="pinlist" aria-label="All pins"></div></aside>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--wood)"></i>Bar counter, shelves, stair</span>
+      <span><i style="background:none;outline:1px dashed var(--wood)"></i>Loft above (vintage and books)</span>
+      <span><i style="background:color-mix(in srgb, var(--pin) 20%, transparent);outline:1px solid var(--pin)"></i>Box you can shape</span>
+      <span><i style="background:color-mix(in srgb, var(--glass) 60%, transparent)"></i>Glass front</span>
+      <span><i style="background:color-mix(in srgb, var(--green) 25%, transparent)"></i>Backyard</span>
+      <span><i style="background:color-mix(in srgb, var(--gold) 25%, transparent)"></i>Balcony</span>
+      <span><i style="background:color-mix(in srgb, var(--ink) 12%, transparent)"></i>Neighbouring shops</span>
+    </div>
+  </section>
+
+  <section class="sheet" aria-labelledby="v-h">
+    <div class="sheet-head"><h2 id="v-h">Walls</h2><span class="eyebrow">To scale · ceiling 3.95 m</span></div>
+    <div class="views">
+      <div class="view"><h3>A · The back bar (west wall), from the stools</h3><div class="scroll-x"><svg id="viewA" viewBox="-7 -4.6 14 5.4" role="img" aria-label="West wall with the bar"></svg></div></div>
+      <div class="view"><h3>B · The white east wall</h3><div class="scroll-x"><svg id="viewB" viewBox="-7 -4.6 14 5.4" role="img" aria-label="East wall with the mezzanine stair"></svg></div></div>
+      <div class="view"><h3>C · Standing on the balcony, looking in</h3><div class="scroll-x"><svg id="viewC" viewBox="-4.2 -5 8.4 5.8" role="img" aria-label="Mandu's front onto the balcony"></svg></div>
+        <p class="note">The door is at the west end. The hanging sign is bare wood with black lettering, edge-on to the front at the west end. Café Beinenu itself is the cart in the backyard.</p></div>
+    </div>
+  </section>
+
+  <section class="sheet" aria-labelledby="q-h">
+    <div class="sheet-head"><h2 id="q-h">Questions</h2><span class="eyebrow">Answers save as you type</span></div>
+    <div class="qs" id="qs"></div>
+  </section>
+
+  <section class="sheet" aria-labelledby="ph-h">
+    <div class="sheet-head"><h2 id="ph-h">Photos</h2><span class="eyebrow">Select a pin first to link a photo to it</span></div>
+    <div class="upload" id="upload">
+      <label for="ph-file">Photo<input type="file" id="ph-file" accept="image/*"></label>
+      <label for="ph-cap">What it shows<input type="text" id="ph-cap" placeholder="e.g. the bar from the balcony door"></label>
+      <button type="button" id="ph-go">Upload photo</button>
+    </div>
+    <p class="status" id="ph-status"></p>
+    <div class="photos" id="photos"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  // Strip-local metres, as in the game: x east (−2.7 west wall … 2.7 east wall), z south (−6.18 the
+  // open north end to the backyard … 6.18 the glass front onto the balcony). Balcony z 6.18 … 10.33,
+  // backyard z −11.4 … −6.18. Neighbours: printing to the west, Itzik’s camera shop to the east.
+  const W2 = 2.7, L2 = 6.18, BAL = 10.33, YARD = -11.4;
+  const P = (k, n, he, x, z, s, now) => ({ k, n, he, x, z, s, now });
+  const PINS = [
+    P('taps', 'Beer taps', 'ברזי בירה', -1.1, -1.8, 'done', 'On the counter, where you moved them.'),
+    P('bartender', 'Bartender', 'הברמן', -2.05, -2.2, 'done', 'Behind the counter, in front of the snack counter.'),
+    P('stools', 'Bar stools', 'כיסאות בר', -.6, -1.3, 'done', 'Four stools along the counter, on the room side.'),
+    P('door', 'Door to the balcony', 'הכניסה מהמרפסת', -2, 5.6, 'done', 'At the west end of the front; glass across the rest.'),
+    P('north', 'Door to the backyard', 'הדלת לחצר', 1, -5.6, 'done', 'Just east of the middle of the back wall.'),
+    P('lamps', 'Lamp', 'מנורה', 2.3, .6, 'done', 'A gooseneck lamp on the east wall.'),
+    P('lamp2', 'Second lamp', 'מנורה שנייה', 2.3, 5, 'done', 'Another lamp, by the front, where you pinned it.'),
+    P('hanging', 'Hanging sign', 'השלט התלוי', -2.7, 7, 'done', 'Back in place: bare wood with black lettering, edge-on, at the west end.'),
+    P('espresso', 'Coffee window', 'חלון הקפה', -1.4, -7.7, 'check', 'Café Beinenu’s window on the cart. Which side faces the customers?'),
+    P('storyteller', 'The storyteller’s seat', 'המספר', 1.6, 7.4, 'check', 'Outside on the balcony. Should he sit by the door at the west end?'),
+    P('baltables', 'Balcony tables', 'שולחנות במרפסת', -4.6, 8.6, 'done', 'Back in place: Mandu’s tables on the balcony.'),
+    P('yard', 'Backyard seating', 'החצר', 2.5, -8.8, 'done', 'White folding chairs and wooden chairs at wooden tables, a sandy floor, a raised wooden planter edge, string lights under the pergola.'),
+  ];
+  // Boxes the owner can move and resize: [key, name, Hebrew, x, z, w, d, level, colour token, note]
+  const B = (k, n, he, x, z, w, d, lvl, col, now) => ({ k, n, he, x, z, w, d, rot: 0, lvl, col, now });
+  const BOXES = [
+    B('cart', 'Café Beinenu coffee cart', 'עגלת הקפה · קפה בינינו', -1.4, -7.7, 2.6, 2.8, 'yard', '--wood', 'The wooden cart, at the size you shaped it.'),
+    B('counter', 'Bar counter', 'הבר', -1.4, -1.75, .9, 4.3, 'ground', '--wood', 'Under the loft, with the taps and four stools.'),
+    B('backbar', 'Snack counter and shelf', 'דלפק הנשנושים והמדף', -2.5, -2.3, .3, 3.1, 'ground', '--wood', 'Against the west wall behind the bar: a counter where the snacks are made, with one big shelf above it.'),
+    B('stair', 'Stair to the loft', 'המדרגות לגלריה', -2.25, 1, .8, 3.4, 'ground', '--wood', 'Steep wooden stair up the west wall, from near the door up to the loft.'),
+    B('loft', 'Loft', 'הגלריה', 0, -3.44, 5.4, 5.48, 'loft', '--wood-2', 'Over the back half, about 2.3 m up, with tables and clothes on hangers.'),
+    B('racks', 'Clothes hangers on the loft', 'מתלים בגלריה', 2.2, -3.4, .8, 4.3, 'loft', '--wood-2', 'Hangers all over the loft, where you put them.'),
+    B('wc', 'Toilet', 'שירותים', -1.95, -5.29, 1.5, 1.78, 'ground', '--ink', 'In the north-west corner, behind the fridge, its door on the corridor.'),
+    B('fridge', 'Fridge by the back door', 'המקרר', -.45, -5.65, .8, .6, 'ground', '--glass', 'West of the backyard door, in front of the toilet corridor.'),
+    B('kegs', 'Kegs', 'חביות', 2.3, -.4, .6, .9, 'ground', '--ink-2', 'Beer kegs against the east wall, where you pinned them.'),
+    B('cooler', 'Standing wine cooler', 'מקרר יין', 2.3, 1.4, .6, .7, 'ground', '--glass', 'A tall glass wine cooler, where you pinned it.'),
+    B('bench', 'Bench and small tables', 'ספסל ושולחנות קטנים', .9, 4, 3.4, 4, 'ground', '--wood-2', 'A bench shaped like a flipped L (drawn along the east wall and the front glass) with small tables in front of it.'),
+  ];
+  const QUESTIONS = [
+    ['q3-bench', 'The bench: I drew the flipped L along the east wall and then along the front glass (┘). Is that the way it turns? How many small tables are there?', 'Box “Bench and small tables”.'],
+    ['q3-snack', 'Is the snack counter the same thing as the back bar along the west wall (a worktop with one big shelf above), or is it a separate counter further back?', 'Box “Snack counter and shelf”.'],
+    ['q3-fridge', 'I swapped the drinks fridge for your wine cooler. Is there any other fridge on the east side?', 'Box “Standing wine cooler”.'],
+    ['q3-cart', 'The coffee cart: which side is the service window on, where do people queue, and does it have its own seating?', 'Box “Café Beinenu coffee cart” and pin 9.'],
+    ['q3-loft', 'The loft: how high is it, can people stand up there, and is the west stair the only way up?', 'Box “Loft”.'],
+    ['q3-story', 'The storyteller sat beside the door. The door is now at the west end: should he sit there too, or inside at the bar?', 'Pin 10.'],
+    ['q3-other', 'Anything else that is missing or wrong?', ''],
+  ];
+
+  const state = { pins: {}, added: {}, answers: {}, photos: [], boxes: {} };
+  let db = null, assets = null, selected = 'box:cart', addMode = false, addBox = false, night = true;
+  const $ = s => document.querySelector(s);
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (parent) parent.appendChild(e); return e; };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const mix = (v, p) => `color-mix(in srgb, var(${v}) ${p}%, transparent)`;
+  const pinNo = k => PINS.findIndex(p => p.k === k) + 1;
+  const pos = p => { const s = state.pins[p.k]; return s && s.moved ? [s.x, s.z] : [p.x, p.z]; };
+  const r1 = v => Math.round(v * 10) / 10;
+  const queues = {}, timers = {};
+  function write(path, data) {
+    if (!db) return;
+    queues[path] = (queues[path] || Promise.resolve()).then(() => db.doc(path).set(data)).then(
+      () => setStatus('Saved.', 'ok'),
+      e => setStatus(e && e.code === 'invalid_argument' ? 'This view can’t save changes.' : 'Couldn’t save. Try again in a moment.', 'warn'));
+  }
+  const later = (key, fn, ms = 700) => { clearTimeout(timers[key]); timers[key] = setTimeout(fn, ms); };
+  function setStatus(t, cls = '') { const s = $('#status'); s.textContent = t; s.className = 'status ' + cls; }
+
+  // ——— Plan ———
+  const svg = $('#plan'), layers = {};
+  const rect = (g, x0, z0, x1, z1, a) => el('rect', { x: Math.min(x0, x1), y: Math.min(z0, z1), width: Math.abs(x1 - x0), height: Math.abs(z1 - z0), ...a }, g);
+  const txt = (g, x, y, s, o = {}) => { const e = el('text', { x, y, 'font-size': o.size || .42, fill: o.fill || 'var(--ink-2)', 'text-anchor': o.anchor || 'middle', 'font-weight': o.weight || 500, transform: o.rot ? `rotate(${o.rot} ${x} ${y})` : '', style: 'paint-order:stroke;stroke:var(--sheet);stroke-width:.12px' }, g); e.textContent = s; if (/[א-ת]/.test(s)) e.setAttribute('direction', 'rtl'); return e; };
+  function drawPlan() {
+    svg.textContent = '';
+    const defs = el('defs', {}, svg); const m = el('marker', { id: 'ah', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 5, markerHeight: 5, orient: 'auto' }, defs); el('path', { d: 'M0 0 L10 5 L0 10z', fill: 'var(--ink)' }, m);
+    for (const n of ['grid', 'room', 'labels', 'pins']) layers[n] = el('g', {}, svg);
+    const G = layers.grid, R = layers.room, Lb = layers.labels;
+    for (let x = -10; x <= 10; x++) el('line', { x1: x, y1: -12.6, x2: x, y2: 11.8, stroke: 'var(--grid)', 'stroke-width': .02 }, G);
+    for (let z = -12; z <= 11; z++) el('line', { x1: -10.5, y1: z, x2: 10.5, y2: z, stroke: 'var(--grid)', 'stroke-width': .02 }, G);
+    // Context: backyard, balcony, neighbouring shops.
+    rect(R, -10.5, YARD, 10.5, -L2, { fill: mix('--green', 18) });
+    for (let x = -9.6; x <= 9.6; x += 3.2) for (const z of [-10.2, -7.2]) el('circle', { cx: x, cy: z, r: .09, fill: 'var(--wood)' }, R);
+    rect(R, -10.5, L2, 10.5, BAL, { fill: mix('--gold', 18) });
+    el('line', { x1: -10.5, y1: BAL - .05, x2: 10.5, y2: BAL - .05, stroke: 'var(--ink)', 'stroke-width': .06, 'stroke-dasharray': '.12 .1' }, R);
+    rect(R, -10.5, -L2, -W2, L2, { fill: mix('--ink', 9) }); rect(R, W2, -L2, 10.5, L2, { fill: mix('--ink', 9) });
+    txt(Lb, -6.6, 0, 'Printing', { size: .55, weight: 600 }); txt(Lb, -6.6, .7, 'דפוס', { size: .42 });
+    txt(Lb, 6.6, 0, 'Itzik’s camera shop', { size: .5, weight: 600 }); txt(Lb, 6.6, .7, 'ביתן הצילום של איציק', { size: .4 });
+    txt(Lb, 0, -11.9, 'BACKYARD · pergola, string lights · Route 75 beyond the bushes', { size: .45, fill: 'var(--green)', weight: 600 });
+    txt(Lb, 0, 11.3, 'BALCONY · from the upper plaza (west) to the building supplies (east)', { size: .45, fill: 'var(--gold)', weight: 600 });
+    // The strip: floor (old patterned tiles), the dark-green west wall, the white east wall.
+    rect(R, -W2, -L2, W2, L2, { fill: night ? mix('--night', 12) : mix('--cream', 60), stroke: 'none' });
+    rect(R, -W2 - .15, -L2, -W2, L2, { fill: '#2f4a3c' }); rect(R, W2, -L2, W2 + .15, L2, { fill: 'var(--ink)' });
+    // Front: the door at the west end, glass across the rest.
+    rect(R, -1.4, L2 - .06, W2, L2 + .06, { fill: mix('--glass', 70) });
+    el('path', { d: `M-2.6 ${L2} A1.2 1.2 0 0 0 -1.4 ${L2 - 1.2}`, fill: 'none', stroke: 'var(--ink-2)', 'stroke-width': .03, 'stroke-dasharray': '.08 .06' }, R);
+    // Back wall with the door to the backyard (x .5 … 1.5).
+    rect(R, -W2, -L2 - .1, .5, -L2 + .1, { fill: 'var(--ink)' }); rect(R, 1.5, -L2 - .1, W2, -L2 + .1, { fill: 'var(--ink)' });
+    el('path', { d: `M.5 ${-L2} A1 1 0 0 1 1.5 ${-L2 - 1}`, fill: 'none', stroke: 'var(--ink-2)', 'stroke-width': .03, 'stroke-dasharray': '.08 .06' }, R);
+    for (const z of [-3.5, -1.1, 1.3, 3.7]) if (z > -.7) el('circle', { cx: .3, cy: z, r: .16, fill: 'none', stroke: 'var(--ink-2)', 'stroke-width': .05 }, R);
+    el('line', { x1: 0, y1: 9.6, x2: -1.9, y2: 6.6, stroke: 'var(--ink)', 'stroke-width': .05, 'marker-end': 'url(#ah)' }, R);
+    el('line', { x1: 1, y1: -6.8, x2: 1, y2: -9.3, stroke: 'var(--ink)', 'stroke-width': .05, 'marker-end': 'url(#ah)' }, R);
+    txt(Lb, -2.3, 2.3, 'up ↑', { size: .32, fill: 'var(--wood)', weight: 700 });
+    txt(Lb, 0, 6.05, night ? 'מנדו · glass front' : 'קפה בינינו · glass front', { size: .34 });
+    txt(Lb, 1.2, -.95, 'loft above ↑', { size: .34, fill: 'var(--wood)' });
+    layers.boxes = el('g', {}, svg);
+    // Balcony tables and the storyteller.
+    for (const x of [-6, -3.2, 4.6, 7.4]) rect(R, x - .4, 8.4, x + .4, 9.2, { fill: mix('--cream', 90), stroke: 'var(--ink-2)', 'stroke-width': .03 });
+    for (let x = -10; x <= 10.4; x += 2.07) rect(R, x - .3, BAL - .62, x + .3, BAL - .02, { fill: 'var(--wood)' });
+    rect(R, -10.5, -10.9, 10.5, -10.2, { fill: mix('--wood', 35) }); txt(Lb, -6.5, -10.35, 'raised wooden planter', { size: .3, fill: 'var(--wood)' });
+    // Scale bar and north.
+    rect(R, -10, 11.55, -8, 11.65, { fill: 'var(--ink)' }); txt(Lb, -9, 11.4, '2 m', { size: .36 });
+    el('path', { d: 'M9.6 -12.4 L9.95 -11.4 L9.6 -11.6 L9.25 -11.4 Z', fill: 'var(--ink)' }, R);
+    svg.appendChild(layers.labels); svg.appendChild(layers.pins); drawBoxes(); drawPins(); layers.labels.style.display = $('#t-labels').getAttribute('aria-pressed') === 'true' ? '' : 'none';
+  }
+  const boxOf = b => { const s = state.boxes[b.k]; return s ? { ...b, ...s } : b; };
+  const allBoxes = () => BOXES.map(boxOf).concat(Object.entries(state.boxes).filter(([k]) => k.startsWith('x')).map(([k, v]) => ({ k, n: v.label || 'New box', he: '', lvl: 'ground', col: '--pin', now: 'A box you added.', ...v })));
+  function drawBoxes() {
+    const g = layers.boxes; g.textContent = '';
+    for (const b of allBoxes()) {
+      const sel = selected === 'box:' + b.k, grp = el('g', { class: 'box', 'data-k': b.k, transform: `translate(${b.x} ${b.z}) rotate(${b.rot || 0})`, style: 'cursor:move' }, g);
+      el('rect', { x: -b.w / 2, y: -b.d / 2, width: b.w, height: b.d, fill: b.lvl === 'loft' ? 'none' : mix(b.col, b.k === 'cart' ? 45 : 55), stroke: sel ? 'var(--pin)' : b.lvl === 'loft' ? 'var(--wood)' : 'var(--ink-2)', 'stroke-width': sel ? .07 : .035, 'stroke-dasharray': b.lvl === 'loft' ? '.2 .12' : '' }, grp);
+      if (b.k !== 'loft' || sel) { const t = el('text', { x: 0, y: .1, 'font-size': Math.min(.34, Math.max(.2, Math.min(b.w, b.d) * .3)), 'text-anchor': 'middle', fill: 'var(--ink)', 'font-weight': 600, transform: b.d > b.w * 1.6 ? 'rotate(-90)' : '', style: 'pointer-events:none;paint-order:stroke;stroke:var(--sheet);stroke-width:.08px' }, grp); t.textContent = b.n; }
+      if (b.k === 'bench') { const t = .45; el('path', { d: `M${b.w / 2 - t} ${-b.d / 2} H${b.w / 2} V${b.d / 2} H${-b.w / 2} V${b.d / 2 - t} H${b.w / 2 - t} Z`, fill: 'var(--wood)', opacity: .8, style: 'pointer-events:none' }, grp); for (const [tx, tz] of [[-.6, .55], [.55, -.55], [.55, .75]]) el('circle', { cx: tx * b.w / 2.4, cy: tz * b.d / 2.6, r: .3, fill: 'var(--wood-2)', stroke: 'var(--ink-2)', 'stroke-width': .03, style: 'pointer-events:none' }, grp); }
+      if (sel) { const h = el('rect', { class: 'handle', 'data-k': b.k, x: b.w / 2 - .22, y: b.d / 2 - .22, width: .44, height: .44, fill: 'var(--pin)', stroke: 'var(--sheet)', 'stroke-width': .05, style: 'cursor:nwse-resize' }, grp); h.setAttribute('aria-label', 'Resize ' + b.n); }
+    }
+  }
+  function saveBox(k) { const b = allBoxes().find(q => q.k === k); if (!b) return; write('shapes3/' + k, { x: r1(b.x), z: r1(b.z), w: r1(b.w), d: r1(b.d), rot: b.rot || 0, note: b.note || '', label: b.label || '', ok: !!b.ok }); }
+  const setBox = (k, patch) => { state.boxes[k] = { ...(state.boxes[k] || {}), ...patch }; };
+  function drawPins() {
+    const g = layers.pins; g.textContent = '';
+    const all = PINS.map(p => ({ ...p, cur: pos(p), moved: !!(state.pins[p.k] && state.pins[p.k].moved), no: pinNo(p.k) }))
+      .concat(Object.entries(state.added).map(([id, a], i) => ({ k: 'added:' + id, n: a.label || 'New pin', cur: [a.x, a.z], moved: false, no: '+' + (i + 1), s: 'you' })));
+    for (const p of all) {
+      if (p.moved) { el('line', { x1: p.x, y1: p.z, x2: p.cur[0], y2: p.cur[1], stroke: 'var(--pin)', 'stroke-width': .04, 'stroke-dasharray': '.12 .08' }, g); el('circle', { cx: p.x, cy: p.z, r: .1, fill: 'none', stroke: 'var(--pin)', 'stroke-width': .04 }, g); }
+      const sel = selected === p.k, r = sel ? .4 : .32, [x, z] = p.cur;
+      const grp = el('g', { class: 'pin', 'data-k': p.k, tabindex: 0, role: 'button', 'aria-label': `Pin ${p.no}: ${p.n}`, style: 'cursor:grab' }, g);
+      if (p.s === 'check') el('circle', { cx: x, cy: z, r: r + .14, fill: 'none', stroke: 'var(--check)', 'stroke-width': .08 }, grp);
+      el('circle', { cx: x, cy: z, r, fill: 'var(--pin)', stroke: 'var(--sheet)', 'stroke-width': sel ? .1 : .05 }, grp);
+      const t = el('text', { x, y: z + .12, 'font-size': String(p.no).length > 1 ? .28 : .34, 'text-anchor': 'middle', fill: 'var(--sheet)', 'font-weight': 600, style: 'pointer-events:none;font-family:var(--f-mono)' }, grp); t.textContent = p.no;
+      if (sel) { const lb = el('text', { x: x + .55, y: z + .13, 'font-size': .36, fill: 'var(--ink)', 'font-weight': 600, style: 'pointer-events:none;paint-order:stroke;stroke:var(--sheet);stroke-width:.14px' }, grp); lb.textContent = p.n; }
+    }
+  }
+  const toggle = b => { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); return on; };
+  const setMode = n => { night = n; $('#t-night').setAttribute('aria-pressed', String(n)); $('#t-day').setAttribute('aria-pressed', String(!n)); drawPlan(); viewA(); viewC(); };
+  $('#t-night').addEventListener('click', () => setMode(true)); $('#t-day').addEventListener('click', () => setMode(false));
+  $('#t-labels').addEventListener('click', e => { const on = toggle(e.currentTarget); layers.labels.style.display = on ? '' : 'none'; });
+  $('#t-add').addEventListener('click', e => { addMode = toggle(e.currentTarget); svg.style.cursor = addMode ? 'crosshair' : ''; setStatus(addMode ? 'Click on the plan where the new pin goes.' : 'Ready.'); });
+  $('#t-addbox').addEventListener('click', e => { addBox = toggle(e.currentTarget); svg.style.cursor = addBox ? 'crosshair' : ''; setStatus(addBox ? 'Click on the plan where the new box goes, then drag its corner to size it.' : 'Ready.'); });
+  const toPlan = ev => { const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; const q = pt.matrixTransform(svg.getScreenCTM().inverse()); return [r1(q.x), r1(q.y)]; };
+  let drag = null;
+  svg.addEventListener('pointerdown', ev => {
+    const g = ev.target.closest('.pin'), h = ev.target.closest('.handle'), bx = ev.target.closest('.box');
+    if (addMode && !g) { const [x, z] = toPlan(ev); addPin(x, z); return; }
+    if (addBox && !g) { const [x, z] = toPlan(ev), k = 'x' + Date.now().toString(36); setBox(k, { x, z, w: 1.2, d: 1.2, rot: 0, label: '' }); addBox = false; $('#t-addbox').setAttribute('aria-pressed', 'false'); svg.style.cursor = ''; saveBox(k); select('box:' + k); return; }
+    if (!g && !h && !bx) return; ev.preventDefault(); svg.setPointerCapture(ev.pointerId);
+    if (g) drag = { kind: 'pin', k: g.dataset.k, start: toPlan(ev), moved: false };
+    else { const k = (h || bx).dataset.k, b = allBoxes().find(q => q.k === k); selected = 'box:' + k; drag = { kind: h ? 'size' : 'box', k, start: toPlan(ev), moved: false, ox: b.x, oz: b.z }; drawBoxes(); renderCard(); renderList(); }
+  });
+  svg.addEventListener('pointermove', ev => {
+    if (!drag) return; const [x, z] = toPlan(ev);
+    if (!drag.moved && Math.hypot(x - drag.start[0], z - drag.start[1]) < .1) return;
+    drag.moved = true;
+    if (drag.kind === 'pin') { selected = drag.k; if (drag.k.startsWith('added:')) { const id = drag.k.slice(6); state.added[id] = { ...state.added[id], x, z }; } else state.pins[drag.k] = { ...(state.pins[drag.k] || {}), x, z, moved: true }; drawPins(); return; }
+    const b = allBoxes().find(q => q.k === drag.k);
+    if (drag.kind === 'box') setBox(drag.k, { x: r1(drag.ox + x - drag.start[0]), z: r1(drag.oz + z - drag.start[1]), w: b.w, d: b.d, rot: b.rot || 0 });
+    else { const a = -(b.rot || 0) * Math.PI / 180, dx = x - b.x, dz = z - b.z, lx = dx * Math.cos(a) - dz * Math.sin(a), lz = dx * Math.sin(a) + dz * Math.cos(a); setBox(drag.k, { x: b.x, z: b.z, w: Math.max(.2, r1(Math.abs(lx) * 2)), d: Math.max(.2, r1(Math.abs(lz) * 2)), rot: b.rot || 0 }); }
+    drawBoxes(); renderCard();
+  });
+  svg.addEventListener('pointerup', () => { if (!drag) return; const d = drag; drag = null; if (d.kind === 'pin') { selected = d.k; if (d.moved) { if (d.k.startsWith('added:')) saveAdded(d.k.slice(6)); else savePin(d.k); } } else if (d.moved) saveBox(d.k); drawBoxes(); drawPins(); renderCard(); renderList(); });
+  svg.addEventListener('keydown', ev => { const g = ev.target.closest && ev.target.closest('.pin'); if (g && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); select(g.dataset.k); } });
+  function select(k) { selected = k; drawBoxes(); drawPins(); renderCard(); renderList(); }
+  function savePin(k) { const p = PINS.find(q => q.k === k), s = state.pins[k] || {}; write('pins3/' + k, { x: s.x ?? p.x, z: s.z ?? p.z, moved: !!s.moved, note: s.note || '', ok: !!s.ok }); }
+  function saveAdded(id) { const a = state.added[id]; write('added3/' + id, { x: a.x, z: a.z, label: a.label || '', note: a.note || '' }); }
+  function addPin(x, z) { const id = 'p' + Date.now().toString(36); state.added[id] = { x, z, label: '', note: '' }; addMode = false; $('#t-add').setAttribute('aria-pressed', 'false'); svg.style.cursor = ''; saveAdded(id); select('added:' + id); setTimeout(() => { const i = $('#c-label'); if (i) i.focus(); }, 30); }
+
+  function renderCard() {
+    const c = $('#card');
+    if (selected.startsWith('box:')) {
+      const k = selected.slice(4), b = allBoxes().find(q => q.k === k); if (!b) { c.innerHTML = ''; return; }
+      const mine = k.startsWith('x');
+      c.innerHTML = `<div class="who"><b>▭</b><h3>${esc(b.n)} <span class="he" dir="rtl">${esc(b.he || '')}</span></h3></div>
+        <p class="now"><strong>${mine ? 'Your box' : 'As drawn now'}:</strong> ${esc(b.now)}</p>
+        <p class="moved">${b.w.toFixed(1)} × ${b.d.toFixed(1)} m${b.rot ? ` · turned ${b.rot}°` : ''}</p>
+        <div class="toolbar"><button type="button" id="c-rl">⟲ 15°</button><button type="button" id="c-rr">⟳ 15°</button>${mine ? '<button type="button" id="c-bdel">Remove this box</button>' : '<button type="button" id="c-breset">Put it back</button>'}</div>
+        ${mine ? `<label for="c-label">What it is<input type="text" id="c-label" value="${esc(b.label || '')}" placeholder="e.g. DJ table, sofa, kitchen"></label>` : ''}
+        <label for="c-note">Notes<textarea id="c-note">${esc(b.note || '')}</textarea></label>
+        <p class="note">Drag the box to move it; drag its pink corner to resize.</p>`;
+      const turn = d => { setBox(k, { x: b.x, z: b.z, w: b.w, d: b.d, rot: ((b.rot || 0) + d + 360) % 360 }); saveBox(k); drawBoxes(); renderCard(); };
+      $('#c-rl').addEventListener('click', () => turn(-15)); $('#c-rr').addEventListener('click', () => turn(15));
+      $('#c-note').addEventListener('input', e => { setBox(k, { x: b.x, z: b.z, w: b.w, d: b.d, rot: b.rot || 0, note: e.target.value }); later('b' + k, () => saveBox(k)); renderList(); });
+      const lab = $('#c-label'); if (lab) lab.addEventListener('input', e => { setBox(k, { ...state.boxes[k], label: e.target.value }); later('b' + k, () => saveBox(k)); drawBoxes(); renderList(); });
+      const rs = $('#c-breset'); if (rs) rs.addEventListener('click', () => { const o = BOXES.find(q => q.k === k); setBox(k, { x: o.x, z: o.z, w: o.w, d: o.d, rot: 0 }); saveBox(k); drawBoxes(); renderCard(); });
+      const del = $('#c-bdel'); if (del) del.addEventListener('click', () => { delete state.boxes[k]; if (db) db.doc('shapes3/' + k).delete().catch(() => {}); selected = 'box:cart'; drawBoxes(); renderCard(); renderList(); });
+      return;
+    }
+    if (selected.startsWith('added:')) {
+      const id = selected.slice(6), a = state.added[id]; if (!a) { c.innerHTML = ''; return; }
+      c.innerHTML = `<div class="who"><b>+</b><h3>New pin</h3></div>
+        <label for="c-label">What is here<input type="text" id="c-label" value="${esc(a.label || '')}" placeholder="e.g. beer taps, toilets, stage"></label>
+        <label for="c-note">Notes<textarea id="c-note">${esc(a.note || '')}</textarea></label>
+        <button type="button" id="c-del">Remove this pin</button>`;
+      $('#c-label').addEventListener('input', e => { a.label = e.target.value; later('a' + id, () => saveAdded(id)); renderList(); });
+      $('#c-note').addEventListener('input', e => { a.note = e.target.value; later('a' + id, () => saveAdded(id)); });
+      $('#c-del').addEventListener('click', () => { delete state.added[id]; if (db) db.doc('added3/' + id).delete().catch(() => {}); selected = 'box:cart'; drawPins(); renderCard(); renderList(); });
+      return;
+    }
+    const p = PINS.find(q => q.k === selected), s = state.pins[p.k] || {};
+    c.innerHTML = `<div class="who"><b>${pinNo(p.k)}</b><h3>${esc(p.n)} <span class="he" dir="rtl">${esc(p.he)}</span></h3></div>
+      <p><span class="badge ${p.s}">${p.s === 'done' ? 'from what you told me' : 'please check'}</span></p>
+      <p class="now"><strong>In the game now:</strong> ${esc(p.now)}</p>
+      ${s.moved ? `<p class="moved">You moved this pin. <button type="button" id="c-reset">Put it back</button></p>` : ''}
+      ${p.s === 'check' ? `<label style="display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--ink)"><input type="checkbox" id="c-ok" ${s.ok ? 'checked' : ''}> That’s right</label>` : ''}
+      <label for="c-note">What’s wrong, or what it should be<textarea id="c-note">${esc(s.note || '')}</textarea></label>`;
+    const base = () => state.pins[p.k] || { x: p.x, z: p.z, moved: false };
+    $('#c-note').addEventListener('input', e => { state.pins[p.k] = { ...base(), note: e.target.value }; later('p' + p.k, () => savePin(p.k)); renderList(); });
+    const ok = $('#c-ok'); if (ok) ok.addEventListener('change', e => { state.pins[p.k] = { ...base(), ok: e.target.checked }; savePin(p.k); renderList(); });
+    const r = $('#c-reset'); if (r) r.addEventListener('click', () => { state.pins[p.k] = { ...base(), x: p.x, z: p.z, moved: false }; savePin(p.k); drawPins(); renderCard(); renderList(); });
+  }
+  function renderList() {
+    const l = $('#pinlist'); l.textContent = '';
+    const rows = PINS.map(p => { const s = state.pins[p.k] || {}; return [p.k, pinNo(p.k), p.n, s.moved ? 'moved' : s.note ? 'note' : s.ok ? 'ok' : p.s === 'check' ? 'check' : '']; })
+      .concat(Object.entries(state.added).map(([id, a], i) => ['added:' + id, '+' + (i + 1), a.label || 'New pin', 'new']))
+      .concat(allBoxes().map(b => ['box:' + b.k, '▭', b.n, state.boxes[b.k] ? 'shaped' : b.k === 'cart' ? 'shape me' : '']));
+    for (const [k, no, n, flag] of rows) {
+      const b = document.createElement('button'); b.type = 'button'; if (k === selected) b.setAttribute('aria-current', 'true');
+      b.innerHTML = `<span class="k">${no}</span><span>${esc(n)}</span><span class="flag" style="color:${flag === 'check' || flag === 'shape me' ? 'var(--check)' : flag === 'ok' ? 'var(--ok)' : 'var(--pin)'}">${flag}</span>`;
+      b.addEventListener('click', () => select(k)); l.appendChild(b);
+    }
+  }
+
+  // ——— Wall views (z runs left = backyard … right = balcony) ———
+  const wallBase = (s, title) => {
+    s.textContent = '';
+    el('rect', { x: -L2, y: -3.95, width: L2 * 2, height: 3.95, fill: night ? mix('--night', 14) : mix('--cream', 55), stroke: 'var(--ink)', 'stroke-width': .04 }, s);
+    el('line', { x1: -6.8, y1: 0, x2: 6.8, y2: 0, stroke: 'var(--ink)', 'stroke-width': .05 }, s);
+    txt(s, -L2, .5, '← backyard', { size: .3, anchor: 'start' }); txt(s, L2, .5, 'balcony →', { size: .3, anchor: 'end' });
+  };
+  function viewA() {
+    const s = $('#viewA'); wallBase(s);
+    el('rect', { x: -L2, y: -3.95, width: L2 * 2, height: 3.95, fill: mix('--green', 22) }, s);
+    // The loft over the back half, the stair climbing to it from near the door.
+    el('rect', { x: -L2, y: -2.3, width: L2 - .7, height: .14, fill: 'var(--wood)' }, s);
+    for (let i = 0; i < 12; i++) el('rect', { x: 2.7 - (i + 1) * .283, y: -(i + 1) * 2.3 / 12, width: .283, height: .05, fill: 'var(--wood)' }, s);
+    el('line', { x1: 2.7, y1: -.9, x2: -.7, y2: -3.2, stroke: 'var(--wood)', 'stroke-width': .04 }, s);
+    el('rect', { x: -3.85, y: -.95, width: 3.1, height: .06, fill: 'var(--wood-2)' }, s); txt(s, -2.3, -2.05, 'one big shelf', { size: .24, fill: 'var(--wood)' });
+    el('rect', { x: -3.9, y: -1.85, width: 3.1, height: .06, fill: 'var(--wood)' }, s);
+    for (let i = 0; i < 14; i++) el('rect', { x: -3.8 + i * .21, y: -1.85 - .32, width: .08, height: .32, fill: ['#5e693b', '#705033', '#ad8a54', '#3a5a6a'][i % 4] }, s);
+    el('rect', { x: -3.9, y: -1.1, width: 4.3, height: 1.1, fill: 'var(--wood)' }, s); txt(s, -.45, -1.25, 'snack counter behind', { size: .22, anchor: 'end' });
+    el('rect', { x: -2.05, y: -1.6, width: .5, height: .5, fill: 'var(--gold)' }, s); txt(s, -1.8, -1.0, 'taps', { size: .24, fill: 'var(--cream)' });
+    el('circle', { cx: -3, cy: -1.9, r: .18, fill: 'var(--brown)' }, s); el('rect', { x: -3.2, y: -1.72, width: .4, height: .6, fill: 'var(--ink-2)' }, s);
+    el('rect', { x: -L2, y: -2.2, width: 1.8, height: 2.2, fill: mix('--ink', 12), stroke: 'var(--ink-2)', 'stroke-width': .03 }, s); txt(s, -L2 + .9, -1, 'toilet', { size: .26 });
+    txt(s, 0, -4.15, 'West wall · dark green · stair, loft, bar, snack counter', { size: .3, weight: 600 });
+  }
+  function viewB() {
+    const s = $('#viewB'); wallBase(s);
+    el('rect', { x: -L2, y: -2.3, width: L2 - .7, height: .14, fill: 'var(--wood)' }, s);
+    el('line', { x1: -5.6, y1: -3.75, x2: -1.2, y2: -3.75, stroke: 'var(--ink-2)', 'stroke-width': .03 }, s);
+    for (let i = 0; i < 20; i++) { const x = -5.5 + i * .22; el('path', { d: `M${x} -3.75 l-.08 .1 h.16 z`, fill: 'none', stroke: 'var(--ink-2)', 'stroke-width': .015 }, s); el('rect', { x: x - .08, y: -3.62, width: .16, height: .45 + (i % 3) * .12, fill: ['#a27f57', '#6e8a82', '#a6a17d', '#625c6a', '#b69c8a', '#425b50', '#ad795d', '#8693a0'][i % 8] }, s); }
+    txt(s, -3.4, -3.9, 'loft: clothes on hangers', { size: .26, fill: 'var(--wood)' });
+    for (const [x, y] of [[-.85, -.6], [-.3, -.6], [-.58, -1.2]]) { el('rect', { x, y, width: .42, height: .58, rx: .08, fill: '#9aa3a6', stroke: 'var(--ink-2)', 'stroke-width': .03 }, s); }
+    txt(s, -.37, -1.4, 'kegs', { size: .24 });
+    el('rect', { x: 1.1, y: -1.8, width: .6, height: 1.8, fill: mix('--glass', 60), stroke: 'var(--ink-2)', 'stroke-width': .03 }, s);
+    for (let k = 0; k < 5; k++) el('line', { x1: 1.15, y1: -.3 - k * .3, x2: 1.65, y2: -.3 - k * .3, stroke: '#7a2e3a', 'stroke-width': .06 }, s);
+    txt(s, 1.4, -1.95, 'wine cooler', { size: .24 });
+    for (const z of [.6, 5]) { el('path', { d: `M${z} -2.2 q.3 -.35 .55 -.05`, fill: 'none', stroke: 'var(--ink-2)', 'stroke-width': .04 }, s); el('path', { d: `M${z + .45} -2.25 l.22 .02 l-.08 .2 z`, fill: 'var(--gold)' }, s); }
+    el('rect', { x: 2, y: -.45, width: 4, height: .45, fill: 'var(--wood)' }, s); el('rect', { x: 2, y: -.95, width: 4, height: .1, fill: 'var(--wood)' }, s);
+    txt(s, 4, -1.1, 'bench', { size: .24 });
+    for (const [z, c] of [[3, '#c9a24a'], [4.4, '#8b3a2e']]) el('rect', { x: z - .27, y: -2.3, width: .55, height: .7, fill: c }, s);
+    txt(s, 0, -4.15, 'East wall · white · the camera shop is behind it', { size: .3, weight: 600 });
+  }
+  function viewC() {
+    const s = $('#viewC'); s.textContent = '';
+    el('rect', { x: -2.7, y: -3.95, width: 5.4, height: 3.95, fill: night ? mix('--night', 20) : mix('--cream', 60), stroke: 'var(--ink)', 'stroke-width': .04 }, s);
+    el('rect', { x: -1.4, y: -3.2, width: 4.1, height: 3.2, fill: mix('--glass', 45), stroke: 'var(--ink-2)', 'stroke-width': .03 }, s);
+    el('rect', { x: -2.6, y: -2.6, width: 1.2, height: 2.6, fill: night ? mix('--night', 40) : mix('--brown', 18), stroke: 'var(--ink-2)', 'stroke-width': .03 }, s);
+    txt(s, -2, -2.75, 'door', { size: .24 });
+    el('rect', { x: -2.3, y: -3.9, width: 4.6, height: .7, fill: night ? 'var(--night)' : 'var(--cream)', stroke: night ? 'var(--gold)' : 'var(--brown)', 'stroke-width': .04 }, s);
+    txt(s, 0, -3.42, night ? 'מנדו' : 'קפה בינינו', { size: .42, fill: night ? 'var(--gold)' : 'var(--brown)', weight: 700 });
+    el('rect', { x: -2.95, y: -3.05, width: .12, height: .9, fill: '#a0764c' }, s); txt(s, -3.4, -2.55, 'sign', { size: .22 });
+    el('line', { x1: -4, y1: 0, x2: 4, y2: 0, stroke: 'var(--ink)', 'stroke-width': .05 }, s);
+    el('rect', { x: -4, y: -1, width: 8, height: .06, fill: 'var(--wood-2)' }, s); txt(s, 3.6, -1.15, 'parapet', { size: .22, anchor: 'end' });
+  }
+
+  // ——— Questions and photos ———
+  function renderQuestions() {
+    const q = $('#qs'); q.textContent = '';
+    QUESTIONS.forEach(([id, text, why], i) => {
+      const d = document.createElement('div'); d.className = 'q';
+      d.innerHTML = `<span class="n">Q${i + 1}</span><div style="display:grid;gap:6px;min-width:0"><p>${esc(text)} <span class="why">${esc(why)}</span></p><textarea id="${id}" aria-label="Answer to question ${i + 1}"></textarea></div>`;
+      q.appendChild(d);
+      const ta = d.querySelector('textarea'); ta.value = state.answers[id] || '';
+      ta.addEventListener('input', e => { state.answers[id] = e.target.value; later('q' + id, () => write('answers3/' + id, { text: e.target.value })); });
+    });
+  }
+  const syncAnswers = () => { for (const [id] of QUESTIONS) { const ta = document.getElementById(id); if (ta && document.activeElement !== ta) ta.value = state.answers[id] || ''; } };
+  function renderPhotos() {
+    const g = $('#photos'); g.textContent = '';
+    if (!state.photos.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = 'No photos yet. Photos of the bar, the back wall, the mezzanine and the way to the backyard help most.'; g.appendChild(p); return; }
+    for (const ph of state.photos) { const d = document.createElement('figure'); d.className = 'photo'; const img = document.createElement('img'); img.src = ph.url; img.alt = ph.caption || 'Photo of Mandu'; img.loading = 'lazy'; const cap = document.createElement('figcaption'); cap.textContent = ph.caption || ''; d.append(img, cap); g.appendChild(d); }
+  }
+  $('#ph-go').addEventListener('click', async () => {
+    const f = $('#ph-file').files[0], st = $('#ph-status');
+    if (!f) { st.textContent = 'Choose a photo first.'; return; }
+    if (!assets || !db) { st.textContent = 'Photos can’t be uploaded in this view.'; return; }
+    st.textContent = 'Uploading…';
+    try { const a = await assets.upload(f); await db.collection('photos').add({ asset: a.id, url: a.url, caption: $('#ph-cap').value.trim(), pin: selected, at: Date.now() }); st.textContent = 'Uploaded.'; $('#ph-file').value = ''; $('#ph-cap').value = ''; }
+    catch (e) { st.textContent = 'The upload didn’t go through. Try a smaller photo.'; }
+  });
+
+  drawPlan(); renderCard(); renderList(); viewA(); viewB(); viewC(); renderQuestions(); renderPhotos();
+  setStatus('Loading saved corrections…');
+  (async () => {
+    const c = window.claude;
+    db = c && c.use ? await c.use('db') : null;
+    if (!db) { setStatus('This view can’t save. The drawing is read-only here.', 'warn'); $('#upload').hidden = true; return; }
+    assets = await c.use('assets'); if (!assets) $('#upload').hidden = true;
+    const onErr = () => setStatus('Lost the connection to saved data. Reload to reconnect.', 'warn');
+    db.collection('pins3').onSnapshot(snap => { for (const d of snap.docs) if (!drag || drag.k !== d.id) state.pins[d.id] = { ...d.data() }; drawPins(); renderList(); if (!document.activeElement || document.activeElement.id !== 'c-note') renderCard(); setStatus('Ready. Your changes save automatically.', 'ok'); }, onErr);
+    db.collection('added3').onSnapshot(snap => { const next = {}; for (const d of snap.docs) next[d.id] = { ...d.data() }; state.added = next; drawPins(); renderList(); }, onErr);
+    db.collection('answers3').onSnapshot(snap => { for (const d of snap.docs) state.answers[d.id] = d.data().text || ''; syncAnswers(); }, onErr);
+    db.collection('shapes3').onSnapshot(snap => { for (const d of snap.docs) if (!drag || drag.k !== d.id) state.boxes[d.id] = { ...d.data() }; drawBoxes(); renderList(); }, onErr);
+    db.collection('photos').orderBy('at').onSnapshot(snap => { state.photos = snap.docs.map(d => d.data()); renderPhotos(); }, onErr);
+  })();
+})();
+</script>
