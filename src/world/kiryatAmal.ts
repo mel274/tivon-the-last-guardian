@@ -91,6 +91,18 @@ function terrazzo(c: CanvasRenderingContext2D, W: number) {
   c.strokeStyle = '#b4a585'; c.lineWidth = 1.5;
   for (let i = 0; i <= n; i++) { c.beginPath(); c.moveTo(i * s, 0); c.lineTo(i * s, W); c.moveTo(0, i * s); c.lineTo(W, i * s); c.stroke(); }
 }
+/** Old patterned bar tiles for Mandu's strip floor (drawing: “old patterned tiles”). */
+function oldBarTiles(c: CanvasRenderingContext2D, W: number) {
+  const n = 4, s = W / n; let seed = 19; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    const warm = (i + j) % 2 === 0;
+    c.fillStyle = warm ? `rgb(${168 + Math.floor(r() * 18)},${140 + Math.floor(r() * 14)},${110 + Math.floor(r() * 12)})` : `rgb(${120 + Math.floor(r() * 16)},${118 + Math.floor(r() * 14)},${108 + Math.floor(r() * 12)})`;
+    c.fillRect(i * s, j * s, s, s);
+    c.strokeStyle = '#6a5a48'; c.lineWidth = 1; c.strokeRect(i * s + 2, j * s + 2, s - 4, s - 4);
+    c.fillStyle = warm ? '#8a7058' : '#7a7870';
+    for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(i * s + s * (.25 + r() * .5), j * s + s * (.25 + r() * .5), 2 + r() * 3, 0, Math.PI * 2); c.fill(); }
+  }
+}
 
 /** Builds a walk-in shop: the furnishing goes into the Zeid interiors group, the shell into the town kit. */
 type ShopFn = (f: Frame, set: string, o: Omit<WalkInOptions, 'set' | 'front' | 'shell'>) => ReturnType<typeof walkInShop>;
@@ -141,38 +153,118 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   clad(Mu, -HW - .03, MZ, .06, UD, ROOF); clad(Mu, HW + .03, MZ, .06, UD, ROOF);
   for (const x of [-7.7 + .03, -2.3 - .03]) clad(Mu, x, MZ, .06, UD, ROOF);
 
-  // ——— Mandu: the narrow north–south bar strip, open to the backyard (north) and the balcony (south) ———
-  const Bf = sub(M, -5, (BAL - HD) / 2, 0, F), half = (BAL + HD) / 2; // strip local z runs −half … half
-  B.lbox(Bf, MAT.plain, 0, 3.95, 0, 5.4, .3, half * 2, '#2a2622');
-  B.lbox(Bf, MAT.wood, 0, .02, 0, 5.2, .04, half * 2 - .2, '#6b4b33', false);
-  B.lbox(Bf, MAT.wood, -1.6, .55, .5, .8, 1.1, 7, '#3d2a1e'); B.lbox(Bf, MAT.gloss, -1.6, 1.12, .5, 1, .06, 7.2, '#1c1714'); kit.lcollide(Bf, -1.6, .55, .5, 1, 1.1, 7.2);
-  for (let k = 0; k < 3; k++) { B.lbox(Bf, MAT.wood, -2.35, 1.4 + k * .55, .5, .3, .04, 7, '#3d2a1e'); for (let i = 0; i < 14; i++) { const [x, z] = Bf.at(-2.35, -3 + i * .5); kit.bottle(x, Bf.y + 1.43 + k * .55, z, ['#5e693b', '#705033', '#ad8a54', '#3a5a6a'][(i + k) % 4]); } }
-  for (let i = 0; i < 6; i++) kit.stool(Bf, -.8, -2 + i * 1);
-  // Wooden stair to the mezzanine of vintage goods and books.
-  for (let i = 0; i < 9; i++) B.lbox(Bf, MAT.wood, 2.05, .2 + i * .3, -4.9 + i * .32, .9, .08, .32, '#5c4029');
-  B.lbox(Bf, MAT.wood, 1.95, 2.9, -2.1, 1.2, .1, 2.6, '#5c4029');
-  for (let i = 0; i < 6; i++) B.lbox(Bf, MAT.matte, 2.35, 3.2, -3.2 + i * .45, .25, .4, .32, SHIRTS[i % SHIRTS.length]);
-  for (let i = 0; i < 4; i++) { const [x, z] = Bf.at(0, -3.5 + i * 2.4); kit.pendant(x, Bf.y + 3.8, z, 1.1, '#2a4a3a'); }
-  { const [x, z] = Bf.at(0, 0); kit.light(x, Bf.y + 3, z, '#ffb466', 12, 12); }
-  // Shopfront onto the balcony: glass either side of a wide door.
-  for (const sx of [-1, 1]) {
-    B.lbox(Bf, MAT.metal, sx * 1.85, 1.6, half, 1.7, 3.2, .08, '#2d3532');
-    const [gx, gz] = Bf.at(sx * 1.85, half + .05); const g = new THREE.Mesh(PRIMS.box, NIGHT.shopWindow); g.position.set(gx, Bf.y + 1.7, gz); g.rotation.y = Bf.rot; g.scale.set(1.5, 2.8, .03); kit.root.add(g);
-    kit.lcollide(Bf, sx * 1.85, 1.6, half, 1.7, 3.2, .2);
-  }
-  B.lbox(Bf, MAT.metal, 0, 3.35, half, 5.4, .3, .1, '#2d3532');
-  const bartender = kit.person(Bf, -2.1, -.5, { shirt: '#2d3a33', pants: '#2b2b28', seed: 9, beard: true, angle: Math.PI / 2 });
+  // ——— Mandu: narrow N–S bar strip from docs/mandu-plan (rev 3) + the owner's answers ———
+  // Strip-local metres (Bf): x −2.7…2.7 east, z −half…+half (backyard door north, balcony glass south).
+  // Furnishings go into zk / zeid_interiors; the shell stays on the town kit.
+  const Bf = sub(M, -5, (BAL - HD) / 2, 0, F), half = (BAL + HD) / 2, SW = 5.4, W2 = SW / 2;
+  const MH = 4.6, LOFT = 2.3; // loft floor ~2.3 m; ceiling raised so people can stand on it
+  const ZB = zk.B;
+  // Floor: old patterned tiles; walkable ground; raised ceiling and a roof slab over the strip.
+  { const canvas = document.createElement('canvas'); canvas.width = canvas.height = 128; oldBarTiles(canvas.getContext('2d')!, 128);
+    const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(SW / .4, half * 2 / .4); tex.anisotropy = 4;
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(SW - .2, half * 2 - .2), new THREE.MeshStandardMaterial({ map: tex, roughness: .55 }));
+    const [x, z] = Bf.at(0, 0); floor.position.set(x, Bf.y + .03, z); floor.rotation.set(-Math.PI / 2, Bf.rot, 0, 'YXZ'); floor.receiveShadow = true; kit.root.add(floor); }
+  kit.lground(Bf, 0, 0, SW, half * 2, .04);
+  B.lbox(Bf, MAT.plain, 0, MH + .05, 0, SW, .12, half * 2, '#2a2622');
+  B.lbox(Bf, MAT.plaster, 0, MH + .18, 0, SW + .1, .14, half * 2 + .1, '#bcb8ad');
+  for (const [lx, lz, pw, pd] of [[0, -half + .1, SW, .2], [-W2 + .1, 0, .2, half * 2], [W2 - .1, 0, .2, half * 2], [0, half + .1, SW, .2]] as Array<[number, number, number, number]>) B.lbox(Bf, MAT.plaster, lx, MH + .5, lz, pw, .5, pd, CREAM, false);
+  // West wall dark green (printing neighbour), east wall white lining (camera shop neighbour).
+  B.lbox(Bf, MAT.plaster, -W2 + .04, MH / 2, 0, .08, MH, half * 2, '#2f4a3c');
+  B.lbox(Bf, MAT.plaster, W2 - .04, MH / 2, 0, .08, MH, half * 2, '#f4f2ec');
+  // Front onto the balcony: door opening at the west end, glass across the rest (drawing pin “door”).
+  B.lbox(Bf, MAT.metal, -2.55, 1.6, half, .3, 3.2, .1, '#2d3532'); // west jamb
+  B.lbox(Bf, MAT.metal, -1.45, 1.6, half, .3, 3.2, .1, '#2d3532'); // east jamb of the door
+  B.lbox(Bf, MAT.metal, -2, 3.05, half, 1.4, .3, .1, '#2d3532'); // lintel
+  kit.lcollide(Bf, -2.55, 1.6, half, .3, 3.2, .2); kit.lcollide(Bf, -1.45, 1.6, half, .3, 3.2, .2);
+  B.lbox(Bf, MAT.metal, .55, 1.6, half, 4.3, 3.2, .08, '#2d3532');
+  { const [gx, gz] = Bf.at(.55, half + .05); const g = new THREE.Mesh(PRIMS.box, NIGHT.shopWindow); g.position.set(gx, Bf.y + 1.7, gz); g.rotation.y = Bf.rot; g.scale.set(4.1, 2.8, .03); kit.root.add(g); }
+  kit.lcollide(Bf, .55, 1.6, half, 4.3, 3.2, .2);
+  B.lbox(Bf, MAT.metal, 0, MH - .25, half, SW, .3, .1, '#2d3532');
+  // Back wall to the backyard: solid either side of the door at x ≈ 1 (pin “north”).
+  B.lbox(Bf, MAT.plaster, -1.1, MH / 2, -half, 3.2, MH, .12, '#2f4a3c'); kit.lcollide(Bf, -1.1, MH / 2, -half, 3.2, MH, .2);
+  B.lbox(Bf, MAT.plaster, 2.1, MH / 2, -half, 1.2, MH, .12, '#2f4a3c'); kit.lcollide(Bf, 2.1, MH / 2, -half, 1.2, MH, .2);
+  // Backyard door: jambs only, opening clear.
+
+  // Bar counter under the loft (BOX counter), taps, stools on the room side.
+  ZB.lbox(Bf, MAT.wood, -1.4, .55, -1.75, .9, 1.1, 4.3, '#3d2a1e'); ZB.lbox(Bf, MAT.gloss, -1.4, 1.12, -1.75, 1, .06, 4.4, '#1c1714');
+  zk.lcollide(Bf, -1.4, .55, -1.75, 1, 1.1, 4.4);
+  for (const dz of [-.4, 0, .4]) { const [x, z] = Bf.at(-1.1, -1.8 + dz); ZB.cyl(MAT.metal, x, Bf.y + 1.25, z, .03, .28, '#c8ccce'); ZB.cyl(MAT.metal, x, Bf.y + 1.42, z, .02, .08, '#8a9094'); }
+  for (let i = 0; i < 4; i++) zk.stool(Bf, -.55, -3.2 + i * 1.05);
+  // Snack counter = the back bar on the west wall: worktop + one big bottle shelf (BOX backbar).
+  ZB.lbox(Bf, MAT.wood, -2.5, .55, -2.3, .3, 1.1, 3.1, '#3d2a1e'); zk.lcollide(Bf, -2.5, .55, -2.3, .35, 1.1, 3.1);
+  ZB.lbox(Bf, MAT.wood, -2.5, 1.85, -2.3, .28, .05, 3.0, '#3d2a1e');
+  for (let i = 0; i < 12; i++) { const [x, z] = Bf.at(-2.5, -3.5 + i * .25); zk.bottle(x, Bf.y + 1.9, z, ['#5e693b', '#705033', '#ad8a54', '#3a5a6a'][i % 4]); }
+  const bartender = zk.person(Bf, -2.05, -2.2, { shirt: '#2d3a33', pants: '#2b2b28', seed: 9, beard: true, angle: Math.PI / 2 });
   kit.register('bartender', bartender.focus, { he: 'מאחורי הבר', en: 'Behind the bar' }, 4.4);
-  kit.anchor(Bf, 'brewer_mandu', -1.6, 1.4, 3.3, { he: 'מכונת הקפה של קפה בינינו', en: 'Café Beinenu espresso machine' }, 3.4);
-  { const [x, z] = Bf.at(-1.6, 3.3); B.box(MAT.metal, x, Bf.y + 1.4, z, .5, .45, .9, M.rot, '#c8ccce'); }
-  // Day/night signs: Café Beinenu by day, Mandu after dark (the game swaps them).
+
+  // Steep wooden stair on the west wall (BOX stair): climbs north from near the door up to the loft edge; railing on the open east side.
+  { const n = 14, rise = LOFT / n, run = 3.2 / n, zSouth = 2.5; // bottom near the door; top at z ≈ −0.7 where the loft begins
+    for (let i = 0; i < n; i++) {
+      const z = zSouth - run * (i + .5);
+      ZB.lbox(Bf, MAT.wood, -2.25, rise * (i + .5), z, .8, .08, run + .02, '#5c4029');
+      zk.lground(Bf, -2.25, z, .8, run, rise * (i + 1));
+    }
+    for (let i = 0; i <= n; i++) ZB.lbox(Bf, MAT.wood, -1.82, .45 + rise * i, zSouth - run * i, .04, .9, .04, '#4a3426');
+    ZB.lbox(Bf, MAT.wood, -1.82, LOFT + .05, zSouth - 1.6, .04, .04, 3.2, '#4a3426');
+  }
+  // Loft over the back half (~2.3 m): floor, walkable, clothes hangers, a small table (BOX loft / racks).
+  ZB.lbox(Bf, MAT.wood, 0, LOFT, -3.44, 5.2, .1, 5.48, '#5c4029'); zk.lground(Bf, 0, -3.44, 5.2, 5.48, LOFT + .05);
+  // Open edge railing along the loft's south face (not under the stair landing).
+  ZB.lbox(Bf, MAT.wood, .4, LOFT + .45, -3.44 + 5.48 / 2, 4.2, .04, .04, '#4a3426');
+  for (let x = -1.6; x <= 2.4; x += .8) ZB.lbox(Bf, MAT.wood, x, LOFT + .25, -.7, .04, .5, .04, '#4a3426');
+  for (let i = 0; i < 8; i++) ZB.lbox(Bf, MAT.matte, 2.2, LOFT + .45, -5.2 + i * .55, .2, .55, .08, SHIRTS[i % SHIRTS.length]);
+  ZB.lbox(Bf, MAT.wood, 2.2, LOFT + .75, -3.4, .7, .04, 4.0, '#3d2a1e'); // hanger rail
+  zk.table(Bf, -.8, -4.2, { y: LOFT, square: .7, top: '#efe7d4', cups: 0 });
+  // Chandelier under the raised ceiling, mid-strip.
+  { const [x, z] = Bf.at(0, 0); zk.pendant(x, Bf.y + MH - .1, z, 1.35, '#c99a2e'); zk.light(x, Bf.y + MH - 1.6, z, '#ffb466', 14, 14); }
+  for (let i = 0; i < 3; i++) { const [x, z] = Bf.at(0, -4 + i * 2.2); zk.pendant(x, Bf.y + MH - .1, z, .85, '#2a4a3a'); }
+
+  // Toilet (1.5 × 1.4) in the NW corner; corridor south of it to the backyard door; sink at the west end; fridge at the east end by the door.
+  { const tw = 1.5, td = 1.4, tx = -W2 + tw / 2, tz = -half + td / 2; // −1.95, −5.48
+    ZB.lbox(Bf, MAT.plaster, tx, 1.1, tz + td / 2, tw, 2.2, .08, '#e8e4dc'); // south wall of the cubicle (door in the middle)
+    ZB.lbox(Bf, MAT.plaster, tx + tw / 2, 1.1, tz, .08, 2.2, td, '#e8e4dc');
+    zk.lcollide(Bf, tx, 1.1, tz + td / 2, tw, 2.2, .12); zk.lcollide(Bf, tx + tw / 2, 1.1, tz, .12, 2.2, td);
+    // Door opening in the south wall (leave a gap collider-wise by not covering the middle).
+    ZB.lbox(Bf, MAT.wood, tx - .35, 1.05, tz + td / 2 + .02, .55, 2.0, .04, '#6a5238');
+    ZB.lbox(Bf, MAT.gloss, tx + .2, .45, tz, .4, .55, .45, '#dfe4e6'); // toilet bowl
+    // Corridor along the south of the toilet: sink at the west end.
+    { const [x, z] = Bf.at(-2.35, -4.55); ZB.lbox(Bf, MAT.gloss, -2.35, .55, -4.55, .45, .2, .4, '#cfd4d6'); ZB.cyl(MAT.metal, x, Bf.y + .72, z, .05, .18, '#8a9094'); }
+    // Fridge by the back door (east end of the corridor) — one of only two fridges.
+    ZB.lbox(Bf, MAT.gloss, -.45, .95, -5.65, .8, 1.9, .6, '#d6dde0'); ZB.lbox(Bf, MAT.metal, -.45, .95, -5.35, .7, 1.7, .04, '#2a3338');
+    zk.lcollide(Bf, -.45, .95, -5.65, .85, 1.9, .65);
+  }
+  // East wall: kegs, standing wine cooler, two gooseneck lamps (BOX kegs / cooler; pins lamps).
+  ZB.lbox(Bf, MAT.metal, 2.3, .4, -.4, .55, .8, .85, '#3a3f42');
+  for (const dz of [-.25, .25]) { const [x, z] = Bf.at(2.3, -.4 + dz); ZB.cyl(MAT.metal, x, Bf.y + .45, z, .22, .7, '#5a6064'); }
+  zk.lcollide(Bf, 2.3, .4, -.4, .6, .8, .9);
+  ZB.lbox(Bf, MAT.gloss, 2.3, 1.0, 1.4, .55, 2.0, .65, '#c5d0d4'); ZB.lbox(Bf, MAT.gloss, 2.15, 1.0, 1.4, .02, 1.7, .55, '#8fb7c2');
+  zk.lcollide(Bf, 2.3, 1.0, 1.4, .6, 2.0, .7);
+  for (const lz of [.6, 5]) {
+    const [x, z] = Bf.at(2.35, lz);
+    ZB.lbox(Bf, MAT.metal, 2.55, 1.7, lz, .04, .04, .35, '#2b2b28');
+    ZB.place(PRIMS.sphere, NIGHT.bulb, x, Bf.y + 1.55, z, .08, .08, .08, 0, '#ffe3b0', false);
+  }
+
+  // Bench: flipped L along the east wall then the front glass, with three small tables in front (BOX bench).
+  { const t = .45;
+    ZB.lbox(Bf, MAT.wood, 2.3, .42, 4, t, .45, 4.0, '#6b4b33'); // east arm
+    ZB.lbox(Bf, MAT.wood, .2, .42, 5.75, 3.4, .45, t, '#6b4b33'); // front arm
+    ZB.lbox(Bf, MAT.wood, 2.3, .85, 4, t, .4, 4.0, '#5c4029'); ZB.lbox(Bf, MAT.wood, .2, .85, 5.75, 3.4, .4, .08, '#5c4029');
+    zk.lcollide(Bf, 2.3, .5, 4, t + .05, 1.0, 4.0); zk.lcollide(Bf, .2, .5, 5.75, 3.4, 1.0, t + .05);
+    for (const [lx, lz] of [[.4, 4.6], [1.3, 4.2], [1.5, 5.2]] as Array<[number, number]>) {
+      zk.table(Bf, lx, lz, { square: .55, top: '#efe7d4', cups: 1 });
+      zk.person(Bf, lx - .35, lz, { shirt: SHIRTS[Math.abs(Math.round(lx * 5)) % SHIRTS.length], pants: PANTS[Math.abs(Math.round(lz)) % 6], seed: 420 + Math.round(lx * 10 + lz), seated: true, angle: Math.PI / 2 });
+    }
+  }
+
+  // Day/night signs: Café Beinenu by day, Mandu after dark (the game swaps them). Hanging sign: bare wood, black lettering, edge-on at the west end.
   const day = new THREE.Group(), night = new THREE.Group(); kit.root.add(day, night); kit.ctx.groups.mandu_day = day; kit.ctx.groups.mandu_night = night;
   kit.sign(Mu, -5, 3.75, BAL + .25, 4.6, .8, 'קפה בינינו', { bg: '#efe6d2', fg: '#4b3a26', sub: 'CAFÉ BEINENU · קפה ופולים', weight: 800 }, 0, day);
   kit.sign(Mu, -5, 3.75, BAL + .27, 4.6, .8, 'מנדו', { bg: '#1f2a26', fg: '#ffcf6e', sub: 'MANDU BAR', weight: 800, glow: 1 }, 0, night);
   kit.sign(Mu, -5, 3.4, -HD - .25, 4.6, .8, 'מנדו · קפה בינינו', { bg: '#1f2a26', fg: '#ffcf6e', sub: 'MANDU · CAFÉ BEINENU', weight: 800, glow: .8 }, Math.PI);
   kit.anchor(Mu, 'landmark_mandu', -5, 1.8, BAL + 2.2, landmark('mandu').name, 3.6);
-  kit.sign(Mu, -3.4, 2.85, BAL + 1, 1.15, .8, 'קפה בינינו\nמנדו בר', { bg: '#7a5230', fg: '#f3d48a', sub: 'אמנות וינטג׳', weight: 800 }, Math.PI / 2);
-  B.lbox(Mu, MAT.metal, -3.4, 3.7, BAL + 1, .03, .9, .03, '#2b2b28');
+  kit.sign(Bf, -2.7, 2.85, half + .85, 1.15, .8, 'קפה בינינו\nמנדו בר', { bg: '#7a5230', fg: '#1c1a18', sub: 'אמנות וינטג׳', weight: 800 }, Math.PI / 2);
+  B.lbox(Bf, MAT.metal, -2.7, 3.7, half + .85, .03, .9, .03, '#2b2b28');
 
   // ——— Balcony: the whole south side, railing, roof on slim posts ———
   B.lbox(Mu, MAT.paving, 0, .02, (BAL + HD) / 2, HW * 2, .04, HD - BAL, '#cbbfa8', false);
@@ -228,6 +320,25 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
     const lx = -9.5 + i * 3.8; kit.table(Y, lx, -.2, { square: 1, top: '#9a7449', cups: 0, bottle: true }); kit.stool(Y, lx - .8, -.2); kit.stool(Y, lx + .8, -.2);
     if (i % 2 === 0) kit.person(Y, lx - .8, -.2, { shirt: SHIRTS[i + 2], pants: PANTS[i % 6], seed: 500 + i, seated: true, angle: Math.PI / 2, y: .3 });
     if (i % 3 === 1) kit.person(Y, lx + .8, -.2, { shirt: SHIRTS[i + 7], pants: PANTS[(i + 3) % 6], seed: 510 + i, seated: true, angle: -Math.PI / 2, y: .3, dress: true });
+  }
+  // Café Beinenu coffee cart (BOX cart): wooden cart in the backyard; service window and ledge on the east; queue in the yard; no cart seating.
+  { const [cx, cz] = Bf.at(-1.4, -7.7), C = new Frame(cx, cz, Bf.rot, Bf.y);
+    ZB.lbox(C, MAT.wood, 0, .55, 0, 2.6, 1.1, 2.8, '#6b4b33'); ZB.lbox(C, MAT.wood, 0, 1.15, 0, 2.7, .08, 2.9, '#5c4029');
+    zk.lcollide(C, 0, .55, 0, 2.6, 1.1, 2.8);
+    // East service window + ledge (customers queue on the backyard / east side).
+    ZB.lbox(C, MAT.wood, 1.35, .95, 0, .08, .7, 1.6, '#4a3426');
+    ZB.lbox(C, MAT.wood, 1.55, .78, 0, .45, .06, 1.5, '#8a6a48');
+    ZB.lbox(C, MAT.gloss, 1.32, 1.0, 0, .02, .55, 1.4, '#d6e6ea');
+    // Translucent corrugated roof and a few plants.
+    ZB.lbox(C, MAT.gloss, 0, 2.15, 0, 2.9, .04, 3.1, '#c5d4c8');
+    for (const s of [-1.1, 1.1]) ZB.lbox(C, MAT.wood, s, 1.65, -1.2, .06, 1.0, .06, '#5c4029');
+    for (const s of [-1.1, 1.1]) ZB.lbox(C, MAT.wood, s, 1.65, 1.2, .06, 1.0, .06, '#5c4029');
+    { const [px, pz] = C.at(-.9, -.9); zk.plant(px, C.y + 1.2, pz, .7); }
+    { const [px, pz] = C.at(.7, 1.0); zk.plant(px, C.y + 1.2, pz, .55, '#6a7a48'); }
+    // Espresso machine / Café Beinenu brewing at the east window (same interactable id as before).
+    ZB.lbox(C, MAT.metal, .9, 1.45, 0, .45, .4, .7, '#c8ccce');
+    kit.anchor(C, 'brewer_mandu', 1.4, 1.4, 0, { he: 'מכונת הקפה של קפה בינינו', en: 'Café Beinenu espresso machine' }, 3.4);
+    kit.sign(C, 0, 1.85, -1.45, 1.6, .35, 'קפה בינינו', { bg: '#efe6d2', fg: '#4b3a26', sub: 'CAFÉ BEINENU', weight: 800 }, Math.PI);
   }
   for (let x = -18; x < 18.5; x += .7) { const [bx, bz] = Y.at(x, 1.6 + .3 * Math.sin(x)); const b = new THREE.Mesh(PRIMS.sphere, NIGHT.bulb); b.position.set(bx, Y.y + 2.7, bz); b.scale.setScalar(.05); kit.root.add(b); }
   { const [x, z] = Y.at(0, 0); kit.light(x, Y.y + 2.5, z, '#ffb466', 10, 14); }

@@ -247,7 +247,7 @@ export class GameModel {
       case 'bartender':
         if (!this.flag('coffeeDrunk')) {
           d.title = tx('קפה בינינו · בבוקר זה בית קפה', 'Café Beinenu · by day it is a café');
-          d.text = tx('״בבוקר אנחנו קפה בינינו, בלילה — מנדו. רוצים פולים? המכונה שלנו ממש כאן על הבר. ובערב תחזרו, אז מתחילים הסיפורים.״\nהדמות והשיחה בדיוניות.', '“By day we are Café Beinenu, by night — Mandu. Want some beans? Our machine is right here on the bar. Come back in the evening; that is when the stories start.”\nThis character and conversation are fictional.');
+          d.text = tx('״בבוקר אנחנו קפה בינינו, בלילה — מנדו. רוצים פולים? המכונה בחצר, בעגלת הקפה ליד החלון המזרחי. ובערב תחזרו, אז מתחילים הסיפורים.״\nהדמות והשיחה בדיוניות.', '“By day we are Café Beinenu, by night — Mandu. Want some beans? The machine is in the backyard, at the coffee cart’s east window. Come back in the evening; that is when the stories start.”\nThis character and conversation are fictional.');
           d.options.push(o('לקנות פולים · ₪5', 'Buy beans · ₪5', this.flag('amaliClue') ? 'buyBeans' : 'beinenuBeans'));
           d.options.push(o('לשאול על הערב', 'Ask about the evening', 'caveContact'));
           break;
