@@ -1,7 +1,7 @@
 /** Hand-surveyed layouts layered on the OSM map, from Google satellite/Street View and the
  *  player community's sketch of the Zeid centre (Kiryat Amal). Pure data so the terrain can
  *  flatten its terraces before anything is built. Coordinates are game metres. */
-import { elevation, orientedBox, ROADS, type P2 } from './geo';
+import { elevation, orientedBox, ROADS, BUILDINGS, type P2 } from './geo';
 
 const BASE = elevation(126, 84);
 const ground = (x: number, z: number) => elevation(x, z) - BASE;
@@ -43,10 +43,16 @@ export const ZEID = (() => {
   const ul = Math.hypot(Bf[0] - A[0], Bf[1] - A[1]), u: P2 = [(Bf[0] - A[0]) / ul, (Bf[1] - A[1]) / ul];
   const along = (t: number, off = 0): P2 => [A[0] + u[0] * t + u[1] * off, A[1] + u[1] * t - u[0] * off];
   const busStair = { x: -176, z0: -852.6, z1: -848.4 };
+  // Zohar cinema's north face (a → b) on the lower plaza, and the entrance lobby cut into it: t metres east
+  // along the face, e metres in (south) from it. Lobby-local frame (kiryatAmal.ts): +z out to the plaza, +x west.
+  const ca: P2 = [-133.9, -810.4], cb: P2 = [-108.7, -807.1], cl = Math.hypot(cb[0] - ca[0], cb[1] - ca[1]), cu: P2 = [(cb[0] - ca[0]) / cl, (cb[1] - ca[1]) / cl], cn: P2 = [-cu[1], cu[0]];
+  const cat = (t: number, e: number): P2 => [ca[0] + cu[0] * t + cn[0] * e, ca[1] + cu[1] * t + cn[1] * e];
+  const lobby = { a: ca, b: cb, L: cl, t0: 6, t1: 22, depth: 10, at: cat, rot: Math.atan2(cu[1], -cu[0]), poly: [cat(6, -.3), cat(22, -.3), cat(22, 10.3), cat(6, 10.3)] as P2[] };
   return {
     road, upper, lower, frame: { x: box.cx, z: box.cz, rot, HW, HD, BAL, STW, ARC0 }, at, rect,
     building: { id: '326224826', poly },
-    cinema: { id: '326224821' },
+    /** The cinema stands on the lower plaza level over its whole footprint: the lobby is built into the hill, and the 8 m terrain mesh must not rise through its floor. */
+    cinema: { id: '326224821', pad: (BUILDINGS.find(b => b.id === '326224821')?.points ?? lobby.poly) as P2[] }, lobby,
     /** One storey under a flat canopy, facing north onto the lane; the pizza unit sticks out 5 m
      *  north at its east end, its window on its west face looking back along the lane. */
     row: {
@@ -129,5 +135,7 @@ export const STATIC_PADS: Array<{ poly: P2[]; y: number; blend: number }> = [
   { poly: ZEID.drugstore.porch, y: ZEID.upper, blend: 0 },
   { poly: ZEID.backyard, y: ZEID.upper, blend: 1.5 },
   { poly: ZEID.kerb, y: ZEID.road, blend: 1 },
+  // The Zohar cinema (its lobby floor is at plaza level, inside the hillside).
+  { poly: ZEID.cinema.pad, y: ZEID.lower, blend: 0 },
   { poly: ZEID.lowerPlaza, y: ZEID.lower, blend: 4 },
 ];

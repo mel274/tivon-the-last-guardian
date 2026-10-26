@@ -7,6 +7,7 @@ import { Sky } from '../world/Sky';
 import { NIGHT } from '../world/kit';
 import { BUILDING_UNIFORMS } from '../world/materials';
 import { DISTRICTS } from '../world/geo';
+import { ZEID } from '../world/layout';
 import type { WorldContext, Interactable } from '../world/types';
 import { PlayerController } from '../player/PlayerController';
 import { rayDistance } from '../world/collide';
@@ -285,6 +286,7 @@ export class Game {
     const budget=!underground&&night<.3?2:this.settings.quality==='low'?3:6;
     nearby.forEach(({light},i)=>{light.visible=i<budget;});
     for(const [key,g] of Object.entries(this.world.groups))if(key.startsWith('gate_'))g.visible=!s.flags[key.slice(5)];
+    const zi=this.world.groups.zeid_interiors;if(zi)zi.visible=Math.hypot(this.camera.position.x-ZEID.frame.x,this.camera.position.z-ZEID.frame.z)<=90; // the Zeid shops' furnishing is only drawn nearby
     const mark=this.world.groups.light_mark;if(mark)mark.visible=(s.flashlightOn&&s.battery>0)||!!s.flags.lightRevealed;
     // Glowing markers on clues not yet recorded, and seals that light as they are pressed.
     const clues:Record<string,string>={inscription_a:'inscriptionA',inscription_b:'inscriptionB',inscription_c:'inscriptionC',map_a:'mapA',map_b:'mapB',light_mark:'lightRevealed'};

@@ -34,9 +34,11 @@ export interface WalkInOptions {
   keeper?: { id: string; label: LocalText; shirt?: string; lx?: number; lz?: number } | null;
   set: InteriorSet;
   front: 'glass' | 'wall';
-  /** Walls a neighbour or the host building already provides (skipped here). */
+  /** Walls a neighbour or the host building already provides: not built here, only lined in the set's wall colour. The room's edge overlaps that wall by this room's 0.2 m wall slot. */
   shared?: { left?: boolean; right?: boolean; back?: boolean };
   ceiling?: boolean; light?: boolean;
+  /** A second kit for the shell (floor, ceiling, walls, glazed front, signboard), so the furnishing can live in a group of its own (hidden at a distance) while the building stays. */
+  shell?: Kit;
 }
 
 const HALF = Math.PI / 2;
@@ -47,11 +49,11 @@ const overlap = (a: Rect, lx: number, lz: number, w: number, d: number) => Math.
 
 /** Interior layout helpers in the shop's frame (origin front-centre at floor level, +z to the street). */
 export class Room {
-  readonly B: Batcher; readonly x0: number; readonly x1: number; readonly zb: number; readonly zf = -.24;
+  B: Batcher; readonly x0: number; readonly x1: number; readonly zb: number; readonly zf = -.24;
   readonly aisle: Rect[] = []; readonly keep: Rect[] = [];
   counter: { lx: number; lz: number; w: number; d: number; h: number } | null = null;
   keeperAt: [number, number] | null = null; stand: [number, number] = [0, -1];
-  constructor(readonly kit: Kit, readonly f: Frame, readonly w: number, readonly d: number, readonly h: number, readonly door: { lx: number; width: number }, readonly wall: string, readonly id: string) {
+  constructor(public kit: Kit, readonly f: Frame, readonly w: number, readonly d: number, readonly h: number, readonly door: { lx: number; width: number }, readonly wall: string, readonly id: string) {
     this.B = kit.B; this.x0 = -w / 2 + .2; this.x1 = w / 2 - .2; this.zb = -d + .2;
   }
   rand(i: number) { const x = Math.sin((i + 1) * 12.9898 + (hash(this.id) % 1000) * 78.233) * 43758.5453; return x - Math.floor(x); }
@@ -222,22 +224,26 @@ function shopFront(r: Room, kind: 'glass' | 'wall') {
 /** Build a walk-in shop. The frame's origin is the front-centre at floor level, local +z points
  *  out to the street; the room spans lx −w/2…w/2 and lz −d…0 (walls included). */
 export function walkInShop(kit: Kit, f: Frame, o: WalkInOptions) {
-  const { w, d, set } = o, h = o.h ?? 3.2, B = kit.B;
-  const r = new Room(kit, f, w, d, h, { lx: o.door.lx, width: o.door.width ?? 1.4 }, set.wall, o.keeper?.id ?? set.name);
-  B.lbox(f, set.floorMat ?? MAT.tiles, 0, .01, -d / 2, w, .02, d, set.floor, false); kit.lground(f, 0, -d / 2, w, d, .02);
+  const { w, d, set } = o, h = o.h ?? 3.2, sk = o.shell ?? kit, B = sk.B;
+  const r = new Room(sk, f, w, d, h, { lx: o.door.lx, width: o.door.width ?? 1.4 }, set.wall, o.keeper?.id ?? set.name);
+  // The shell (floor, ceiling, walls, front, signboard) goes to `shell` when given; the furnishing to `kit`.
+  B.lbox(f, set.floorMat ?? MAT.tiles, 0, .01, -d / 2, w, .02, d, set.floor, false); sk.lground(f, 0, -d / 2, w, d, .02);
   if (o.ceiling !== false) B.lbox(f, MAT.plain, 0, h + .05, -d / 2, w, .1, d, set.ceiling ?? '#f2efe8', false);
-  if (!o.shared?.back) kit.solid(f, MAT.plaster, 0, h / 2, -d + .1, w, h, .2, set.wall);
-  r.box(0, .05, r.zb + .012, w - .4, .1, .024, '#5d564c');
+  // A shared wall is not built again, but its face into this room is lined in this set's colour.
+  if (!o.shared?.back) sk.solid(f, MAT.plaster, 0, h / 2, -d + .1, w, h, .2, set.wall); else B.lbox(f, MAT.plaster, 0, h / 2, -d + .21, w - .4, h, .02, set.wall, false);
   for (const s of [-1, 1]) {
-    if (!(s < 0 ? o.shared?.left : o.shared?.right)) kit.solid(f, MAT.plaster, s * (w / 2 - .1), h / 2, -d / 2, .2, h, d, set.wall);
-    r.box(s * (w / 2 - .212), .05, -d / 2, .024, .1, d - .4, '#5d564c');
+    if (!(s < 0 ? o.shared?.left : o.shared?.right)) sk.solid(f, MAT.plaster, s * (w / 2 - .1), h / 2, -d / 2, .2, h, d, set.wall); else B.lbox(f, MAT.plaster, s * (w / 2 - .21), h / 2, -d / 2, .02, h, d - .4, set.wall, false);
   }
   shopFront(r, o.front);
   if (o.sign) {
     const sw = Math.min(w - .3, o.sign.w ?? 6.5), sx = o.sign.lx ?? 0, sy = o.sign.y ?? h + .45;
     if (set.signboard) set.signboard(r, sx, sy, .16, sw, .8);
-    else { B.lbox(f, MAT.plain, sx, sy, .1, sw + .1, .86, .14, o.sign.bg); kit.sign(f, sx, sy, .18, sw - .2, .72, o.sign.he, { bg: o.sign.bg, fg: o.sign.fg, sub: o.sign.en, weight: 800, glow: .2 }); }
+    else { B.lbox(f, MAT.plain, sx, sy, .1, sw + .1, .86, .14, o.sign.bg); sk.sign(f, sx, sy, .18, sw - .2, .72, o.sign.he, { bg: o.sign.bg, fg: o.sign.fg, sub: o.sign.en, weight: 800, glow: .2 }); }
   }
+  // From here on the room is furnished into the main kit.
+  r.kit = kit; r.B = kit.B;
+  r.box(0, .05, r.zb + .012, w - .4, .1, .024, '#5d564c');
+  for (const s of [-1, 1]) r.box(s * (w / 2 - .212), .05, -d / 2, .024, .1, d - .4, '#5d564c');
   // Counter, keeper spot and the customer's spot in front of it; the aisle keeps the way clear.
   const c = set.counter?.(r) ?? null;
   if (c) {
