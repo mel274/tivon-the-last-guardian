@@ -34,7 +34,18 @@ Research date: 24 October 2026. This register describes evidence, not survey-gra
 
 **Confidence:** High for the address and mixed pub/café/vintage character; incomplete for exact current frontage, dimensions and floor plan.
 
-**Modeling status (0.2):** At the project owner's direction the bar is on the upper floor of the 1 Alexander Zaid building, reached by an outside stair and terrace above the ground-floor shops (Butcher Tivon, which OSM also lists at Alexander Zaid 1, and others). A vintage corner nods to the listed upstairs vintage shop, and a wooden cabin labelled Café Beinenu stands in the garden beside the building. Use a clearly labeled original approximation with a warm pub, many fictional patrons and a garden/courtyard cue. A 15–30-person crowd is a game design choice, not a factual crowd count. Fictional drinking, conversations and mysteries are not claims about the business.
+**Modeling status (0.2 → Mandu Interior Plan rev 3):** At the project owner's direction the bar is on the upper floor of the 1 Alexander Zaid building, reached by an outside stair and terrace above the ground-floor shops (Butcher Tivon, which OSM also lists at Alexander Zaid 1, and others). The interior follows the owner-approved [Mandu Interior Plan](mandu-plan/mandu-plan.html) (revision 3) and the owner's answers:
+
+- Narrow north–south bar strip (5.4 × 12.36 m) between the printing shop and Itzik's camera shop; door at the west end of the glass front; hanging wooden sign edge-on at the west end.
+- Dark-green west wall with a steep stair to a standable loft (~2.3 m up; strip ceiling raised to ~4.6 m); clothes hangers and tables on the loft; chandelier.
+- Bar counter under the loft with stools and taps; snack counter = the back bar on the west wall (worktop + one bottle shelf).
+- Toilet 1.5 × 1.4 m in the north-west corner; short corridor south of it to the backyard door, with a sink at the west end and the fridge at the east end beside that door.
+- White east wall: kegs, a standing wine cooler, and two gooseneck lamps. Only those two cold units (wine cooler + back-door fridge).
+- Flipped-L bench along the east wall then the front glass, with three small tables.
+- Backyard: Café Beinenu is a wooden coffee cart (~2.6 × 2.8 m) with its service window and ledge on the east side; customers queue in the backyard and use the yard tables (the cart has no seating of its own). Day/night signs still swap at dusk.
+- Storyteller stays on the balcony at his existing seat so the Mandu story keeps working.
+
+A 15–30-person crowd is a game design choice, not a factual crowd count. Fictional drinking, conversations and mysteries are not claims about the business.
 
 ## Computer shop: Beit HaTochna VeHaMachshev / בית התוכנה והמחשב
 

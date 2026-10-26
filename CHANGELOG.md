@@ -8,8 +8,9 @@
   - Ground floor: Mishi, Oranim pharmacy, the על-הקו (Rav-Kav) service centre and the flower shop.
   - The Zohar cinema lobby with Eva & Batya inside.
   - The falafel row (Falafel Chen, AURUM clocks, מספרת סלים, Falafel Luli, a for-rent unit, Beit Chabad), the pizza unit and Drugstore HaTzomet.
-  - Each shop has a keeper to talk to. Zeid 1 stays closed, and Mandu's interior waits for the owner's drawing (Mandu Interior Plan, revision 3).
+  - Each shop has a keeper to talk to. Zeid 1 stays closed.
   - Furnishings are hidden beyond 90 m.
+- Mandu's interior from the owner-approved Mandu Interior Plan (revision 3) and the owner's answers: loft and west-wall stair, snack back-bar, NW toilet corridor, east-wall kegs and wine cooler, flipped-L bench, backyard Café Beinenu coffee cart (east service window), storyteller kept on the balcony.
 - The falafel-row corner to plan revision 4.2:
   - the one-storey row with its canopy, the pizza unit facing the lane's street entrance, and the drugstore with red Coca-Cola boards and a porch;
   - the paved lane with picnic tables;
