@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (branch `world-pass`)
+## 0.4.0 — the town at real scale, 2026-10-26
 
 ### Added
 - Walk-in shops across the Zeid centre, built with a shared interior kit (`src/world/interiors.ts`, 17 sets):
@@ -34,10 +34,12 @@
 ### Fixed
 - The cave entrance is open: the hill stays above every cave space, and the walk test reaches every chamber.
 - Distant ridges are drawn as unclipped haze, so there is no sky arc on the horizon.
+- House plots are cheaper to build. The browser reaches the menu in about 16–17 s, against the 28 s noted before that work (Intel UHD 620, 1280×800, 2026-10-26).
+- The terrain mesh is cut along building floors, so an 8 m triangle no longer bridges a floor or leaves a wall floating. Terrace walls taller than one step are split where a tread fits.
 
 ### Known
-- House plots make the town slower to build (about 28 s to load in the browser). A speed-up is half done on branch `worktree-agent-a7d8f80b132bf05e1`.
-- Some Zeid rooms were cut short where the old ground poked through their floors. They have not been re-checked against the new DEM.
+- On an Intel UHD 620 at 1280×800, medium and high graphics settle at the lowest automatic resolution (0.6×) and often run on a 30 fps cadence in Ben Gurion Square and on the Zeid balcony. Low stays nearer 60 fps. Figures are in [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md).
+- 2,048 house-terrace edges stay as one wall, because a tread would meet a road or a neighbour. The tallest of those is about 15.7 m.
 
 ## 0.3.0 — Tivon at 1:1, 2026-10-24
 

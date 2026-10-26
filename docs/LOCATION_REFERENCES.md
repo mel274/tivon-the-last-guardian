@@ -45,6 +45,8 @@ Research date: 24 October 2026. This register describes evidence, not survey-gra
 - Backyard: Café Beinenu is a wooden coffee cart (~2.6 × 2.8 m) with its service window and ledge on the east side; customers queue in the backyard and use the yard tables (the cart has no seating of its own). Day/night signs still swap at dusk.
 - Storyteller stays on the balcony at his existing seat so the Mandu story keeps working.
 
+Built this way in 0.4.0. The plot-cost and terrain-mesh tasks did not change the interior.
+
 A 15–30-person crowd is a game design choice, not a factual crowd count. Fictional drinking, conversations and mysteries are not claims about the business.
 
 ## Computer shop: Beit HaTochna VeHaMachshev / בית התוכנה והמחשב
@@ -87,22 +89,23 @@ A 15–30-person crowd is a game design choice, not a factual crowd count. Ficti
 
 ## Version 0.3 survey notes
 
-- **Scale:** 1:1. Origin: Beit She'arim catacombs (32.70340 N, 35.12878 E) at game point (126, 86). OSM building footprints and paths are used as mapped; elevation from AWS Terrain Tiles (~30 m source resolution), so small embankments are authored by hand.
+- **Scale:** 1:1. Origin: Beit She'arim catacombs (32.70340 N, 35.12878 E) at game point (126, 86). OSM building footprints and paths are used as mapped. Elevation is Copernicus GLO-30 (~30 m source, resampled), with each road smoothed along its length and each private house on a flat terrace. Small walls and garden edges are still authored by hand. The earlier AWS Terrain Tiles DEM is kept only so the build can be repeated; the game does not sample it.
 - **Ben Gurion Square:** the pedestrian street runs NW–SE between HaShkedim and Get Phone (32.72271 N, 35.13014 E), positioned from Google Street View (7 HaShkedim St) and the satellite view; shop placement follows Google Maps pins. OSM maps this block as one merged building, which the game replaces.
-- **Zeid centre (1 Alexander Zaid):** built to the owner-approved Zeid Centre Plan, revision 3.1 (`docs/zeid-plan/zeid-plan.html`; pins, answers and photos are in the plan artifact's data). The layout is encoded in `ZEID` in `src/world/layout.ts`:
+- **Zeid centre (1 Alexander Zaid):** built to the owner-approved Zeid Centre Plan, revision 4.2 (`docs/zeid-plan/zeid-plan.html`; pins, answers and photos are in the plan artifact's data). The layout is encoded in `ZEID` in `src/world/layout.ts`:
   - Route 75 bus stop → short stair → upper-plaza walkway.
   - Upper floor, west to east: Butcher Tivon, printing, Mandu (narrow north–south bar strip, Café Beinenu by day), Itzik's camera shop, Pilates, building supplies, all opening onto a full-length balcony entered from the upper plaza.
   - Backyard behind the building, level with the plaza, below a bank of bushes and the road railing; side entrance at the west end.
   - Stair outside the balcony, west to east, to the lower plaza.
   - Ground floor, west to east: a closed section (Rav-Kav centre, flowers) with an east-facing door in the roofed strip under the balcony; then Zeid 1, Mishi and Oranim pharmacy, as deep as the upper floor.
   - Drugstore (candy, Toto, ATM) north of the lane, falafel row south of it; Zohar cinema faces the building.
-- **Zeid centre, owner's photos (2026-10-25)**, not yet all modelled:
+- **Private houses:** agreed 2026-10-25 and built in 0.4.0. A footprint is a private house when it is about 40–250 m², at most three storeys, and not tagged as a shop, a public building or apartments. Each gets a garden plot (street wall, hedge or fence from the street survey, a gate and path, lawn and garden trees) and a flat terrace with rubble retaining walls on the edges that step. The 2026-10-26 count is 1,835 houses and 1,832 plots. Where a stepped wall would run into a road or a neighbour, that edge stays one wall; the tallest measured is about 15.7 m.
+- **Zeid centre, owner's photos (2026-10-25)**, modelled with the 0.4.0 centre (beige balcony tiles, canvas awnings, roller shutters, a landing on the lower-plaza stair, the longer bus-stop stair with green railings). What the photos show:
   - *Balcony:* beige floor tiles; white ceiling with red-painted beams and fluorescent tubes; square piers of stacked dark wooden slats; a stucco parapet about 1 m high with a wide wooden plank cap (not a metal railing); rolled cream canvas awnings between the piers; string lights; wall fans and roller shutters on the shopfronts; stacked folding chairs. A brown hanging sign "קפה בינינו · מנדו בר · אמנות וינטג׳" beside the door. A yellow "טמבור" sign further along.
   - *Stair to the lower plaza:* terrazzo steps between stucco walls with stainless handrails, with a wide landing at the top.
   - *Lower plaza:* red-brown pavers with light stripes forming large diamonds, mature trees with seating rings, the cinema's low pergola front.
   - *Upper floor seen from the upper plaza:* a one-storey façade of wooden-slat piers, a slatted fascia band and roller shutters. Upper plaza paving is red brick in front of the shops and grey elsewhere; a clipped hedge lines the stair down.
   - *By the bus stop:* a long stair with green railings climbs from the upper plaza to Route 75. Beside it is a small kiosk with yellow stone-pattern walls, a clock and a red-tile hipped roof, with a yellow mailbox, rubble boulders and an oleander.
-  - *Falafel row:* a single-storey row under a flat canopy, facing the plaza with picnic tables and closed cream umbrellas. In the photos, from the left: a corner building with a large pizza billboard (04-9830102), Beit Chabad (בית חב״ד), a shop, Falafel Luli (blue scalloped awning; yellow sign with red "פלאפל לולי" in a black shadow, a red panel "טעם של פעם", "כשר"), an arched-door shop, "AURUM", stone-clad piers, then Falafel Chen (Coca-Cola sign) at the right. **Open question:** this order and the row facing the plaza differ from the owner's written order ("Falafel Chen, barber, Falafel Luli, pizza"). Confirm the order and which way the row faces before changing it.
+  - *Falafel row:* a single-storey row under a flat canopy, facing north onto the lane, with picnic tables. Revision 4.2 settled the order. West to east from Alexander Zaid Street: Falafel Chen (its signboard faces the street and the lane), AURUM clocks, מספרת סלים, Falafel Luli (blue scalloped awning), a unit for rent, Beit Chabad, then the pizza unit sticking out at the east end with its window facing back along the lane. The drugstore (הצומת) is north of the lane, with its porch on the lane.
 - **Monuments:** the Library & Memorial Center (HaMigdal 2) and the three-rail pyramid on its lawn; the water tower (OSM height 15 m) with its glazed lookout; the Alexander Zaid statue at 32.70116 N, 35.12800 E (Google), a bronze rider on a rough boulder pedestal inside a round iron fence.
 
 ## World scale and approximation ledger
@@ -118,5 +121,5 @@ A 15–30-person crowd is a game design choice, not a factual crowd count. Ficti
 1. Reconcile Amali's conflicting address labels and obtain a verified physical placement/footprint; the supplied Google URL's business identity is now resolved.
 2. Inspect current Amali and Mandu frontage reference images, then document which dimensions/features remain estimated.
 3. Inspect current frontage for the user-confirmed computer shop, בית התוכנה והמחשב at HaBonim 2; the initial Yizrael Street description is corrected above.
-4. Import a legitimately reusable road/path and terrain dataset; document coordinate projection and the chosen compression.
+4. The 1:1 OSM roads and the Copernicus GLO-30 DEM are now in the game (see ASSET_SOURCES.md). What remains is checking frontages and the few terrace edges that stay as one tall wall.
 5. Review archaeological and biographical journal text against primary references when the later chapters are finalized.
