@@ -150,11 +150,17 @@ export class Game {
   private nearestCar(maxDist: number) {
     const p = this.camera.position; let best: typeof this.world.vehicles[number] | undefined, bd = maxDist;
     for (const v of this.world.vehicles) {
-      if (v.occupied) continue;
+      if (v.occupied || !v.group.visible) continue;
       const d = Math.hypot(v.group.position.x - p.x, v.group.position.z - p.z);
       if (d < bd) { bd = d; best = v; }
     }
     return best;
+  }
+  private carPrompt() {
+    if (this.player.driving) return this.ui.t('E · יציאה מהרכב', 'E · Exit vehicle');
+    const car = this.nearestCar(6);
+    if (car) return this.ui.t('E · לנהוג ברכב', 'E · Drive vehicle');
+    return this.target ? this.target.label[this.ui.lang] : null;
   }
   action(action: string) {
     if (action === 'new') { this.start(); return; }
@@ -247,25 +253,26 @@ export class Game {
   private findTarget() {
     this.camera.getWorldDirection(this.direction); let best = 0; this.target = undefined;
     if (this.player.driving) return;
+    // Proximity wins for cars — no need to aim the crosshair.
+    const nearCar = this.nearestCar(6);
+    if (nearCar) {
+      this.target = this.world.interactables.find(i => i.id === nearCar.id);
+      if (this.target) return;
+    }
     // Only colliders around the player can block a short interaction ray.
     const nearby = this.player.collidersNear(this.camera.position.x, this.camera.position.z, 6);
     for (const i of this.world.interactables) {
-      const isCar = i.id.startsWith('car_');
-      if (isCar && this.world.vehicles.find(v => v.id === i.id)?.occupied) continue;
-      i.object.updateMatrixWorld(true);
-      const o = i.object.matrixWorld.elements; if (Math.abs(o[12] - this.camera.position.x) > 8 || Math.abs(o[14] - this.camera.position.z) > 8) continue;
+      if (i.id.startsWith('car_')) continue; // handled by proximity above
+      const o = i.object.matrixWorld.elements; if (Math.abs(o[12] - this.camera.position.x) > 7 || Math.abs(o[14] - this.camera.position.z) > 7) continue;
       i.object.getWorldPosition(this.temp);
-      // Characters / cars use a group at their feet; aim at the body.
-      if (isCar) this.temp.y += 1.05;
-      else if (this.world.npcs.some(n => n.object === i.object)) this.temp.y += 1.35;
+      if (this.world.npcs.some(n => n.object === i.object)) this.temp.y += 1.35;
       const vector = this.temp.clone().sub(this.camera.position), dist = vector.length();
       const dot = vector.normalize().dot(this.direction);
-      // Cars are easier to select: looser aim cone and larger radius.
-      if (dist > (i.radius ?? 4.2) || dot < (isCar ? .55 : .84)) continue;
+      if (dist > (i.radius ?? 4.2) || dot < .84) continue;
       const ray = new THREE.Ray(this.camera.position, vector);
       let occluded = false;
       for (const c of nearby) {
-        if (c.gate || c.vehicle) continue; // a car must not block its own enter prompt
+        if (c.gate || c.vehicle) continue;
         const hit = rayDistance(c, ray);
         if (hit !== null && hit < dist - .7) { occluded=true;break; }
       }
@@ -370,7 +377,7 @@ export class Game {
         }
       }
     }
-    this.hudTimer+=dt;if(this.playing&&this.hudTimer>.12){this.hudTimer=0;const labels:Record<string,[string,string]>={town:['טבעון','KIRYAT TIVON'],bengurion:['כיכר בן גוריון','BEN GURION SQUARE'],kiryatamal:['קריית עמל · אלכסנדר זייד','KIRYAT AMAL · ALEXANDER ZAID'],south:['הדרך לבית שערים','THE ROAD TO BEIT SHE’ARIM'],overlook:['אור ראשון בעמק','SUNRISE OVER THE VALLEY'],amali:['עמלי','AMALI'],mandu:['מנדו · קומה ב׳','MANDU · UPSTAIRS'],shop:['בית התוכנה והמחשב','COMPUTER SHOP'],caves:[s.phase===2?'בית שערים · קירוב':'האולם הנסתר · בדיוני',s.phase===2?'BEIT SHE’ARIM · INTERPRETATION':'HIDDEN CHAMBERS · FICTION']};const l=labels[zone];const px=this.player.car?.group.position.x??this.camera.position.x,pz=this.player.car?.group.position.z??this.camera.position.z;this.ui.updateHUD(s,this.player.driving?this.ui.t('E · יציאה מהרכב','E · Exit vehicle'):(this.target?this.target.label[this.ui.lang]:null),this.ui.t(l[0],l[1]),this.fps,s.brewing,!!document.pointerLockElement,s.encounter.active?(1-s.encounter.timer/20)*100:0,s.phase===2?this.model.catacombSteps():null,this.waypoint,this.route?.metres??0,this.player.driving?this.player.speedKmh:0);this.ui.updateMinimap(px,pz,this.player.yaw,zone!=='caves'&&!this.panel,this.route,this.waypoint);}
+    this.hudTimer+=dt;if(this.playing&&this.hudTimer>.12){this.hudTimer=0;const labels:Record<string,[string,string]>={town:['טבעון','KIRYAT TIVON'],bengurion:['כיכר בן גוריון','BEN GURION SQUARE'],kiryatamal:['קריית עמל · אלכסנדר זייד','KIRYAT AMAL · ALEXANDER ZAID'],south:['הדרך לבית שערים','THE ROAD TO BEIT SHE’ARIM'],overlook:['אור ראשון בעמק','SUNRISE OVER THE VALLEY'],amali:['עמלי','AMALI'],mandu:['מנדו · קומה ב׳','MANDU · UPSTAIRS'],shop:['בית התוכנה והמחשב','COMPUTER SHOP'],caves:[s.phase===2?'בית שערים · קירוב':'האולם הנסתר · בדיוני',s.phase===2?'BEIT SHE’ARIM · INTERPRETATION':'HIDDEN CHAMBERS · FICTION']};const l=labels[zone];const px=this.player.car?.group.position.x??this.camera.position.x,pz=this.player.car?.group.position.z??this.camera.position.z;this.ui.updateHUD(s,this.carPrompt(),this.ui.t(l[0],l[1]),this.fps,s.brewing,!!document.pointerLockElement,s.encounter.active?(1-s.encounter.timer/20)*100:0,s.phase===2?this.model.catacombSteps():null,this.waypoint,this.route?.metres??0,this.player.driving?this.player.speedKmh:0);this.ui.updateMinimap(px,pz,this.player.yaw,zone!=='caves'&&!this.panel,this.route,this.waypoint);}
     this.shadowTick = (this.shadowTick + 1) % 2; this.renderer.shadowMap.needsUpdate = this.shadowTick === 0;
     this.renderer.render(this.scene,this.camera);
   }

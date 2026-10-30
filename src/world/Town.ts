@@ -7,6 +7,7 @@ import { buildKiryatAmal, buildComputerShop } from './kiryatAmal';
 import { buildLandmarks } from './landmarksWorld';
 import { prepareTerraces, buildTerraceWalls } from './terraces';
 import { buildFootprints, buildCars, buildTrees, flushExtrusions } from './scenery';
+import { spawnDriveableCar } from './vehicles';
 
 /** Kiryat Tivon at 1:1: every OSM street, path and building footprint on real elevation, with
  *  the old centre's pedestrian street, the Zeid centre, story venues and landmarks hand-built
@@ -68,4 +69,7 @@ export function* townStages(ctx: WorldContext): Generator<[string, string]> {
   anchor('shop', shop.x, shop.y, shop.z, shop.rot);
   const [sx, sz] = amali.at(0, 9 + 5.2);
   anchor('spawn', sx, amali.y, sz, amali.rot);
+  // Starter car right beside spawn — walk two steps and press E.
+  spawnDriveableCar(kit, sx + Math.sin(amali.rot + Math.PI / 2) * 4.5, sz + Math.cos(amali.rot + Math.PI / 2) * 4.5, amali.rot, '#e8e4dc');
+  if (import.meta.env?.DEV) console.info('[cars]', ctx.vehicles.length, 'driveable');
 }

@@ -62,8 +62,14 @@ export function spawnDriveableCar(kit: Kit, x: number, z: number, yaw: number, c
   const id = `car_${kit.ctx.vehicles.length}`;
   const collider = makeCollider(x, z, yaw, y);
   kit.ctx.colliders.push(collider);
-  const label: LocalText = { he: 'רכב · E לנהיגה', en: 'Car · E to drive' };
-  kit.register(id, group, label, 5.5);
+  const label: LocalText = { he: 'E · לנהוג ברכב', en: 'E · Drive vehicle' };
+  kit.register(id, group, label, 6);
+  // Floating enter marker — always visible above the roof so the prompt is obvious.
+  const tip = document.createElement('canvas'); tip.width = 128; tip.height = 64;
+  const c = tip.getContext('2d')!; c.fillStyle = '#000000cc'; c.fillRect(8, 8, 112, 48); c.strokeStyle = '#f0c400'; c.lineWidth = 4; c.strokeRect(8, 8, 112, 48);
+  c.fillStyle = '#f0c400'; c.font = 'bold 36px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('E', 64, 34);
+  const marker = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(tip), transparent: true, depthTest: false }));
+  marker.scale.set(1.6, .8, 1); marker.position.set(0, 2.4, 0); marker.name = 'enter_marker'; group.add(marker);
   const car: DriveableCar = { id, group, yaw, speed: 0, color, occupied: false, collider };
   kit.ctx.vehicles.push(car);
   return car;

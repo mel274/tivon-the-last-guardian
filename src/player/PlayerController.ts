@@ -104,11 +104,13 @@ export class PlayerController {
     this.yaw = car.yaw; this.pitch = -.12; this.chaseLook = 0; this.verticalVelocity = 0;
     // Disable the parked-car collider while driving so we don't collide with ourselves.
     car.collider.minY = 999; car.collider.maxY = 999;
+    const tip = car.group.getObjectByName('enter_marker'); if (tip) tip.visible = false;
     this.camera.fov = 72; this.camera.updateProjectionMatrix();
   }
   exitCar() {
     const car = this.car; if (!car) return;
     car.speed = 0; car.occupied = false;
+    const tip = car.group.getObjectByName('enter_marker'); if (tip) tip.visible = true;
     const side = car.yaw + Math.PI / 2;
     const x = car.group.position.x + Math.sin(side) * 2.2, z = car.group.position.z + Math.cos(side) * 2.2;
     syncCarCollider(car);
