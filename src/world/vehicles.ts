@@ -17,27 +17,39 @@ export interface DriveableCar {
 
 const bodyMat = (color: string) => new THREE.MeshStandardMaterial({ color, roughness: .32, metalness: .12 });
 
+export function trafficBody(color: string): THREE.Group { return buildMesh(color); }
+
 function buildMesh(color: string): THREE.Group {
   const g = new THREE.Group();
   g.name = 'driveable_car';
+  const chassis = new THREE.Group();
+  chassis.name = 'chassis';
   const mat = bodyMat(color);
   const body = new THREE.Mesh(PRIMS.box, mat); body.scale.set(1.72, .62, 4.1); body.position.y = .55; body.castShadow = true; body.receiveShadow = true;
   const cabin = new THREE.Mesh(PRIMS.box, mat); cabin.scale.set(1.56, .5, 2.2); cabin.position.set(0, 1.08, -.25); cabin.castShadow = true;
   const glassMat = new THREE.MeshStandardMaterial({ color: '#2e3d42', roughness: .15, metalness: .2 });
   for (const [x, y, z, sx, sy, sz] of [[0, 1.1, .9, 1.4, .42, .05], [0, 1.1, -1.38, 1.4, .4, .05], [.79, 1.1, -.25, .03, .38, 1.9], [-.79, 1.1, -.25, .03, .38, 1.9]] as number[][]) {
-    const w = new THREE.Mesh(PRIMS.box, glassMat); w.scale.set(sx, sy, sz); w.position.set(x, y, z); g.add(w);
+    const w = new THREE.Mesh(PRIMS.box, glassMat); w.scale.set(sx, sy, sz); w.position.set(x, y, z); chassis.add(w);
   }
   const wheelMat = new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: .9 });
   for (const s of [-1, 1]) for (const zz of [-1.3, 1.3]) {
-    const wh = new THREE.Mesh(PRIMS.cyl, wheelMat); wh.scale.set(.33, .2, .33); wh.rotation.z = Math.PI / 2; wh.position.set(s * .82, .33, zz); wh.castShadow = true; g.add(wh);
+    const axle = new THREE.Group(); axle.rotation.z = Math.PI / 2;
+    const wh = new THREE.Mesh(PRIMS.cyl, wheelMat); wh.name = 'wheel'; wh.scale.set(.33, .2, .33); wh.castShadow = true;
+    axle.add(wh);
+    if (zz > 0) {
+      const pivot = new THREE.Group(); pivot.name = 'steer'; pivot.position.set(s * .82, .33, zz); pivot.add(axle); chassis.add(pivot);
+    } else {
+      axle.position.set(s * .82, .33, zz); chassis.add(axle);
+    }
   }
-  const lightMat = new THREE.MeshStandardMaterial({ color: '#f3f0e5', emissive: '#f3f0e5', emissiveIntensity: .15 });
-  const tailMat = new THREE.MeshStandardMaterial({ color: '#a33a30', emissive: '#a33a30', emissiveIntensity: .1 });
+  const lightMat = new THREE.MeshStandardMaterial({ color: '#f3f0e5', emissive: '#fff4d2', emissiveIntensity: .55 });
+  const tailMat = new THREE.MeshStandardMaterial({ color: '#a33a30', emissive: '#ff2a1a', emissiveIntensity: .12 });
   for (const s of [-1, 1]) {
-    const fl = new THREE.Mesh(PRIMS.box, lightMat); fl.scale.set(.38, .14, .03); fl.position.set(s * .58, .62, 2.06); g.add(fl);
-    const tl = new THREE.Mesh(PRIMS.box, tailMat); tl.scale.set(.34, .14, .03); tl.position.set(s * .6, .65, -2.06); g.add(tl);
+    const fl = new THREE.Mesh(PRIMS.box, lightMat); fl.name = 'head_light'; fl.scale.set(.38, .14, .03); fl.position.set(s * .58, .62, 2.06); chassis.add(fl);
+    const tl = new THREE.Mesh(PRIMS.box, tailMat); tl.name = 'brake_light'; tl.scale.set(.34, .14, .03); tl.position.set(s * .6, .65, -2.06); chassis.add(tl);
   }
-  g.add(body, cabin);
+  chassis.add(body, cabin);
+  g.add(chassis);
   return g;
 }
 
@@ -54,23 +66,27 @@ export function syncCarCollider(car: DriveableCar) {
 
 const MAX_CARS = 140;
 
+/** A standing spot beside the driver door, or null if every side is blocked. */
+export function doorStand(x: number, z: number, yaw: number, free: (x: number, z: number) => boolean): { x: number; z: number } | null {
+  for (const side of [1, -1]) for (const dist of [2.4, 3.1, 3.8]) {
+    const ang = yaw + side * Math.PI / 2;
+    const sx = x + Math.sin(ang) * dist, sz = z + Math.cos(ang) * dist;
+    if (free(sx, sz)) return { x: sx, z: sz };
+  }
+  return null;
+}
+
 /** True if the player capsule fits beside the car (left or right door). */
 function hasEnterSpot(colliders: Collider[], x: number, z: number, yaw: number, self?: Collider): boolean {
-  for (const side of [1, -1]) {
-    for (const dist of [2.4, 3.1, 3.8]) {
-      const ang = yaw + side * Math.PI / 2;
-      const sx = x + Math.sin(ang) * dist, sz = z + Math.cos(ang) * dist;
-      const y = surfaceHeight(sx, sz);
-      let clear = true;
-      for (const c of colliders) {
-        if (c === self || c.gate) continue;
-        if (y + .2 >= c.maxY || y + 1.65 <= c.minY) continue;
-        if (footprintDistance2(c, sx, sz) < .35 ** 2) { clear = false; break; }
-      }
-      if (clear) return true;
+  return doorStand(x, z, yaw, (sx, sz) => {
+    const y = surfaceHeight(sx, sz);
+    for (const c of colliders) {
+      if (c === self || c.gate) continue;
+      if (y + .2 >= c.maxY || y + 1.65 <= c.minY) continue;
+      if (footprintDistance2(c, sx, sz) < .35 ** 2) return false;
     }
-  }
-  return false;
+    return true;
+  }) !== null;
 }
 
 /** Drop cars sealed by later walls/hedges so every remaining car is enterable.
@@ -82,13 +98,11 @@ export function pruneUnreachableCars(
 ) {
   const keep: DriveableCar[] = [];
   for (const car of ctx.vehicles) {
-    const p = car.group.position; let ok = false;
-    for (const side of [1, -1]) for (const dist of [2.4, 3.1, 3.8]) {
-      const ang = car.yaw + side * Math.PI / 2, x = p.x + Math.sin(ang) * dist, z = p.z + Math.cos(ang) * dist;
-      // Probe at standing height so floor pads match the live player capsule.
+    const p = car.group.position;
+    const ok = doorStand(p.x, p.z, car.yaw, (x, z) => {
       void groundAt(x, z);
-      if (!blocked(x, z, car.collider)) { ok = true; break; }
-    }
+      return !blocked(x, z, car.collider);
+    }) !== null;
     if (ok) { keep.push(car); continue; }
     car.group.removeFromParent();
     const ci = ctx.colliders.indexOf(car.collider); if (ci >= 0) ctx.colliders.splice(ci, 1);

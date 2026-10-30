@@ -9,7 +9,7 @@ export type ShopType = 'falafel' | 'pizza' | 'salon' | 'bakery' | 'pharmacy' | '
 export interface ShopSpec { type: ShopType; width: number; he: string; en?: string; sign?: string; ink?: string; awning?: string | null; landmark?: string; seating?: number }
 
 const glass = (kit: Kit, f: Frame, lx: number, y: number, lz: number, w: number, h: number) => {
-  const [x, z] = f.at(lx, lz); const m = new THREE.Mesh(PRIMS.box, NIGHT.shopWindow); m.position.set(x, f.y + y, z); m.rotation.y = f.rot; m.scale.set(w, h, .03); kit.root.add(m);
+  const [x, z] = f.at(lx, lz); kit.B.place(PRIMS.box, NIGHT.shopWindow, x, f.y + y, z, w, h, .03, f.rot, null, false);
 };
 
 /** A shop unit whose glass line sits at local z = fz, spanning lx ± width/2. `height` is the

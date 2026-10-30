@@ -24,7 +24,7 @@ const STONE = ['#efe2c4', '#e8d9b8', '#f1e6cc'];
 export function window_(kit: Kit, f: Frame, lx: number, y: number, lz: number, w: number, h: number, shutter: string | null, roller = false) {
   const B = kit.B;
   B.lbox(f, MAT.plain, lx, y, lz + .02, w + .14, h + .14, .08, '#efeae0');
-  const [x, z] = f.at(lx, lz + .07); const pane = new THREE.Mesh(PRIMS.box, NIGHT.window); pane.position.set(x, f.y + y, z); pane.rotation.y = f.rot; pane.scale.set(w, h, .03); kit.root.add(pane);
+  const [x, z] = f.at(lx, lz + .07); B.place(PRIMS.box, NIGHT.window, x, f.y + y, z, w, h, .03, f.rot, null, false);
   if (roller) B.lbox(f, MAT.plain, lx, y + h / 2 + .16, lz + .08, w + .16, .26, .2, '#d8d4ca');
   else if (shutter) for (const s of [-1, 1]) B.lbox(f, MAT.wood, lx + s * (w / 2 + .2), y, lz + .06, .36, h, .05, shutter);
 }
@@ -302,7 +302,8 @@ export function buildTrees(kit: Kit, extra: GardenTree[] = []) {
       // One rough crown stands in for the whole tree at a distance.
       const fh = t.kind === 0 ? 5.6 : t.kind === 1 ? 9.2 : t.kind === 2 ? 5 : 3.2, fr = t.kind === 2 ? 1 : t.kind === 3 ? 1.9 : 2.7;
       o.position.set(t.x, y + fh * s, t.z); o.rotation.set(0, rnd() * 6, 0); o.scale.set(fr * s, (t.kind === 2 ? 4.8 : 1.6) * s, fr * s); o.updateMatrix();
-      far.push([o.matrix.clone(), col.set(t.kind === 2 ? '#2f4731' : t.kind === 3 ? '#80906b' : t.kind === 1 ? '#445d3b' : '#526a3a').clone()]);
+      const farGreen = t.kind === 2 ? '#2f4731' : pick(t.kind === 3 ? ['#7f8e6a', '#8a9873', '#76875f'] : t.kind === 1 ? ['#3f5638', '#46603d', '#4b5f3a'] : ['#4c6436', '#56703c', '#5f7742', '#4a5f35']);
+      far.push([o.matrix.clone(), col.set(farGreen).clone()]);
       kit.collide(t.x - .3, t.x + .3, t.z - .3, t.z + .3, y, y + 3);
     }
     const tm = new THREE.InstancedMesh(trunkGeo, trunkMat, trunks.length); trunks.forEach((m, i) => tm.setMatrixAt(i, m));

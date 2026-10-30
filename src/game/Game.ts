@@ -14,6 +14,7 @@ import { rayDistance } from '../world/collide';
 import { AudioSystem } from '../systems/AudioSystem';
 import { UI, type Waypoint } from '../ui/UI';
 import { findRoute, trimRoute, type GpsRoute } from '../world/gps';
+import { spawnTraffic, tickTraffic, type TrafficCar } from '../world/traffic';
 import { landmark } from '../world/geo';
 
 export class Game {
@@ -35,7 +36,8 @@ export class Game {
   private temp = new THREE.Vector3(); private direction = new THREE.Vector3();
   private skyDome!: Sky; private terrain?: THREE.Object3D; private shadowTick = 0;
   private viewDistance = 620; private maxPixelRatio = 1; private pixelRatio = 1; private perf = { t: 0, n: 0 }; private lightPos?: THREE.Vector3[]; private lightOrder: Array<{ light: THREE.Light; d: number }> = [];
-  private waypoint: Waypoint | null = null; private route: GpsRoute | null = null; private gpsTimer = 0;
+  private waypoint: Waypoint | null = null; private route: GpsRoute | null = null; private gpsTimer = 0; private shownDusk = 0;
+  private traffic: TrafficCar[] = [];
   constructor() {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.renderer.domElement.id = 'game'; this.renderer.domElement.setAttribute('aria-label', 'Tivon 3D game world');
@@ -66,6 +68,8 @@ export class Game {
     for (const [he, en] of townStages(this.world)) await step(he, en);
     await step('מערות בית שערים', 'The Beit She’arim caves'); buildCaves(this.world);
     this.skyDome = new Sky(this.scene); this.terrain = this.scene.getObjectByName('terrain');
+    this.traffic = spawnTraffic(this.scene);
+    this.world.traffic = this.traffic.map(() => ({ x: 0, z: 0, yaw: 0 }));
     this.player = new PlayerController(this.camera, this.world);
     this.scene.add(this.camera); this.camera.add(this.flashlight);
     this.flashlight.position.set(.15, -.16, -.12); this.flashlight.target.position.set(0, 0, -10); this.camera.add(this.flashlight.target); this.flashlight.visible = false;
@@ -118,15 +122,15 @@ export class Game {
       const l = landmark(id);
       this.waypoint = { id, x: l.x, z: l.z, name: l.name };
       const p = this.player.snapshot();
-      this.route = findRoute(p.x, p.z, l.x, l.z);
+      this.route = findRoute(p.x, p.z, l.x, l.z, this.player.driving);
       this.ui.toast(this.ui.t(`ניווט ל־${this.ui.text(l.name)}`, `Route set: ${this.ui.text(l.name)}`));
-      if (this.panel === 'map') this.openPanel('map');
+      if (this.panel === 'map') { this.ui.retainMapView(); this.openPanel('map'); }
     } catch { this.ui.toast(this.ui.t('לא ניתן לנווט ליעד זה.', 'Could not set a route to that place.')); }
   }
   private clearGps(silent = false) {
     this.waypoint = null; this.route = null;
     if (!silent) this.ui.toast(this.ui.t('הניווט בוטל.', 'GPS cleared.'));
-    if (this.panel === 'map') this.openPanel('map');
+    if (this.panel === 'map') { this.ui.retainMapView(); this.openPanel('map'); }
   }
   interact() {
     if (!this.playing || this.panel) return;
@@ -137,10 +141,11 @@ export class Game {
     }
     // Prefer the aimed car, else the nearest free car within reach (GTA-style proximity enter).
     const aimed = this.target?.id.startsWith('car_') ? this.world.vehicles.find(v => v.id === this.target!.id && !v.occupied) : undefined;
-    const near = aimed ?? this.nearestCar(5.5);
+    const near = aimed ?? this.nearestCar(6);
     if (near) {
       this.player.enterCar(near);
-      this.ui.toast(this.ui.t('WASD לנהיגה · Shift למהירות · E ליציאה', 'WASD to drive · Shift for speed · E to exit'));
+      if (this.waypoint) { const p = this.player.snapshot(); this.route = findRoute(p.x, p.z, this.waypoint.x, this.waypoint.z, true); }
+      this.ui.toast(this.ui.t('WASD לנהיגה · Shift למהירות · רווח לבלימה · H לצופר · R לרדיו · E ליציאה', 'WASD to drive · Shift for speed · Space to brake · H to horn · R for radio · E to exit'));
       return;
     }
     if (!this.target) return;
@@ -158,7 +163,7 @@ export class Game {
   }
   private carPrompt() {
     if (this.player.driving) return this.ui.t('יציאה מהרכב', 'Exit vehicle');
-    const car = this.nearestCar(7);
+    const car = this.nearestCar(6);
     if (car) return this.ui.t('לנהוג ברכב', 'Drive vehicle');
     return this.target ? this.target.label[this.ui.lang] : null;
   }
@@ -216,7 +221,7 @@ export class Game {
     // Draw distance and shadow resolution follow the quality setting; fog hides the edge.
     this.viewDistance = this.settings.quality === 'low' ? 380 : this.settings.quality === 'high' ? 1000 : 620;
     this.camera.far = this.viewDistance + 80; this.camera.updateProjectionMatrix();
-    const shadowSize = this.settings.quality === 'high' ? 2048 : 1024;
+    const shadowSize = this.settings.quality === 'high' ? 2048 : 512;
     if (this.sun.shadow.mapSize.x !== shadowSize) { this.sun.shadow.mapSize.set(shadowSize, shadowSize); this.sun.shadow.map?.dispose(); this.sun.shadow.map = null as unknown as THREE.WebGLRenderTarget; }
     this.audio.setVolume(this.settings.volume); this.player.sensitivity = this.settings.sensitivity; this.player.invertY = this.settings.invertY;
   }
@@ -231,6 +236,12 @@ export class Game {
       if (panels[e.code]) { if (this.panel === panels[e.code]) this.closePanel(); else this.openPanel(panels[e.code]); return; }
       if (this.panel) return;
       if (e.code === 'KeyE') { this.interact(); return; }
+      if (e.code === 'KeyH' && this.player.driving) { this.audio.horn(); return; }
+      if (e.code === 'KeyR' && this.player.driving) {
+        const on = this.audio.toggleRadio();
+        this.ui.toast(on ? this.ui.t('הרדיו דולק.', 'Radio on.') : this.ui.t('הרדיו כבוי.', 'Radio off.'));
+        return;
+      }
       if (e.code === 'KeyF') { this.action('act:toggleFlashlight'); return; }
       this.player.keys.add(e.code);
     });
@@ -326,10 +337,16 @@ export class Game {
     const s=this.model.state;
     if(!this.playing){const a=this.world.groups.amali,c=Math.cos(a.rotation.y),sn=Math.sin(a.rotation.y),ox=8+Math.sin(this.total*.03)*4,oz=30;this.camera.position.set(a.position.x+ox*c+oz*sn,a.position.y+15,a.position.z-ox*sn+oz*c);this.camera.lookAt(a.position.x-2*c+4*sn,a.position.y+3,a.position.z+2*sn+4*c);}
     const zone=this.zone(), underground=zone==='caves';
-    const dusk=s.flags.spiritFreed?0:s.flags.manduClue?1:s.flags.coffeeDrunk?.75:0;
+    const duskTarget=s.flags.spiritFreed?0:s.flags.manduClue?1:s.flags.coffeeDrunk?.75:0;
+    this.shownDusk=THREE.MathUtils.damp(this.shownDusk,duskTarget,.4,dt);
+    const dusk=this.shownDusk;
     const bg=new THREE.Color(underground?'#101817':s.flags.spiritFreed?'#e2c59b':dusk>.5?'#4b6570':'#c5d4c9');
     (this.scene.background as THREE.Color).lerp(bg,.025);(this.scene.fog as THREE.Fog).color.copy(this.scene.background as THREE.Color);
-    (this.scene.fog as THREE.Fog).near=underground?5:this.viewDistance*.3-dusk*60;(this.scene.fog as THREE.Fog).far=underground?55:this.viewDistance-dusk*this.viewDistance*.35;
+    const fog = this.scene.fog as THREE.Fog;
+    fog.near = underground ? 5 : this.viewDistance * .3 - dusk * 60;
+    fog.far = underground ? 55 : this.viewDistance - dusk * this.viewDistance * .35;
+    const clip = fog.far + (underground ? 12 : 28);
+    if (Math.abs(this.camera.far - clip) > 1) { this.camera.far = clip; this.camera.updateProjectionMatrix(); }
     this.sun.intensity=underground?.03:3.1-dusk*2.7;this.sky.intensity=underground?.09:2.3-dusk*1.6;
     const dawn=!!s.flags.spiritFreed;const sunOff=dawn?new THREE.Vector3(60,22,40):new THREE.Vector3(-35-dusk*30,55-dusk*35,28);
     this.sun.position.copy(this.camera.position).add(sunOff);this.sun.target.position.copy(this.camera.position);this.sun.color.set(dawn?'#ffc58a':dusk>.5?'#ffd2a8':'#ffe1a6');
@@ -353,12 +370,27 @@ export class Game {
     for(const [id,flag] of Object.entries(clues)){const g=this.world.groups[`clue_${id}`];if(g){g.visible=s.phase===2&&!s.flags[flag];g.rotation.y+=dt*1.5;}}
     const lit=[s.flags.sequenceLamp||s.flags.mechanismSolved,s.flags.sequenceTree||s.flags.mechanismSolved,s.flags.mechanismSolved];
     lit.forEach((on,i)=>{const f=this.world.groups[`seal_${i}`]?.userData.face as THREE.MeshStandardMaterial|undefined;if(f)f.emissiveIntensity+=((on?.9:0)-f.emissiveIntensity)*.1;});
+    tickTraffic(this.traffic, dt);
+    this.traffic.forEach((car, i) => {
+      const slot = this.world.traffic![i];
+      slot.x = car.group.position.x; slot.z = car.group.position.z; slot.yaw = car.group.rotation.y;
+    });
+    const px = this.player.driving ? this.player.car!.group.position.x : this.camera.position.x;
+    const pz = this.player.driving ? this.player.car!.group.position.z : this.camera.position.z;
     for(const npc of this.world.npcs){
-      if(npc.kind==='walk'&&npc.path){const [a,b]=npc.path,len=Math.hypot(b[0]-a[0],b[2]-a[2])||1;npc.progress=((npc.progress??0)+dt*(npc.speed??1)/len/2)%1;const fwd=npc.progress<.5,t=fwd?npc.progress*2:2-npc.progress*2;npc.object.position.set(a[0]+(b[0]-a[0])*t,a[1]+Math.abs(Math.sin(this.total*6+npc.phase))*.03,a[2]+(b[2]-a[2])*t);npc.object.rotation.y=Math.atan2((b[0]-a[0])*(fwd?1:-1),(b[2]-a[2])*(fwd?1:-1));continue;}
+      if(npc.kind==='walk'&&npc.path){
+        const [a,b]=npc.path,len=Math.hypot(b[0]-a[0],b[2]-a[2])||1;npc.progress=((npc.progress??0)+dt*(npc.speed??1)/len/2)%1;const fwd=npc.progress<.5,t=fwd?npc.progress*2:2-npc.progress*2;
+        npc.object.position.set(a[0]+(b[0]-a[0])*t,a[1]+Math.abs(Math.sin(this.total*6+npc.phase))*.03,a[2]+(b[2]-a[2])*t);
+        npc.object.rotation.y=Math.atan2((b[0]-a[0])*(fwd?1:-1),(b[2]-a[2])*(fwd?1:-1));
+        const avoid=(x:number,z:number,radius:number)=>{const dx=npc.object.position.x-x,dz=npc.object.position.z-z,d=Math.hypot(dx,dz);if(d<radius&&d>.05){const push=(radius-d)*.9;npc.object.position.x+=dx/d*push;npc.object.position.z+=dz/d*push;}};
+        avoid(px,pz,2.2);
+        for(const car of this.world.traffic??[])avoid(car.x,car.z,3.2);
+        continue;
+      }
       npc.object.rotation.y+=Math.sin(this.total*.7+npc.phase)*dt*.12;npc.object.position.y=npc.origin.y+Math.sin(this.total*1.4+npc.phase)*.015;}
     if(this.playing&&!this.panel){
       for(let i=0;i<3;i++)this.player.tick(dt/3,s.flags,s.wakefulness,s.intoxication,this.settings.reducedMotion,this.total);
-      this.model.tick(dt,this.player.sprinting);this.audio.tick(dt,zone,this.player.moving,this.player.sprinting,s.phase,this.player.driving?this.player.speedKmh:0);this.updateEncounter(dt);
+      this.model.tick(dt,this.player.sprinting);this.audio.tick(dt,zone,this.player.moving,this.player.sprinting,s.phase,this.player.driving?this.player.speedKmh:0,this.player.driving,this.player.handbrake,this.player.scraping);this.updateEncounter(dt);
       this.findTarget();this.saveTimer+=dt;if(this.saveTimer>12){this.saveTimer=0;this.save();}
       if(this.previousBrew>0&&s.brewing===0){this.audio.tone(1100,.2,.2);this.ui.toast(this.ui.t('הקפה מוכן ונמצא בתיק. I לשתייה.','Coffee is ready in your bag. Press I to drink.'));}
       if(!this.wasSurvived&&s.encounter.survived){this.ui.toast(this.ui.t('השומר נעצר. חפשו את שלושת הזיכרונות באולם.','The guardian falls still. Find the three memories around the chamber.'));this.save();}
@@ -377,7 +409,7 @@ export class Game {
         }
       }
     }
-    this.hudTimer+=dt;if(this.playing&&this.hudTimer>.12){this.hudTimer=0;const labels:Record<string,[string,string]>={town:['טבעון','KIRYAT TIVON'],bengurion:['כיכר בן גוריון','BEN GURION SQUARE'],kiryatamal:['קריית עמל · אלכסנדר זייד','KIRYAT AMAL · ALEXANDER ZAID'],south:['הדרך לבית שערים','THE ROAD TO BEIT SHE’ARIM'],overlook:['אור ראשון בעמק','SUNRISE OVER THE VALLEY'],amali:['עמלי','AMALI'],mandu:['מנדו · קומה ב׳','MANDU · UPSTAIRS'],shop:['בית התוכנה והמחשב','COMPUTER SHOP'],caves:[s.phase===2?'בית שערים · קירוב':'האולם הנסתר · בדיוני',s.phase===2?'BEIT SHE’ARIM · INTERPRETATION':'HIDDEN CHAMBERS · FICTION']};const l=labels[zone];const px=this.player.car?.group.position.x??this.camera.position.x,pz=this.player.car?.group.position.z??this.camera.position.z;this.ui.updateHUD(s,this.carPrompt(),this.ui.t(l[0],l[1]),this.fps,s.brewing,!!document.pointerLockElement,s.encounter.active?(1-s.encounter.timer/20)*100:0,s.phase===2?this.model.catacombSteps():null,this.waypoint,this.route?.metres??0,this.player.driving?this.player.speedKmh:0);this.ui.updateMinimap(px,pz,this.player.yaw,zone!=='caves'&&!this.panel,this.route,this.waypoint);}
+    this.hudTimer+=dt;if(this.playing&&this.hudTimer>.12){this.hudTimer=0;const labels:Record<string,[string,string]>={town:['טבעון','KIRYAT TIVON'],bengurion:['כיכר בן גוריון','BEN GURION SQUARE'],kiryatamal:['קריית עמל · אלכסנדר זייד','KIRYAT AMAL · ALEXANDER ZAID'],south:['הדרך לבית שערים','THE ROAD TO BEIT SHE’ARIM'],overlook:['אור ראשון בעמק','SUNRISE OVER THE VALLEY'],amali:['עמלי','AMALI'],mandu:['מנדו · קומה ב׳','MANDU · UPSTAIRS'],shop:['בית התוכנה והמחשב','COMPUTER SHOP'],caves:[s.phase===2?'בית שערים · קירוב':'האולם הנסתר · בדיוני',s.phase===2?'BEIT SHE’ARIM · INTERPRETATION':'HIDDEN CHAMBERS · FICTION']};const l=labels[zone];const px=this.player.car?.group.position.x??this.camera.position.x,pz=this.player.car?.group.position.z??this.camera.position.z;this.ui.updateHUD(s,this.carPrompt(),this.ui.t(l[0],l[1]),this.fps,s.brewing,!!document.pointerLockElement,s.encounter.active?(1-s.encounter.timer/20)*100:0,s.phase===2?this.model.catacombSteps():null,this.waypoint,this.route?.metres??0,this.player.driving?this.player.speedKmh:-1);this.ui.updateMinimap(px,pz,this.player.yaw,zone!=='caves'&&!this.panel,this.route,this.waypoint);}
     this.shadowTick = (this.shadowTick + 1) % 2; this.renderer.shadowMap.needsUpdate = this.shadowTick === 0;
     this.renderer.render(this.scene,this.camera);
   }

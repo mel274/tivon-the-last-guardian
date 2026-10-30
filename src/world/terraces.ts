@@ -151,7 +151,7 @@ export function prepareTerraces() {
         const t0 = q / segs, t1 = (q + 1) / segs, ax = e.a[0] + ex * t0, az = e.a[1] + ez * t0, bx = e.a[0] + ex * t1, bz = e.a[1] + ez * t1;
         const count = (g: number) => Math.max(1, Math.ceil(Math.abs(pad.y - g) / MAX_WALL));
         // Steep banks step down to the ground where the last tread lands. A blocked tread keeps one wall, to the near bank.
-        let n = count(far), gAim = far;
+        let n = Math.max(count(g0), count(far)), gAim = count(g0) > count(far) ? g0 : far;
         if (n > 1) {
           let hit = false;
           for (let s = 0; s < n - 1 && !hit; s++) hit = blocked([at(ax, az, s * STRIDE + GAP), at(bx, bz, s * STRIDE + GAP), at(bx, bz, (s + 1) * STRIDE), at(ax, az, (s + 1) * STRIDE)]);

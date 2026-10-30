@@ -2,7 +2,7 @@
 import { ROADS, VEHICLE, type P2 } from './geo';
 
 const STEP = 8; // metres — snap resolution for the route graph
-type Node = { x: number; z: number; edges: Array<{ to: number; w: number }> };
+type Node = { x: number; z: number; edges: Array<{ to: number; w: number; drive: boolean }> };
 
 let nodes: Node[] | null = null;
 let cellIndex: Map<number, number[]> | null = null;
@@ -28,20 +28,22 @@ function ensureGraph() {
     }
     return i;
   };
-  const link = (a: number, b: number) => {
+  const link = (a: number, b: number, drive: boolean) => {
     if (a === b) return;
     const na = nodes![a], nb = nodes![b], w = Math.hypot(nb.x - na.x, nb.z - na.z);
     if (w < .5) return;
-    if (!na.edges.some(e => e.to === b)) na.edges.push({ to: b, w });
-    if (!nb.edges.some(e => e.to === a)) nb.edges.push({ to: a, w });
+    const ab = na.edges.find(e => e.to === b), ba = nb.edges.find(e => e.to === a);
+    if (ab) { if (drive) ab.drive = true; } else na.edges.push({ to: b, w, drive });
+    if (ba) { if (drive) ba.drive = true; } else nb.edges.push({ to: a, w, drive });
   };
   for (const road of ROADS) {
     // Prefer driveable streets + footpaths; skip tiny service stubs that clutter the graph.
     if (!VEHICLE.has(road.kind) && road.kind !== 'path' && road.kind !== 'footway' && road.kind !== 'steps' && road.kind !== 'pedestrian' && road.kind !== 'track') continue;
+    const drive = VEHICLE.has(road.kind);
     let prev = -1;
     for (const [x, z] of road.points) {
       const i = add(x, z);
-      if (prev >= 0) link(prev, i);
+      if (prev >= 0) link(prev, i, drive);
       prev = i;
     }
   }
@@ -52,7 +54,7 @@ function ensureGraph() {
       for (const j of cellIndex.get((cx + ox) * 10000 + (cz + oz)) ?? []) {
         if (j <= i) continue;
         const m = nodes[j], d = Math.hypot(m.x - n.x, m.z - n.z);
-        if (d > 0 && d <= 14) link(i, j);
+        if (d > 0 && d <= 14) link(i, j, nodes[i].edges.some(e => e.drive) && nodes[j].edges.some(e => e.drive));
       }
     }
   }
@@ -78,7 +80,7 @@ function nearestNode(x: number, z: number): number {
 export interface GpsRoute { points: P2[]; metres: number }
 
 /** A* along the street graph from the player to a destination. */
-export function findRoute(fromX: number, fromZ: number, toX: number, toZ: number): GpsRoute | null {
+export function findRoute(fromX: number, fromZ: number, toX: number, toZ: number, drive = false): GpsRoute | null {
   ensureGraph();
   const start = nearestNode(fromX, fromZ), goal = nearestNode(toX, toZ);
   if (start === goal) {
@@ -103,6 +105,7 @@ export function findRoute(fromX: number, fromZ: number, toX: number, toZ: number
     open[bi] = open[open.length - 1]; open.pop(); inOpen[cur] = 0;
     if (cur === goal) break;
     for (const e of nodes![cur].edges) {
+      if (drive && !e.drive) continue;
       const tent = gScore[cur] + e.w;
       if (tent >= gScore[e.to]) continue;
       came[e.to] = cur; gScore[e.to] = tent; fScore[e.to] = tent + h(e.to);

@@ -13,4 +13,6 @@ export interface WorldContext {
   groups: Record<string, THREE.Group>;
   lights: THREE.Light[];
   vehicles: DriveableCar[];
+  /** Moving traffic the player should not drive through. Positions update every frame. */
+  traffic?: Array<{ x: number; z: number; yaw: number }>;
 }

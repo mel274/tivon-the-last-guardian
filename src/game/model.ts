@@ -226,7 +226,7 @@ export class GameModel {
   interact(id: string): Dialogue {
     this.context = id;
     const o = this.option.bind(this);
-    const d: Dialogue = { title: tx('טבעון', 'Tivon'), text: tx('יש עוד מה לגלות כאן.', 'There is more to discover here.'), options: [] };
+    const d: Dialogue = { title: tx('טבעון', 'Tivon'), text: tx('רחוב שקט בטבעון. אפשר להמשיך ללכת.', 'A quiet Tivon street. You can keep walking.'), options: [] };
     switch (id) {
       case 'barista':
         d.title = tx('עמלי · הבריסטה', 'Amali · Barista');

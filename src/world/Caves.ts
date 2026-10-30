@@ -152,7 +152,7 @@ export function buildCaves(ctx: WorldContext): void {
   box(cave,145,1.6,147.78,2.8,1.5,.12,darkStone);
   sign(cave,145,.62,147.7,2.3,.3,['קיר כהה · שריטות חיוורות · DARK WALL'],'#6c705f');
   const lightMark=new THREE.Group();lightMark.position.set(145,1.65,147.7);cave.add(lightMark);ctx.groups.light_mark=lightMark;
-  (['lamp','tree','wave'] as const).forEach((k,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.75,.75),new THREE.MeshStandardMaterial({map:symbolCanvas(k,'','#1c2420','#9fe3c8'),emissive:'#ffffff',emissiveMap:symbolCanvas(k,'','#000000','#7fe0b8'),emissiveIntensity:1.4,roughness:.6}));m.position.set(-.85+i*.85,0,-.08);m.rotation.y=Math.PI;lightMark.add(m);});
+  (['lamp','tree','wave'] as const).forEach((k,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1.15,1.15),new THREE.MeshStandardMaterial({map:symbolCanvas(k,'','#1c2420','#9fe3c8'),emissive:'#ffffff',emissiveMap:symbolCanvas(k,'','#000000','#7fe0b8'),emissiveIntensity:1.4,roughness:.6}));m.position.set(-1.15+i*1.15,0,-.08);m.rotation.y=Math.PI;lightMark.add(m);});
   target('light_mark',cave,145,1.6,147.6,{he:'קיר כהה עם שריטות',en:'Dark wall with faint scratches'},3.4);
   clueMarker('light_mark',145,2.9,147.3);
   const fragment=(id:string,x:number,z:number,label:string)=>{
@@ -170,6 +170,7 @@ export function buildCaves(ctx: WorldContext): void {
     const face=new THREE.MeshStandardMaterial({map:symbolCanvas(k,['I','II','III'][i],'#b7bea2','#2f3a2f'),emissive:'#ffcf73',emissiveIntensity:0,roughness:.7});
     const disc=new THREE.Mesh(new THREE.CircleGeometry(.36,24),face);disc.position.z=-.06;disc.rotation.y=Math.PI;seal.add(disc);seal.userData.face=face;
   });
+  lamp(126,158,'#c4c8a0',1.15);
   sign(mechanism,0,1.78,-.64,3.1,.4,['נר · עץ · גל — לפי הלוחות I · II · III'],'#c9c0a2');
   sign(mechanism,0,1.72,.25,3.1,.55,['הסדר נשמר בזיכרון · REMEMBER THE ORDER']);
   collision(126,.65,160,3.3,1.3,1.25);target('mechanism',mechanism,0,1,-.75,{he:'מנגנון שלוש החותמות',en:'Three-seal mechanism'},3.5);
@@ -193,7 +194,7 @@ export function buildCaves(ctx: WorldContext): void {
 
   const ghost=new THREE.Group();ghost.position.set(126,.1,226);ghost.name='The unnamed guardian';cave.add(ghost);ctx.groups.ghost=ghost;
   const spectral=new THREE.MeshStandardMaterial({color:'#b8d9cf',emissive:'#78b8a4',emissiveIntensity:.8,transparent:true,opacity:.43,roughness:.3,depthWrite:false});
-  ghost.add(horseAndRider(spectral));const spectralLight=new THREE.PointLight('#9cd8ca',4,11,2);spectralLight.position.set(0,2,0);ghost.add(spectralLight);ctx.lights.push(spectralLight);
+  ghost.add(horseAndRider(spectral, true, false));const spectralLight=new THREE.PointLight('#9cd8ca',4,11,2);spectralLight.position.set(0,2,0);ghost.add(spectralLight);ctx.lights.push(spectralLight);
   target('guardian',cave,126,1.7,218,{he:'ההד שבחשכה',en:'The presence in the dark'},3.8);
   sign(cave,126,1.5,215.6,2.8,.9,['הקשיבו לפני שתתקדמו','LISTEN BEFORE YOU APPROACH'],'#9eaa94');
 

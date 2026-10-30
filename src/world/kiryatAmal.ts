@@ -177,7 +177,7 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   B.lbox(Bf, MAT.metal, -2, 3.05, half, 1.4, .3, .1, '#2d3532'); // lintel
   kit.lcollide(Bf, -2.55, 1.6, half, .3, 3.2, .2); kit.lcollide(Bf, -1.45, 1.6, half, .3, 3.2, .2);
   B.lbox(Bf, MAT.metal, .55, 1.6, half, 4.3, 3.2, .08, '#2d3532');
-  { const [gx, gz] = Bf.at(.55, half + .05); const g = new THREE.Mesh(PRIMS.box, NIGHT.shopWindow); g.position.set(gx, Bf.y + 1.7, gz); g.rotation.y = Bf.rot; g.scale.set(4.1, 2.8, .03); kit.root.add(g); }
+  { const [gx, gz] = Bf.at(.55, half + .05); B.place(PRIMS.box, NIGHT.shopWindow, gx, Bf.y + 1.7, gz, 4.1, 2.8, .03, Bf.rot, null, false); }
   kit.lcollide(Bf, .55, 1.6, half, 4.3, 3.2, .2);
   B.lbox(Bf, MAT.metal, 0, MH - .25, half, SW, .3, .1, '#2d3532');
   // Back wall to the backyard: solid either side of the door at x ≈ 1 (pin “north”).
@@ -267,10 +267,9 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   B.lbox(Bf, MAT.metal, -2.7, 3.7, half + .85, .03, .9, .03, '#2b2b28');
 
   // ——— Balcony: the whole south side, railing, roof on slim posts ———
-  B.lbox(Mu, MAT.paving, 0, .02, (BAL + HD) / 2, HW * 2, .04, HD - BAL, '#cbbfa8', false);
   // The floor is small beige terrazzo tiles (a repeating painted texture).
   { const canvas = document.createElement('canvas'); canvas.width = canvas.height = 128; terrazzo(canvas.getContext('2d')!, 128);
-    const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(HW * 2 / 1.2, (HD - BAL) / 1.2); tex.anisotropy = 4;
+    const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(HW * 2 / 1.8, (HD - BAL) / 1.8); tex.anisotropy = 4;
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(HW * 2, HD - BAL), new THREE.MeshStandardMaterial({ map: tex, roughness: .5 }));
     const [x, z] = Mu.at(0, (BAL + HD) / 2); floor.position.set(x, Mu.y + .045, z); floor.rotation.set(-Math.PI / 2, Mu.rot, 0, 'YXZ'); floor.receiveShadow = true; kit.root.add(floor); }
   B.lbox(Mu, MAT.plain, 0, 4.3, (BAL + HD) / 2 + .05, HW * 2 + .2, .14, HD - BAL + .3, '#f1eee6');
@@ -304,7 +303,7 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
     if (n > 1) kit.person(Mu, lx + .7, 6.7, { shirt: SHIRTS[Math.abs(Math.round(lx * 5) + 3) % SHIRTS.length], pants: PANTS[Math.abs(Math.round(lx) + 2) % 6], seed: 545 + Math.round(lx * 7), seated: true, angle: -Math.PI / 2, dress: true });
   }
   for (let x = -12; x <= 3; x += 5) { const [px, pz] = Mu.at(x, (BAL + HD) / 2); kit.pendant(px, Mu.y + 4.2, pz, .6, '#1d1d1b'); }
-  { const [x, z] = Mu.at(-5, (BAL + HD) / 2); kit.light(x, Mu.y + 3.6, z, '#ffc98a', 9, 12); }
+  { const [x, z] = Mu.at(-5, (BAL + HD) / 2); kit.light(x, Mu.y + 3.6, z, '#ffd4a0', 7, 12); }
   // The storyteller sits just outside Mandu's door, beside the bar.
   const storyteller = kit.person(Mu, -3.4, 5.3, { shirt: '#8b8c83', pants: '#484940', seed: 12, seated: true, angle: Math.PI / 2, gray: true, beard: true });
   kit.chair(Mu, -3.4, 5.3, Math.PI / 2, '#1f1f1d'); kit.table(Mu, -2.6, 5.3, { r: .4, top: '#4a3426', cups: 0, bottle: true });

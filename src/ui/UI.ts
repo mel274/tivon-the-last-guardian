@@ -33,6 +33,8 @@ export class UI {
   toastBox = document.createElement('div');
   minimap = document.createElement('div');
   private toastTimer = 0;
+  private mapView: { cx: number; cz: number; span: number } | null = null;
+  private keepMapView = false;
   private miniSvg?: SVGSVGElement;
   constructor(private action: (action: string) => void) {
     this.layer.id = 'overlay'; this.hud.id = 'hud'; this.toastBox.id = 'toast';
@@ -129,11 +131,19 @@ export class UI {
     this.panel(this.t(inCaves ? 'מפת המערות' : 'מפה', inCaves ? 'Cave map' : 'MAP'),`<p class="map-subtitle">${this.t(inCaves ? 'סכמה בדיונית של רשת המערות' : 'קנה מידה 1:1 · © OpenStreetMap contributors', inCaves ? 'FICTIONAL SCHEMATIC OF THE CAVE NETWORK' : 'REAL SCALE 1:1 · © OPENSTREETMAP CONTRIBUTORS')}</p>${map}<div class="map-legend">${legend}</div>`,true);
     if (!inCaves) this.zoomableMap();
   }
+  /** Keep the current pan and zoom when the map is rebuilt to show a new route. */
+  retainMapView() {
+    const svg = this.layer.querySelector<SVGSVGElement>('.town-map'); if (!svg?.viewBox.baseVal.width) return;
+    const vb = svg.viewBox.baseVal;
+    this.mapView = { cx: vb.x + vb.width / 2, cz: vb.y + vb.height / 2, span: Math.min(vb.width, vb.height) };
+    this.keepMapView = true;
+  }
   /** Wheel/pinch to zoom, drag to pan, +/− and centre-on-me buttons; markers keep their size. */
   private zoomableMap() {
     const svg = this.layer.querySelector<SVGSVGElement>('.town-map'); if (!svg) return;
     const me = { x: Number(svg.dataset.x), z: Number(svg.dataset.z) };
     let cx = me.x, cz = me.z, span = 520;
+    if (this.keepMapView && this.mapView) { cx = this.mapView.cx; cz = this.mapView.cz; span = this.mapView.span; this.keepMapView = false; }
     const apply = () => {
       span = Math.max(80, Math.min(4600, span));
       const r = svg.getBoundingClientRect(), aspect = r.width && r.height ? r.width / r.height : 1.4;
@@ -231,8 +241,8 @@ export class UI {
     const tipsy = s.intoxication >= 45 ? this.t('מעט שיכורים','Feeling tipsy') : this.t('ראש מעט קל','A little light-headed');
     const dist = routeMetres >= 1000 ? `${(routeMetres / 1000).toFixed(1)} km` : `${Math.round(routeMetres)} m`;
     const gps = waypoint ? `<div class="gps-bar"><span class="gps-dot"></span><div><b>${escape(this.text(waypoint.name))}</b><small>${this.t('ניווט GPS','GPS ROUTE')}</small></div><strong>${dist}</strong>${this.button('✕','gpsClear','gps-x')}</div>` : '';
-    const speedo = speedKmh > 0 ? `<div class="speedo"><strong>${Math.round(speedKmh)}</strong><span>km/h</span></div>` : '';
-    const driving = speedKmh > 0;
+    const driving = speedKmh >= 0;
+    const speedo = driving ? `<div class="speedo"><strong>${Math.round(speedKmh)}</strong><span>km/h</span><em>${this.t('רווח בלימה · H צופר · R רדיו', 'SPACE brake · H horn · R radio')}</em></div>` : '';
     this.hud.innerHTML = `<div class="hud-top"><span class="location"><i></i>${zone}</span><div class="hud-tools">${this.button(`<span>${icon('bag')}</span><kbd>I</kbd>`,'inventory','tool')}${this.button(`<span>${icon('journal')}</span><kbd>J</kbd>`,'journal','tool')}${this.button(`<span>${icon('map_fragment')}</span><kbd>M</kbd>`,'map','tool')}${this.button('<span class="pause-symbol">Ⅱ</span>','pause','tool')}</div></div>${gps}${speedo}<div class="crosshair ${prompt ? 'has-target' : ''} ${driving ? 'hidden' : ''}"></div>${prompt ? `<div class="interact-prompt"><kbd>E</kbd> <span>${escape(prompt)}</span></div>` : ''}<div class="vitals ${wake<20?'fatigued':''}"><div class="vital"><span>${icon('eye')} ${this.t('ערנות','Wakefulness')}</span><div class="meter"><i style="width:${wake}%"></i></div><b>${wake}</b></div>${s.inventory.flashlight ? `<div class="vital"><span>${icon('batteries')} ${this.t('סוללה','Battery')}</span><div class="meter"><i style="width:${s.battery}%"></i></div><b>${Math.round(s.battery)}</b></div>` : ''}${s.intoxication>10 ? `<div class="intox">${tipsy}</div>` : ''}</div>${brewing>0 ? `<div class="brewing">${icon('coffee')}<span>${this.t('הקפה מתבשל…','Brewing coffee…')}<small>${Math.ceil(brewing)} ${this.t('שניות','seconds')}</small></span></div>` : ''}${!locked ? `<div class="capture-hint">${this.t('לחצו להביט סביב','Click to look around')}<span>WASD · ${this.t('הליכה / נהיגה','walk / drive')} &nbsp; E · ${this.t('פעולה','action')}</span></div>` : ''}${threat>0 ? `<div class="threat">${this.t('הקשיבו לפרסות. המשיכו לנוע.','Listen for hoofbeats. Keep moving.')}<div class="meter"><i style="width:${threat}%"></i></div></div>` : ''}${steps ? `<aside class="tracker"><h4>${this.t('דלת האבן החתומה','THE SEALED DOOR')}</h4>${steps.map((st, i) => `<p class="${st.done ? 'done' : ''} ${!st.done && steps.findIndex(q => !q.done) === i ? 'next' : ''}"><b>${st.done ? '✓' : '○'}</b>${escape(this.text(st.label))}</p>`).join('')}${(() => { const n = steps.find(q => !q.done); return n ? `<small>${escape(this.text(n.hint))}</small>` : ''; })()}</aside>` : ''}<span class="performance-counter" aria-hidden="true">${Math.round(fps)}</span>`;
   }
   ending() {

@@ -19,7 +19,7 @@ function install(surface: Surface, canvas: HTMLCanvasElement) {
     for (let i = 0; i < data.length; i += 64) { r += toLinear(data[i]); g += toLinear(data[i + 1]); b += toLinear(data[i + 2]); n++; }
     s.mean.set(r / n, g / n, b / n);
   } catch { /* tainted or stub canvas: keep neutral mean */ }
-  const t = new THREE.CanvasTexture(canvas); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  const t = new THREE.CanvasTexture(canvas); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16;
   t.generateMipmaps = true; s.texture = t;
   s.users.forEach(m => { m.map = t; m.needsUpdate = true; });
 }

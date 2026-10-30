@@ -3,7 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 /** Original low-poly horse and rider, merged into one mesh. Faces local +z.
  *  Used for the memorial's bronze statue and the spectral guardian. */
-export function horseAndRider(material: THREE.Material, rider = true): THREE.Mesh {
+export function horseAndRider(material: THREE.Material, rider = true, armed = true): THREE.Mesh {
   const parts: THREE.BufferGeometry[] = [];
   const put = (g: THREE.BufferGeometry, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1) => {
     g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz)), new THREE.Vector3(sx, sy, sz)));
@@ -39,7 +39,7 @@ export function horseAndRider(material: THREE.Material, rider = true): THREE.Mes
       put(cap(.06, .42), s * .3, 1.62, .25, -.15, 0, s * .1);
       put(cap(.055, .38), s * .24, 2.58, .12, -.9, 0, s * .2);
     }
-    put(new THREE.CylinderGeometry(.025, .025, 1.3, 6), .38, 2.75, -.25, .35, 0, -.15); // rifle slung across
+    if (armed) put(new THREE.CylinderGeometry(.025, .025, 1.3, 6), .38, 2.75, -.25, .35, 0, -.15);
   }
   const geo = mergeGeometries(parts, false); parts.forEach(p => p.dispose()); geo.computeVertexNormals();
   const mesh = new THREE.Mesh(geo, material); mesh.castShadow = true; mesh.receiveShadow = true;

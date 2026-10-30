@@ -92,8 +92,9 @@ export function buildBenGurion(kit: Kit, skip: Set<string>) {
   kit.person(S, 3.8, L / 2 - 6.2, { shirt: '#c4b59a', pants: '#4a4038', seed: 411, seated: true, angle: -Math.PI / 2, gray: true });
   for (const [id, f, lx, lz] of [['arbes', ne1, 3.5, 5.6], ['bm_realestate', ne1, -3.5, 5.6], ['moneygram', ne2, 3.5, 5.6], ['council', sw1, 0, 6.6], ['dani', sw2, -4, 5.6], ['nitzat', sw2, 3, 5.6], ['bg_butcher', sw3, -4, 5.6], ['hinanit', sw3, 3, 5.6]] as Array<[string, Frame, number, number]>) kit.anchor(f, `landmark_${id}`, lx, 2.3, lz, landmark(id).name, 3.6);
   kit.anchor(gp, 'landmark_get_phone', 3.5, 2.3, 5.4, landmark('get_phone').name, 3.6);
+  kit.anchor(ne3, 'landmark_bg_bakery', -3.5, 2.3, 5.6, landmark('bg_bakery').name, 3.6);
+  kit.anchor(ne3, 'landmark_bg_boutique', 3.5, 2.3, 5.6, landmark('bg_boutique').name, 3.6);
   kit.anchor(new Frame(...at(L * .5, 0), S.rot), 'landmark_bengurion_square', 0, 1.6, 0, landmark('bengurion_square').name, 4);
-  void ne3;
 
   // ——— Amali on its footprint ———
   const al = landmark('amali'), fp = footprintAt(al.x, al.z, 20);
@@ -123,7 +124,7 @@ function amali(kit: Kit, f: Frame) {
   B.lbox(f, MAT.plaster, 0, 5.75, F - .15, W, 2.5, .3, '#efe9dc');
   for (const mx of [-6.35, -4, -1.25, 1.25, 4, 6.35]) B.lbox(f, MAT.metal, mx, 2.25, F, .12, 4.5, .16, steel);
   B.lbox(f, MAT.metal, 0, 4.45, F, W, .14, .16, steel); B.lbox(f, MAT.metal, 0, 3.05, F, W, .08, .14, steel); B.lbox(f, MAT.metal, 0, .2, F, W, .4, .16, steel);
-  const pane = (a: number, b: number, y0: number, y1: number) => { const [x, z] = f.at((a + b) / 2, F); const m = new THREE.Mesh(PRIMS.box, NIGHT.shopWindow); m.position.set(x, f.y + (y0 + y1) / 2, z); m.rotation.y = f.rot; m.scale.set(b - a - .1, y1 - y0 - .05, .03); kit.root.add(m); };
+  const pane = (a: number, b: number, y0: number, y1: number) => { const [x, z] = f.at((a + b) / 2, F); B.place(PRIMS.box, NIGHT.shopWindow, x, f.y + (y0 + y1) / 2, z, b - a - .1, y1 - y0 - .05, .03, f.rot, null, false); };
   for (const [a, b] of [[-6.35, -4], [-4, -1.25], [1.25, 4], [4, 6.35]]) pane(a, b, .4, 4.4);
   pane(-1.25, 1.25, 3.1, 4.4);
   kit.lcollide(f, -3.9, 2.25, F, 5.3, 4.5, .3); kit.lcollide(f, 3.9, 2.25, F, 5.3, 4.5, .3);
@@ -158,7 +159,7 @@ function amali(kit: Kit, f: Frame) {
     const [x, z] = f.at(gx, -2.75); B.place(PRIMS.cone, MAT.gloss, x, f.y + 1.68, z, .12, .3, .12, 0, beans, true, Math.PI);
   }
   // Pastry case.
-  { const [x, z] = f.at(.7, -2.6); const c = new THREE.Mesh(PRIMS.box, NIGHT.shopWindow); c.position.set(x, f.y + 1.36, z); c.rotation.y = f.rot; c.scale.set(1.3, .5, .65); kit.root.add(c);
+  { const [x, z] = f.at(.7, -2.6); B.place(PRIMS.box, NIGHT.shopWindow, x, f.y + 1.36, z, 1.3, .5, .65, f.rot, null, false);
     for (let i = 0; i < 8; i++) { const [px, pz] = f.at(.25 + (i % 4) * .3, -2.75 + Math.floor(i / 4) * .28); B.place(PRIMS.sphere, MAT.matte, px, f.y + 1.18, pz, .1, .05, .1, 0, ['#d7a35a', '#b9783d', '#efd8a8', '#8c5a3a'][i % 4], false); } }
   B.lbox(f, MAT.gloss, 1.75, 1.2, -2.6, .3, .2, .22, '#222');
   // Back bar and shelving wall of coffee bags and ceramics.

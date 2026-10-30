@@ -2,6 +2,8 @@
 export class AudioSystem {
   private ctx?: AudioContext; private master?: GainNode;
   private timer = 0; private stepTimer = 0; volume = .35;
+  private engine?: OscillatorNode; private engineGain?: GainNode; private engineFilter?: BiquadFilterNode;
+  radioOn = false; private radioTimer = 0;
   start() {
     if (!this.ctx) { this.ctx = new AudioContext(); this.master = this.ctx.createGain(); this.master.connect(this.ctx.destination); }
     void this.ctx.resume(); this.master!.gain.value = this.volume * .4;
@@ -24,18 +26,40 @@ export class AudioSystem {
     source.buffer = buffer; filter.type = 'lowpass'; filter.frequency.value = cutoff; gain.gain.value = level;
     source.connect(filter); filter.connect(gain); gain.connect(this.master); source.start();
   }
-  tick(dt: number, zone: string, moving: boolean, sprinting: boolean, phase: number, speedKmh = 0) {
+  toggleRadio() { this.radioOn = !this.radioOn; if (this.radioOn) this.start(); return this.radioOn; }
+  horn() {
+    this.start();
+    this.tone(392, .16, .22, 'square');
+    window.setTimeout(() => this.tone(311, .26, .18, 'square'), 150);
+  }
+  private ensureEngine() {
+    if (this.engine || !this.ctx || !this.master) return;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain(), f = this.ctx.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.value = 46; f.type = 'lowpass'; f.frequency.value = 200; g.gain.value = 0;
+    o.connect(f); f.connect(g); g.connect(this.master); o.start();
+    this.engine = o; this.engineGain = g; this.engineFilter = f;
+  }
+  tick(dt: number, zone: string, moving: boolean, sprinting: boolean, phase: number, speedKmh = 0, driving = false, handbrake = false, scraping = false) {
     this.timer += dt; this.stepTimer += dt;
-    if (speedKmh > 2) {
-      if (this.stepTimer > .12) {
-        this.stepTimer = 0;
-        const f = 55 + speedKmh * 1.8;
-        this.tone(f, .14, .04 + Math.min(.08, speedKmh / 400), 'sawtooth', f * 1.05);
-        this.noise(.1, .04 + speedKmh / 800, 280 + speedKmh * 4);
+    if (driving && this.ctx) {
+      this.ensureEngine();
+      const t = this.ctx.currentTime;
+      this.engine!.frequency.setTargetAtTime(Math.min(210, 40 + speedKmh * .9), t, .06);
+      this.engineFilter!.frequency.setTargetAtTime(170 + speedKmh * 7, t, .08);
+      this.engineGain!.gain.setTargetAtTime((0.028 + Math.min(.06, speedKmh / 1100)) * this.volume, t, .05);
+      if (handbrake && speedKmh > 14 && this.stepTimer > .22) { this.stepTimer = 0; this.noise(.16, .11, 1600); }
+      else if (scraping && this.stepTimer > .14) { this.stepTimer = 0; this.noise(.1, .09, 980); }
+    } else if (this.engineGain && this.ctx) this.engineGain.gain.setTargetAtTime(0, this.ctx.currentTime, .08);
+    if (!driving && moving && this.stepTimer > (sprinting ? .3 : .48)) { this.stepTimer = 0; this.noise(.1, .16, zone === 'caves' ? 1600 : 650); }
+    if (driving && this.radioOn) {
+      this.radioTimer += dt;
+      if (this.radioTimer > .55) {
+        this.radioTimer = 0;
+        const scale = [196, 247, 294, 330, 392];
+        this.tone(scale[Math.floor(Math.random() * scale.length)], .42, .02, 'triangle');
       }
-      return;
     }
-    if (moving && this.stepTimer > (sprinting ? .3 : .48)) { this.stepTimer = 0; this.noise(.1, .16, zone === 'caves' ? 1600 : 650); }
+    if (driving) return;
     if (this.timer < (zone === 'mandu' ? .45 : 2.4)) return;
     this.timer = 0;
     if (zone === 'mandu') {

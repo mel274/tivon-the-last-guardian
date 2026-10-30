@@ -487,6 +487,8 @@ export function dressPlots(kit: Kit, L: PlotLayout, styleOf: (house: number) => 
       S.gates++;
       const g = p.gate, ux = g.nz, uz = -g.nx, ph = front === 'wall' ? fh + .25 : front === 'slats' ? fh + .1 : 1.35;
       for (const s of [-1, 1]) { const x = g.x + ux * s * .78 + g.nx * .22, z = g.z + uz * s * .78 + g.nz * .22, y = ht(x, z); kit.B.place(PRIMS.box, front === 'slats' ? MAT.wood : MAT.stone, x, y + ph / 2 - .1, z, .42, ph + .2, .42, Math.atan2(g.nx, g.nz), front === 'slats' ? '#6e5238' : '#d8c8a4'); tris += 12; }
+      const lx = g.x + g.nx * .22, lz = g.z + g.nz * .22, ly = ht(lx, lz);
+      kit.B.place(PRIMS.box, front === 'slats' ? MAT.wood : MAT.stone, lx, ly + ph + .02, lz, 1.9, .14, .36, Math.atan2(g.nx, g.nz), front === 'slats' ? '#6e5238' : '#d8c8a4'); tris += 12;
       if (p.path) { const [[ax, az], [bx, bz]] = p.path, len = Math.hypot(bx - ax, bz - az); if (len > .3) { tris += paving(kit, ax, az, (bx - ax) / len, (bz - az) / len, len, 1.1, pick(['#d6ccb6', '#cfc3aa', '#ddd3bd']), ht) * 12; } kit.occ.markRect(new Frame((ax + bx) / 2, (az + bz) / 2, Math.atan2(bx - ax, bz - az)), 0, 0, 1.2, len); }
     }
     if (p.drive) {

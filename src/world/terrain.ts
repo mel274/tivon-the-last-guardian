@@ -104,19 +104,26 @@ export function buildTerrain(scene: THREE.Scene) {
     const geo = new THREE.PlaneGeometry(W, D, Math.max(1, Math.round(W / step)), Math.max(1, Math.round(D / step)));
     geo.rotateX(-Math.PI / 2); geo.translate(tx + W / 2, 0, tz + D / 2);
     const p = geo.attributes.position, nrm = geo.attributes.normal, colors = new Float32Array(p.count * 3), inStone = new Uint8Array(p.count);
+    const heights = new Map<string, number>();
+    const hAt = (x: number, z: number) => {
+      const k = `${x.toFixed(2)},${z.toFixed(2)}`;
+      let v = heights.get(k);
+      if (v === undefined) { v = surfaceHeight(x, z); heights.set(k, v); }
+      return v;
+    };
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), row = faceRow(x, p.getZ(i)), z = row < 0 ? FACE.front + .05 : row > 0 ? FACE.back - .05 : p.getZ(i);
       if (row) { p.setZ(i, z); if (x >= FACE.x0 && x <= FACE.x1) inStone[i] = 1; }
-      let y = surfaceHeight(x, z);
+      let y = hAt(x, z);
       // At a terrace's retaining wall the 8 m mesh would bridge the two levels and poke grass
       // through the lower paving; keep such vertices at the lower level (the wall hides the step).
       if (nearPad.some(b => x > b[0] && x < b[1] && z > b[2] && z < b[3])) {
-        let lo = y, hi = y; for (const [dx, dz] of [[-4, 0], [4, 0], [0, -4], [0, 4]]) { const h = surfaceHeight(x + dx, z + dz); lo = Math.min(lo, h); hi = Math.max(hi, h); }
+        let lo = y, hi = y; for (const [dx, dz] of [[-4, 0], [4, 0], [0, -4], [0, 4]]) { const h = hAt(x + dx, z + dz); lo = Math.min(lo, h); hi = Math.max(hi, h); }
         if (hi - lo > 2) y = lo;
       }
       p.setY(i, y - .08);
       const za = row > 0 ? z : z - step, zb = row < 0 ? z : z + step; // one-sided across the façade
-      n3.set(surfaceHeight(x - step, z) - surfaceHeight(x + step, z), 2 * step, (surfaceHeight(x, za) - surfaceHeight(x, zb)) * 2 * step / (zb - za)).normalize(); nrm.setXYZ(i, n3.x, n3.y, n3.z);
+      n3.set(hAt(x - step, z) - hAt(x + step, z), 2 * step, (hAt(x, za) - hAt(x, zb)) * 2 * step / (zb - za)).normalize(); nrm.setXYZ(i, n3.x, n3.y, n3.z);
       const n = (Math.sin(x * .071) * Math.cos(z * .063) + Math.sin((x + z) * .021)) * .5 + .5;
       c.copy(dry).lerp(green, .3 + n * .55);
       const woods = Math.max(0, Math.sin(x * .011 + 1) * Math.cos(z * .009) - .2); c.lerp(wood, Math.min(1, woods * 1.4));

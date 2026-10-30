@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { WorldContext, Collider } from '../world/types';
 import type { DriveableCar } from '../world/vehicles';
-import { syncCarCollider } from '../world/vehicles';
+import { doorStand, syncCarCollider } from '../world/vehicles';
 import { surfaceHeight } from '../world/terrain';
 import { WORLD } from '../world/geo';
 import { footprintDistance2, toLocal } from '../world/collide';
@@ -22,11 +22,14 @@ export class PlayerController {
   touchMove = new THREE.Vector2();
   car: DriveableCar | null = null;
   speedKmh = 0;
+  handbrake = false;
+  scraping = false;
   private radius = .29;
   private driveRadius = 1.15;
   private grid = new Map<number, Collider[]>(); private indexed = 0;
   private groundGrid = new Map<number, WorldContext['grounds']>(); private groundsIndexed = 0;
   private chaseLook = 0;
+  private walkVel = new THREE.Vector2();
   constructor(public camera: THREE.PerspectiveCamera, private world: WorldContext) {
     camera.rotation.order = 'YXZ';
     window.addEventListener('blur', () => this.clear());
@@ -62,9 +65,17 @@ export class PlayerController {
   /** Floor under (x,z). With `feet`, picks the highest floor the character can stand on from
    *  that height (multi-storey buildings, stairs, caves under the hill). Without it, an explicit
    *  floor wins over the terrain (legacy behaviour for teleports and fixtures). */
-  groundAt(x: number, z: number, feet?: number) {
+  private groundsNear(x: number, z: number) {
     this.indexGrounds();
-    const list = this.groundGrid.get(this.key(Math.floor(x / 8), Math.floor(z / 8))) ?? [];
+    const out: WorldContext['grounds'] = [];
+    const seen = new Set<WorldContext['grounds'][number]>();
+    for (let ix = Math.floor((x - 1) / 8); ix <= Math.floor((x + 1) / 8); ix++) for (let iz = Math.floor((z - 1) / 8); iz <= Math.floor((z + 1) / 8); iz++) {
+      for (const g of this.groundGrid.get(this.key(ix, iz)) ?? []) if (!seen.has(g)) { seen.add(g); out.push(g); }
+    }
+    return out;
+  }
+  groundAt(x: number, z: number, feet?: number) {
+    const list = this.groundsNear(x, z);
     const surface = surfaceHeight(x, z);
     if (feet === undefined) {
       let y = surface;
@@ -88,11 +99,10 @@ export class PlayerController {
   }
   blocked(x: number, z: number, flags: Record<string, boolean>, radius = this.radius, skip?: Collider) {
     if (x < WORLD.minX || x > WORLD.maxX || z < WORLD.minZ || z > WORLD.maxZ) return true;
-    this.index();
     const feet = this.car ? this.car.group.position.y : this.camera.position.y - 1.7;
-    const list = this.grid.get(this.key(Math.floor(x / 8), Math.floor(z / 8)));
-    if (!list) return false;
-    return list.some(c => {
+    const list = this.collidersNear(x, z, radius);
+    if (!list.size) return false;
+    return [...list].some(c => {
       if (c === skip) return false;
       if (c.gate && flags[c.gate]) return false;
       if (feet + .2 >= c.maxY || feet + 1.65 <= c.minY) return false;
@@ -111,10 +121,13 @@ export class PlayerController {
     const car = this.car; if (!car) return;
     car.speed = 0; car.occupied = false;
     const tip = car.group.getObjectByName('enter_marker'); if (tip) tip.visible = true;
+    this.resetDrivePose(car);
+    const p = car.group.position;
+    const stand = doorStand(p.x, p.z, car.yaw, (x, z) => !this.blocked(x, z, {}, this.radius, car.collider));
     const side = car.yaw + Math.PI / 2;
-    const x = car.group.position.x + Math.sin(side) * 2.2, z = car.group.position.z + Math.cos(side) * 2.2;
+    const x = stand?.x ?? p.x + Math.sin(side) * 2.6, z = stand?.z ?? p.z + Math.cos(side) * 2.6;
     syncCarCollider(car);
-    this.car = null; this.speedKmh = 0; this.chaseLook = 0;
+    this.car = null; this.speedKmh = 0; this.chaseLook = 0; this.handbrake = false; this.scraping = false;
     this.camera.fov = 66; this.camera.updateProjectionMatrix();
     this.restore({ x, y: this.groundAt(x, z) + 1.7, z, yaw: car.yaw, pitch: -.08 });
   }
@@ -126,10 +139,13 @@ export class PlayerController {
     if (this.keys.has('ArrowRight')) this.yaw -= dt * 1.5;
     this.moving = Math.abs(forward) + Math.abs(right) > .08;
     this.sprinting = this.keys.has('ShiftLeft') && this.moving && wake > 15;
-    this.speedKmh = 0;
-    const velocity = new THREE.Vector2(right, -forward).normalize().multiplyScalar((this.sprinting ? 9 : 5.2) * (wake < 18 ? .65 : 1));
-    const dx = (velocity.x * Math.cos(this.yaw) + velocity.y * Math.sin(this.yaw)) * dt;
-    const dz = (-velocity.x * Math.sin(this.yaw) + velocity.y * Math.cos(this.yaw)) * dt;
+    this.speedKmh = 0; this.handbrake = false; this.scraping = false;
+    const wish = new THREE.Vector2(right, -forward);
+    if (wish.lengthSq() > 1) wish.normalize();
+    wish.multiplyScalar(this.moving ? (this.sprinting ? 9 : 5.2) * (wake < 18 ? .65 : 1) : 0);
+    this.walkVel.lerp(wish, 1 - Math.exp(-12 * dt));
+    const dx = (this.walkVel.x * Math.cos(this.yaw) + this.walkVel.y * Math.sin(this.yaw)) * dt;
+    const dz = (-this.walkVel.x * Math.sin(this.yaw) + this.walkVel.y * Math.cos(this.yaw)) * dt;
     const pos = this.camera.position;
     if (!this.blocked(pos.x + dx, pos.z, flags)) pos.x += dx;
     if (!this.blocked(pos.x, pos.z + dz, flags)) pos.z += dz;
@@ -142,41 +158,100 @@ export class PlayerController {
     else if (this.verticalVelocity <= 0) { pos.y = floor; this.verticalVelocity = 0; this.grounded = true; }
     this.camera.rotation.set(this.pitch, this.yaw, reducedMotion ? 0 : Math.sin(time * 1.4) * intox / 100 * .012);
   }
+  private resetDrivePose(car: DriveableCar) {
+    const chassis = car.group.getObjectByName('chassis');
+    if (chassis) { chassis.rotation.x = 0; chassis.rotation.z = 0; }
+    car.group.traverse(o => { if (o.name === 'steer') o.rotation.y = 0; });
+  }
   private tickDrive(dt: number, flags: Record<string, boolean>, reducedMotion: boolean) {
     const car = this.car!;
     const throttle = Number(this.keys.has('KeyW') || this.keys.has('ArrowUp')) - Number(this.keys.has('KeyS') || this.keys.has('ArrowDown')) - this.touchMove.y;
     const steer = Number(this.keys.has('KeyA') || this.keys.has('ArrowLeft')) - Number(this.keys.has('KeyD') || this.keys.has('ArrowRight')) - this.touchMove.x;
-    const max = this.keys.has('ShiftLeft') ? 28 : 18;
-    if (throttle > 0) car.speed = Math.min(max, car.speed + throttle * 11 * dt);
-    else if (throttle < 0) car.speed = Math.max(-8, car.speed + throttle * 14 * dt);
-    else car.speed *= Math.exp(-2.4 * dt);
+    this.handbrake = this.keys.has('Space');
+    const max = this.keys.has('ShiftLeft') ? 32 : 22;
+    if (throttle > 0) car.speed += throttle * 9 * (1 - Math.max(0, car.speed) / max) * dt;
+    else if (throttle < 0) car.speed += throttle * 16 * dt;
+    else car.speed *= Math.exp(-1.5 * dt);
+    if (this.handbrake) car.speed *= Math.exp(-3.4 * dt);
+    car.speed = THREE.MathUtils.clamp(car.speed, -7, max);
     if (Math.abs(car.speed) < .05) car.speed = 0;
-    const turn = steer * dt * (1.9 + Math.min(2.4, Math.abs(car.speed) * .12)) * Math.sign(car.speed || throttle || 1);
-    if (Math.abs(car.speed) > .2 || Math.abs(throttle) > .1) car.yaw += turn;
+    const speedAbs = Math.abs(car.speed);
+    const steerScale = speedAbs < .35 ? .4 : 1 / (1 + speedAbs * .05);
+    const slide = this.handbrake && speedAbs > 3 ? 2.35 : 1;
+    if (speedAbs > .15 || Math.abs(throttle) > .1) car.yaw += steer * dt * 2.15 * steerScale * slide * Math.sign(car.speed || throttle || 1);
     this.yaw = car.yaw;
     const dx = Math.sin(car.yaw) * car.speed * dt, dz = Math.cos(car.yaw) * car.speed * dt;
-    const nx = car.group.position.x + dx, nz = car.group.position.z + dz;
-    const hit = this.blocked(nx, nz, flags, this.driveRadius, car.collider)
-      || this.blocked(nx + Math.sin(car.yaw) * 1.6, nz + Math.cos(car.yaw) * 1.6, flags, this.driveRadius * .7, car.collider);
-    if (hit) car.speed *= -.15;
-    else { car.group.position.x = nx; car.group.position.z = nz; }
-    car.group.position.y = surfaceHeight(car.group.position.x, car.group.position.z);
+    const x0 = car.group.position.x, z0 = car.group.position.z;
+    const nx = x0 + dx, nz = z0 + dz;
+    const hitsTraffic = (x: number, z: number) => (this.world.traffic ?? []).some(t => {
+      const dx = x - t.x, dz = z - t.z;
+      const fwd = dx * Math.sin(t.yaw) + dz * Math.cos(t.yaw);
+      const side = dx * Math.cos(t.yaw) - dz * Math.sin(t.yaw);
+      return Math.abs(fwd) < 2.6 && Math.abs(side) < 1.35;
+    });
+    const blockedAt = (x: number, z: number) => hitsTraffic(x, z) || hitsTraffic(x + Math.sin(car.yaw) * 1.6, z + Math.cos(car.yaw) * 1.6)
+      || this.blocked(x, z, flags, this.driveRadius, car.collider)
+      || this.blocked(x + Math.sin(car.yaw) * 1.6, z + Math.cos(car.yaw) * 1.6, flags, this.driveRadius * .7, car.collider);
+    const hit = blockedAt(nx, nz);
+    this.scraping = false;
+    if (!hit) { car.group.position.x = nx; car.group.position.z = nz; }
+    else {
+      const xOk = !blockedAt(nx, z0), zOk = !blockedAt(x0, nz);
+      if (xOk) car.group.position.x = nx;
+      if (zOk) car.group.position.z = nz;
+      if (!xOk && !zOk) {
+        const back = Math.sign(car.speed) || 1;
+        const bx = x0 - Math.sin(car.yaw) * back * .18, bz = z0 - Math.cos(car.yaw) * back * .18;
+        if (!blockedAt(bx, bz)) { car.group.position.x = bx; car.group.position.z = bz; }
+      }
+      car.speed *= (xOk || zOk) ? .55 : .22;
+      this.scraping = true;
+    }
+    const px = car.group.position.x, pz = car.group.position.z;
+    car.group.position.y = surfaceHeight(px, pz);
     car.group.rotation.y = car.yaw;
-    this.moving = Math.abs(car.speed) > .4;
+    const yFront = surfaceHeight(px + Math.sin(car.yaw) * 1.7, pz + Math.cos(car.yaw) * 1.7);
+    const yBack = surfaceHeight(px - Math.sin(car.yaw) * 1.7, pz - Math.cos(car.yaw) * 1.7);
+    const grade = Math.atan2(yFront - yBack, 3.4);
+    const chassis = car.group.getObjectByName('chassis');
+    if (chassis) {
+      const pitch = THREE.MathUtils.clamp(-throttle * .05 + grade * .65, -.12, .12);
+      const roll = THREE.MathUtils.clamp(-steer * Math.min(1, speedAbs / 10) * (this.handbrake ? .11 : .05), -.12, .12);
+      chassis.rotation.x = THREE.MathUtils.damp(chassis.rotation.x, pitch, 7, dt);
+      chassis.rotation.z = THREE.MathUtils.damp(chassis.rotation.z, roll, 6, dt);
+    }
+    const steerAngle = THREE.MathUtils.clamp(steer * .48, -.5, .5);
+    car.group.traverse(o => {
+      if (o.name === 'steer') o.rotation.y = steerAngle;
+      if (o.name === 'wheel') {
+        o.userData.spin = ((o.userData.spin as number) || 0) + car.speed * dt * 2.6;
+        o.rotation.y = o.userData.spin as number;
+      }
+      if (o.name === 'brake_light' && o instanceof THREE.Mesh && o.material instanceof THREE.MeshStandardMaterial) {
+        o.material.emissiveIntensity = throttle < -.05 || this.handbrake ? 1.6 : .14;
+      }
+    });
+    this.moving = speedAbs > .4;
     this.sprinting = false;
-    this.speedKmh = Math.abs(car.speed) * 3.6;
+    this.speedKmh = speedAbs * 3.6;
     this.chaseLook *= Math.exp(-1.8 * dt);
     const lookYaw = car.yaw + this.chaseLook;
-    const behind = 7.2 + Math.min(3, Math.abs(car.speed) * .08), height = 2.6;
-    const cx = car.group.position.x - Math.sin(lookYaw) * behind;
-    const cz = car.group.position.z - Math.cos(lookYaw) * behind;
+    const speed01 = Math.min(1, speedAbs / 24);
+    const behind = 6.6 + speed01 * 3.4, height = 2.35 + speed01 * .55;
+    const cx = px - Math.sin(lookYaw) * behind;
+    const cz = pz - Math.cos(lookYaw) * behind;
     const cy = surfaceHeight(cx, cz) + height;
-    this.camera.position.lerp(new THREE.Vector3(cx, cy, cz), 1 - Math.exp(-10 * dt));
-    const target = new THREE.Vector3(car.group.position.x + Math.sin(car.yaw) * 4, car.group.position.y + 1.1, car.group.position.z + Math.cos(car.yaw) * 4);
+    this.camera.position.lerp(new THREE.Vector3(cx, cy, cz), 1 - Math.exp(-8 * dt));
+    const ahead = 5 + speed01 * 9;
+    const gaze = car.yaw + this.chaseLook * .55;
+    const target = new THREE.Vector3(px + Math.sin(gaze) * ahead, car.group.position.y + 1.15, pz + Math.cos(gaze) * ahead);
     this.camera.lookAt(target);
-    this.camera.rotateZ(reducedMotion ? 0 : -steer * .04 * Math.min(1, Math.abs(car.speed) / 10));
+    const fov = 70 + speed01 * 12;
+    if (Math.abs(this.camera.fov - fov) > .2) { this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
+    this.camera.rotateZ(reducedMotion ? 0 : -steer * (this.handbrake ? .07 : .045) * Math.min(1, speedAbs / 8));
   }
   restore(p: { x: number; y: number; z: number; yaw: number; pitch: number }) {
+    this.walkVel.set(0, 0);
     this.camera.position.set(p.x, p.y, p.z); this.yaw = p.yaw; this.pitch = p.pitch;
     this.camera.rotation.set(this.pitch, this.yaw, 0); this.verticalVelocity = 0; this.clear();
   }

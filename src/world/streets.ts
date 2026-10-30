@@ -124,7 +124,11 @@ export function buildStreets(kit: Kit) {
       const seg = road.points.slice(i - 1, i + 1);
       if (grid.onOtherRoad(seg[0][0], seg[0][1], road, 1)) continue;
       if (road.kind === 'trunk') { marks.push(ribbon(offsetLine(seg, -hw + .35), .14, lift + .012, yellow)); marks.push(ribbon(offsetLine(seg, hw - .35), .14, lift + .012, lineC)); marks.push(ribbon(seg, .12, lift + .012, lineC)); }
-      else marks.push(ribbon(seg, .12, lift + .012, lineC));
+      else {
+        marks.push(ribbon(seg, .12, lift + .012, lineC));
+        marks.push(ribbon(offsetLine(seg, -hw + .35), .1, lift + .012, lineC));
+        marks.push(ribbon(offsetLine(seg, hw - .35), .1, lift + .012, lineC));
+      }
     }
     let acc = 0, n = 0;
     for (let i = 1; i < road.points.length; i++) {
@@ -168,13 +172,14 @@ function mergeAll(list: THREE.BufferGeometry[]) {
 }
 
 const kitBox = new THREE.BoxGeometry(1, 1, 1);
+const lampBulb = new THREE.SphereGeometry(.14, 8, 6);
 export function streetLamp(kit: Kit, x: number, z: number, faceRot: number, lit: boolean) {
   const y = surfaceHeight(x, z), B = kit.B;
   B.cyl(MAT.metal, x, y + 3, z, .07, 6, '#3c4440'); B.cyl(MAT.metal, x, y + .25, z, .14, .5, '#3c4440');
   const ax = x + Math.sin(faceRot) * .9, az = z + Math.cos(faceRot) * .9;
   B.place(kitBox, MAT.metal, (x + ax) / 2, y + 5.95, (z + az) / 2, .06, .06, 1.9, faceRot, '#3c4440');
   B.place(kitBox, MAT.metal, ax, y + 5.85, az, .32, .12, .55, faceRot, '#2d3330');
-  const bulb = new THREE.Mesh(kitBox, NIGHT.bulb); bulb.position.set(ax, y + 5.78, az); bulb.rotation.y = faceRot; bulb.scale.set(.26, .03, .45); kit.root.add(bulb);
+  const bulb = new THREE.Mesh(lampBulb, NIGHT.bulb); bulb.position.set(ax, y + 5.7, az); kit.root.add(bulb);
   if (lit) kit.light(ax, y + 5.6, az, '#ffd49b', 18, 20);
   kit.occ.markDisc(x, z, 2.5); // keeps street trees (and their crowns) off the lamp
 }
