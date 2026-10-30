@@ -135,17 +135,26 @@ export class Game {
       this.ui.toast(this.ui.t('יצאתם מהרכב.', 'You left the car.'));
       return;
     }
-    if (!this.target) return;
-    if (this.target.id.startsWith('car_')) {
-      const car = this.world.vehicles.find(v => v.id === this.target!.id);
-      if (car) {
-        this.player.enterCar(car);
-        this.ui.toast(this.ui.t('WASD לנהיגה · Shift למהירות · E ליציאה', 'WASD to drive · Shift for speed · E to exit'));
-      }
+    // Prefer the aimed car, else the nearest free car within reach (GTA-style proximity enter).
+    const aimed = this.target?.id.startsWith('car_') ? this.world.vehicles.find(v => v.id === this.target!.id && !v.occupied) : undefined;
+    const near = aimed ?? this.nearestCar(4.2);
+    if (near) {
+      this.player.enterCar(near);
+      this.ui.toast(this.ui.t('WASD לנהיגה · Shift למהירות · E ליציאה', 'WASD to drive · Shift for speed · E to exit'));
       return;
     }
+    if (!this.target) return;
     this.currentInteraction = this.target.id; this.panel = 'dialogue'; this.unlock();
     this.ui.dialogue(this.model.interact(this.currentInteraction));
+  }
+  private nearestCar(maxDist: number) {
+    const p = this.camera.position; let best: typeof this.world.vehicles[number] | undefined, bd = maxDist;
+    for (const v of this.world.vehicles) {
+      if (v.occupied) continue;
+      const d = Math.hypot(v.group.position.x - p.x, v.group.position.z - p.z);
+      if (d < bd) { bd = d; best = v; }
+    }
+    return best;
   }
   action(action: string) {
     if (action === 'new') { this.start(); return; }
@@ -241,18 +250,22 @@ export class Game {
     // Only colliders around the player can block a short interaction ray.
     const nearby = this.player.collidersNear(this.camera.position.x, this.camera.position.z, 6);
     for (const i of this.world.interactables) {
-      if (i.id.startsWith('car_') && this.world.vehicles.find(v => v.id === i.id)?.occupied) continue;
-      const o = i.object.matrixWorld.elements; if (Math.abs(o[12] - this.camera.position.x) > 7 || Math.abs(o[14] - this.camera.position.z) > 7) continue;
+      const isCar = i.id.startsWith('car_');
+      if (isCar && this.world.vehicles.find(v => v.id === i.id)?.occupied) continue;
+      i.object.updateMatrixWorld(true);
+      const o = i.object.matrixWorld.elements; if (Math.abs(o[12] - this.camera.position.x) > 8 || Math.abs(o[14] - this.camera.position.z) > 8) continue;
       i.object.getWorldPosition(this.temp);
-      // Characters use a group at their feet; focus on the upper body.
-      if (this.world.npcs.some(n => n.object === i.object)) this.temp.y += 1.35;
+      // Characters / cars use a group at their feet; aim at the body.
+      if (isCar) this.temp.y += 1.05;
+      else if (this.world.npcs.some(n => n.object === i.object)) this.temp.y += 1.35;
       const vector = this.temp.clone().sub(this.camera.position), dist = vector.length();
       const dot = vector.normalize().dot(this.direction);
-      if (dist > (i.radius ?? 4.2) || dot < .84) continue;
+      // Cars are easier to select: looser aim cone and larger radius.
+      if (dist > (i.radius ?? 4.2) || dot < (isCar ? .55 : .84)) continue;
       const ray = new THREE.Ray(this.camera.position, vector);
       let occluded = false;
       for (const c of nearby) {
-        if (c.gate) continue;
+        if (c.gate || c.vehicle) continue; // a car must not block its own enter prompt
         const hit = rayDistance(c, ray);
         if (hit !== null && hit < dist - .7) { occluded=true;break; }
       }

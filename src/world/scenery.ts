@@ -9,6 +9,7 @@ import { nearestRoad } from './geo';
 import { ZEID, STATIC_PADS } from './layout';
 import { layoutPlots, dressPlots, PLOT_STATS } from './plots';
 import { LANDMARKS } from '../game/landmarks';
+import { spawnDriveableCar } from './vehicles';
 
 /** The town's fabric from real OSM footprints. Each building stands on its ground (on slopes the
  *  downhill side shows a taller base, as Tivon's hillside houses do); heights follow OSM levels
@@ -198,22 +199,17 @@ function frontBoundary(kit: Kit, box: { cx: number; cz: number; w: number; d: nu
 }
 
 function car(kit: Kit, x: number, z: number, rot: number, color: string) {
-  const f = new Frame(x, z, rot), B = kit.B;
-  B.lbox(f, MAT.gloss, 0, .55, 0, 1.72, .62, 4.1, color); B.lbox(f, MAT.gloss, 0, 1.08, -.25, 1.56, .5, 2.2, color);
-  B.lbox(f, MAT.gloss, 0, 1.1, .9, 1.4, .42, .05, '#2e3d42'); B.lbox(f, MAT.gloss, 0, 1.1, -1.38, 1.4, .4, .05, '#2e3d42');
-  for (const s of [-1, 1]) { B.lbox(f, MAT.gloss, s * .79, 1.1, -.25, .03, .38, 1.9, '#2e3d42'); for (const zz of [-1.3, 1.3]) { const [wx, wz] = f.at(s * .82, zz); B.place(PRIMS.cyl, MAT.matte, wx, f.y + .33, wz, .33, .2, .33, f.rot, '#222', true, 0, Math.PI / 2); } }
-  for (const s of [-1, 1]) { B.lbox(f, MAT.plain, s * .58, .62, 2.06, .38, .14, .03, '#f3f0e5'); B.lbox(f, MAT.plain, s * .6, .65, -2.06, .34, .14, .03, '#a33a30'); }
-  kit.lcollide(f, 0, .7, 0, 1.8, 1.4, 4.2);
+  spawnDriveableCar(kit, x, z, rot, color);
 }
-/** Cars parked along residential kerbs and in car parks. */
+/** Cars parked along residential/local kerbs and in car parks — all enterable. */
 export function buildCars(kit: Kit) {
   seed = 777;
   for (const road of ROADS) {
-    if (road.kind !== 'residential' && road.kind !== 'unclassified') continue;
-    for (let i = 3; i < road.points.length - 3; i += 4) {
-      if (rnd() > .18) continue;
+    if (!VEHICLE.has(road.kind) || road.kind.startsWith('trunk') || road.kind === 'service') continue;
+    for (let i = 3; i < road.points.length - 3; i += 5) {
+      if (rnd() > .28) continue;
       const [ax, az] = road.points[i], [bx, bz] = road.points[i + 1], dx = bx - ax, dz = bz - az, l = Math.hypot(dx, dz) || 1, side = rnd() < .5 ? 1 : -1;
-      car(kit, ax + dz / l * side * (road.width / 2 - 1), az - dx / l * side * (road.width / 2 - 1), Math.atan2(dx, dz), pick(CARS));
+      car(kit, ax + dz / l * side * (road.width / 2 - 1.1), az - dx / l * side * (road.width / 2 - 1.1), Math.atan2(dx, dz), pick(CARS));
     }
   }
   for (const a of AREAS) if (a.kind === 'parking') {
@@ -223,6 +219,12 @@ export function buildCars(kit: Kit) {
       car(kit, x, z, box.rot + (v < 0 ? 0 : Math.PI), pick(CARS));
     }
   }
+  // Guaranteed car at the spawn plaza so the first E always works.
+  try {
+    const a = landmark('amali'), face = .35;
+    const [sx, sz] = new Frame(a.x, a.z, face).at(6.5, 12);
+    car(kit, sx, sz, face + Math.PI / 2, '#c9ced3');
+  } catch { /* */ }
 }
 
 /** Instanced trees: dense oak–pine woodland in OSM forests, park trees, garden trees around
