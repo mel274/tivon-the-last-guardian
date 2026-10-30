@@ -89,7 +89,7 @@ A 15–30-person crowd is a game design choice, not a factual crowd count. Ficti
 
 ## Version 0.3 survey notes
 
-- **Scale:** 1:1. Origin: Beit She'arim catacombs (32.70340 N, 35.12878 E) at game point (126, 86). OSM building footprints and paths are used as mapped. Elevation is Copernicus GLO-30 (~30 m source, resampled), with each road smoothed along its length and each private house on a flat terrace. Small walls and garden edges are still authored by hand. The earlier AWS Terrain Tiles DEM is kept only so the build can be repeated; the game does not sample it.
+- **Scale:** 1:1. Origin: Beit She'arim catacombs (32.70340 N, 35.12878 E) at game point (126, 86). OSM building footprints and paths are used as mapped. Elevation is the GEM-15 bare-earth DTM (15 m source, resampled), with each road smoothed along its length and each private house on a flat terrace. Small walls and garden edges are still authored by hand. The earlier AWS Terrain Tiles DEM is kept only so the build can be repeated; the game does not sample it.
 - **Ben Gurion Square:** the pedestrian street runs NW–SE between HaShkedim and Get Phone (32.72271 N, 35.13014 E), positioned from Google Street View (7 HaShkedim St) and the satellite view; shop placement follows Google Maps pins. OSM maps this block as one merged building, which the game replaces.
 - **Zeid centre (1 Alexander Zaid):** built to the owner-approved Zeid Centre Plan, revision 4.2 (`docs/zeid-plan/zeid-plan.html`; pins, answers and photos are in the plan artifact's data). The layout is encoded in `ZEID` in `src/world/layout.ts`:
   - Route 75 bus stop → short stair → upper-plaza walkway.

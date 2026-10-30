@@ -23,6 +23,43 @@ export function facingStreet(cx: number, cz: number, rot: number, w: number, d: 
   return best;
 }
 
+/** Closed shop on the landmark footprint. A merged block (the pedestrian street) keeps a modest front at the pin. */
+function placeShop(kit: Kit, skip: Set<string>, id: string, units: ShopSpec[], maxW: number, maxD: number, opts: { floors?: number; stone?: boolean; wall?: string; hint?: number } = {}) {
+  const l = landmark(id), fp = footprintAt(l.x, l.z, 10);
+  let cx = l.x, cz = l.z, rot = opts.hint ?? 0, w = maxW, d = maxD;
+  if (fp) {
+    const box = orientedBox(fp.points), inside = pointInPolygon(l.x, l.z, fp.points);
+    const usable = box.w <= 44 && box.d <= 44 && (inside || Math.hypot(box.cx - l.x, box.cz - l.z) < 14);
+    if (inside || box.w > 44 || box.d > 44) skip.add(fp.id);
+    if (usable) { skip.add(fp.id); cx = box.cx; cz = box.cz; rot = box.rot; w = Math.min(Math.max(box.w - .4, 6), maxW); d = Math.min(Math.max(box.d - .4, 5), maxD); }
+  }
+  let face = facingStreet(cx, cz, rot, w, d);
+  const fwdX = Math.sin(face.rot), fwdZ = Math.cos(face.rot);
+  const road = nearestRoad(cx + fwdX * face.d / 2, cz + fwdZ * face.d / 2, vehicleRoads);
+  const need = road.road.width / 2 + 2;
+  if (road.dist < need) { const push = Math.min(5, need - road.dist); cx -= fwdX * push; cz -= fwdZ * push; face = facingStreet(cx, cz, face.rot, face.w, face.d); }
+  const corners: P2[] = [[-face.w / 2, -face.d / 2], [face.w / 2, -face.d / 2], [face.w / 2, face.d / 2], [-face.w / 2, face.d / 2]].map(([u, v]) => new Frame(cx, cz, face.rot, 0).at(u, v));
+  const f = new Frame(cx, cz, face.rot, groundRange(corners).hi);
+  const sum = units.reduce((s, u) => s + u.width, 0) || 1;
+  commercialBlock(kit, f, face.w, face.d, units.map(u => ({ ...u, width: u.width * face.w / sum })), { floors: opts.floors ?? 2, wall: opts.wall ?? '#ece4d4', stone: opts.stone });
+  reserve(kit, f, face.w, face.d, 0, .8);
+  kit.anchor(f, `landmark_${id}`, 0, 2.2, face.d / 2 + .3, l.name, 3.6);
+  return { f, w: face.w, d: face.d };
+}
+
+let wheelGeo: THREE.TorusGeometry | null = null;
+function streetBike(kit: Kit, f: Frame, lx: number, lz: number, color: string) {
+  wheelGeo ??= new THREE.TorusGeometry(.32, .034, 6, 14);
+  const mat = new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: .55 });
+  for (const dx of [-.52, .52]) { const [x, z] = f.at(lx + dx, lz); const wheel = new THREE.Mesh(wheelGeo, mat); wheel.position.set(x, f.y + .34, z); wheel.rotation.y = f.rot + Math.PI / 2; kit.root.add(wheel); }
+  kit.B.lbox(f, MAT.gloss, lx, .42, lz, 1.15, .06, .06, color);
+  kit.B.lbox(f, MAT.gloss, lx - .18, .66, lz, .06, .5, .05, color);
+  kit.B.lbox(f, MAT.gloss, lx + .22, .56, lz, .48, .05, .05, color);
+  kit.B.lbox(f, MAT.metal, lx - .52, .17, lz, .05, .34, .05, '#2a2a2a');
+  kit.B.lbox(f, MAT.metal, lx + .52, .17, lz, .05, .34, .05, '#2a2a2a');
+  kit.lcollide(f, lx, .4, lz, 1.25, .8, .35);
+}
+
 export function buildBenGurion(kit: Kit, skip: Set<string>) {
   // ——— The pedestrian street ———
   const [ax, az] = BENGURION.a, [bx, bz] = BENGURION.b;
@@ -76,7 +113,12 @@ export function buildBenGurion(kit: Kit, skip: Set<string>) {
   reserve(kit, gp, 10, 9, 0, .5);
   for (const s of [-1, 1]) for (let i = 0; i < 6; i++) { const [x, z] = at(L - 1 + i * .45, s * 6.3); kit.B.box(MAT.stone, x, surfaceHeight(...at(L - 1, 0)) + i * .16 - .3, z, 2.2, .6, .45, S.rot, '#ddd0b3'); }
   // Back rows: flats over the shops, filling the block OSM maps as one merged building.
-  for (const [a0, a1, o0, o1, lv] of [[2, 44, 17.6, 25, 3], [18, 47, -19.6, -28, 3], [-2, 16, -19.8, -26, 2]] as Array<[number, number, number, number, number]>) {
+  // Notch the south-west filler around the bicycle shop so its front is not buried in that mass.
+  const braP = landmark('braaap'), bdx = braP.x - S.x, bdz = braP.z - S.z, bo = bdx * S.cos - bdz * S.sin, ba = L / 2 - (bdx * S.sin + bdz * S.cos);
+  const filler: Array<[number, number, number, number, number]> = [[2, 44, 17.6, 25, 3], [-2, 16, -19.8, -26, 2]];
+  if (ba > 20 && ba < 45 && bo < -19 && bo > -29) filler.push([18, ba - 5, -19.6, -28, 3], [ba + 5, 47, -19.6, -28, 3]);
+  else filler.push([18, 47, -19.6, -28, 3]);
+  for (const [a0, a1, o0, o1, lv] of filler) {
     const poly: P2[] = [at(a0, o0), at(a1, o0), at(a1, o1), at(a0, o1)];
     const g = groundRange(poly); extrude(kit, poly, g.lo - .5, g.hi + lv * 3, lv === 3 ? '#ece3cf' : '#e4dccd', false);
     const c = at((a0 + a1) / 2, (o0 + o1) / 2); for (let i = 0; i < Math.floor((a1 - a0) / 8); i++) { const q = at(a0 + 4 + i * 8, (o0 + o1) / 2); solarHeater(kit, q[0], g.hi + lv * 3, q[1], S.rot); }
@@ -94,7 +136,87 @@ export function buildBenGurion(kit: Kit, skip: Set<string>) {
   kit.anchor(gp, 'landmark_get_phone', 3.5, 2.3, 5.4, landmark('get_phone').name, 3.6);
   kit.anchor(ne3, 'landmark_bg_bakery', -3.5, 2.3, 5.6, landmark('bg_bakery').name, 3.6);
   kit.anchor(ne3, 'landmark_bg_boutique', 3.5, 2.3, 5.6, landmark('bg_boutique').name, 3.6);
-  kit.anchor(new Frame(...at(L * .5, 0), S.rot), 'landmark_bengurion_square', 0, 1.6, 0, landmark('bengurion_square').name, 4);
+  const square = new Frame(...at(L * .5, 0), S.rot);
+  kit.anchor(square, 'landmark_bengurion_square', 0, 1.6, 0, landmark('bengurion_square').name, 4);
+  // Inlaid name in the paving. Radius stays inside the stroller lines at off = ±2; nothing here is a tall collider.
+  { const py = square.y; kit.B.cyl(MAT.stone, square.x, py + .09, square.z, 1.48, .04, '#b7a48c', false); kit.B.cyl(MAT.paving, square.x, py + .11, square.z, 1.12, .025, '#e6dcc8', false);
+    const name = kit.sign(square, 0, .135, 0, 2.05, .38, 'כיכר בן גוריון', { bg: '#e6dcc8', fg: '#2d4235', weight: 700 }); name.rotation.order = 'YXZ'; name.rotation.x = -Math.PI / 2; }
+
+  const spot = (x: number, z: number) => {
+    const dx = x - S.x, dz = z - S.z, off = dx * S.cos - dz * S.sin, lz = dx * S.sin + dz * S.cos;
+    const vx = bx - ax, vz = bz - az, len2 = vx * vx + vz * vz || 1, t = Math.max(0, Math.min(1, ((x - ax) * vx + (z - az) * vz) / len2));
+    return { off, along: L / 2 - lz, dist: Math.hypot(x - ax - vx * t, z - az - vz * t) };
+  };
+
+  // Bus shelter on the HaShkedim sidewalk, just southwest of the paving (walking half-width is 7 m). Open toward the road.
+  { const f = new Frame(...at(1.15, -9.2), S.rot), B = kit.B;
+    for (const sx of [-1.6, 1.6]) for (const sz of [-.45, .45]) kit.solid(f, MAT.metal, sx, 1.15, sz, .07, 2.3, .07, '#8d9390');
+    B.lbox(f, MAT.metal, 0, 2.32, 0, 3.55, .08, 1.2, '#d5d8d4');
+    const pane = (lx: number, lz: number, w: number, h: number, d: number) => { const [px, pz] = f.at(lx, lz); B.place(PRIMS.box, NIGHT.shopWindow, px, f.y + 1.25, pz, w, h, d, f.rot, null, false); kit.lcollide(f, lx, 1.25, lz, Math.max(w, .08), h, Math.max(d, .08)); };
+    pane(-1.6, 0, .04, 1.65, .95); pane(1.6, 0, .04, 1.65, .95); pane(0, -.46, 3.05, 1.65, .04);
+    B.lbox(f, MAT.wood, 0, .46, -.18, 2.15, .06, .4, '#8a6a48'); B.lbox(f, MAT.wood, 0, .7, -.36, 2.15, .42, .06, '#8a6a48'); kit.lcollide(f, 0, .4, -.24, 2.15, .8, .46);
+    kit.sign(f, 0, 1.55, -.4, 2.35, .4, 'אלונים · כיכר בן גוריון', { bg: '#f4f1e6', fg: '#1d3a2c', weight: 700, border: true }); }
+
+  // Council: steps, a plain white-and-blue flag, a freestanding board. The landmark_council anchor stays where it is.
+  for (let i = 0; i < 3; i++) kit.B.lbox(sw1, MAT.stone, 0, .07 + i * .08, 6.15 + i * .32, 2.3, .1, .34, '#e4d7bc');
+  kit.solid(sw1, MAT.metal, -6.6, 3.5, 6.15, .07, 7, .07, '#e6e6e2');
+  { const cloth = (color: string, w: number, h: number, y: number, zOff: number) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide, roughness: .92 })); const [x, z] = sw1.at(-5.85, 6.15 + zOff); m.position.set(x, sw1.y + y, z); m.rotation.y = sw1.rot; kit.root.add(m); };
+    cloth('#f7f7f5', 1.35, .72, 6.45, 0); cloth('#1a4e96', 1.35, .16, 6.45, .02); }
+  kit.solid(sw1, MAT.metal, 5.1, .95, 6.35, .08, 1.9, .08, '#4a514c');
+  kit.sign(sw1, 5.1, 1.75, 6.42, 2.8, .7, 'המועצה המקומית קריית טבעון', { bg: '#e8e1cf', fg: '#2d4235', sub: 'KIRYAT TIVON', border: true, weight: 700 });
+
+  // Named fronts that are only plaques today. Pins inside the authored row do not get a second building.
+  { const fel = landmark('bg_falafel'), fs = spot(fel.x, fel.z);
+    const onRow = fs.along > 2 && fs.along < L && Math.abs(fs.off) > 6.5 && Math.abs(fs.off) < 18;
+    if (fs.dist < 12 || onRow) {
+      const ne = fs.off >= 0, mid = fs.along < 17 ? (ne ? 10 : 9.5) : fs.along < 31 ? 24 : 38;
+      const host = ne ? (fs.along < 17 ? ne1 : fs.along < 31 ? ne2 : ne3) : (fs.along < 17 ? sw1 : fs.along < 31 ? sw2 : sw3);
+      const lx = Math.max(-5.2, Math.min(5.2, ne ? mid - fs.along : fs.along - mid));
+      kit.solid(host, MAT.plaster, lx, .55, 6.35, 1.65, 1.1, .52, '#e7d3a4');
+      kit.B.lbox(host, MAT.metal, lx, 1.12, 6.35, 1.7, .06, .58, '#c9c3b4');
+      kit.sign(host, lx, 1.72, 6.68, 1.55, .38, 'פלאפל · שווארמה', { bg: '#f2c230', fg: '#1f3b1f', weight: 800 });
+      for (let i = 0; i < 3; i++) kit.B.lbox(host, MAT.paving, lx, .02, 7.15 + i * .55, .36, .02, .36, '#d7c4a4', false);
+      kit.anchor(host, 'landmark_bg_falafel', lx, 1.5, 6.5, fel.name, 3.6);
+    } else placeShop(kit, skip, 'bg_falafel', [{ type: 'falafel', width: 6, he: 'פלאפל · שווארמה', sign: '#f2c230', ink: '#1f3b1f', awning: '#c4552a' }], 7, 5, { floors: 1, hint: S.rot }); }
+  { const l = landmark('shalva'), ss = spot(l.x, l.z), fp = footprintAt(l.x, l.z, 12); if (fp) skip.add(fp.id);
+    if (ss.dist < 12) {
+      // The pin is in the walking street, beside the roundel. A shallow older café sits against the north-east row, clear of off = ±2.
+      const [sx, sz] = ne2.at(1.4, 7.95), f = new Frame(sx, sz, ne2.rot), W = 4.8, D = 1.55;
+      kit.solid(f, MAT.plaster, -W / 2, 1.35, 0, .14, 2.7, D, '#efe4d0'); kit.solid(f, MAT.plaster, W / 2, 1.35, 0, .14, 2.7, D, '#efe4d0');
+      kit.solid(f, MAT.plaster, 0, 1.35, -D / 2, W, 2.7, .14, '#efe4d0');
+      kit.B.lbox(f, MAT.plaster, 0, 2.72, 0, W + .1, .16, D, '#f3ead8');
+      { const [gx, gz] = f.at(0, D / 2); kit.B.place(PRIMS.box, NIGHT.shopWindow, gx, f.y + 1.3, gz, W - .35, 1.7, .03, f.rot, null, false); }
+      kit.lcollide(f, 0, 1.35, D / 2, W, 2.7, .14);
+      { const [ax2, az2] = f.at(0, D / 2 + .4); kit.B.place(PRIMS.box, MAT.plain, ax2, f.y + 2.42, az2, W + .15, .06, 1.05, f.rot, '#8c4a3a', true, .16); }
+      kit.sign(f, 0, 2.05, D / 2 + .08, W - .5, .46, 'שלוה', { bg: '#5c332c', fg: '#f6efe4', sub: 'CAFE', weight: 800 });
+      kit.B.lbox(f, MAT.wood, 0, .5, -.15, 1.6, 1, .45, '#c4a27a');
+      for (const sx of [-1.05, 1.05]) { kit.table(f, sx, 1.45, { square: .68, top: '#e4d2b4', cups: 2 }); kit.chair(f, sx + (sx < 0 ? -.5 : .5), 1.45, sx < 0 ? Math.PI / 2 : -Math.PI / 2, '#6a4038', 0, true); }
+      kit.person(f, -1.55, 1.45, { shirt: '#c4b59a', pants: '#3b3d3a', seed: 218, seated: true, angle: Math.PI / 2, gray: true });
+      reserve(kit, f, W, D, 0, .4);
+      kit.anchor(f, 'landmark_shalva', 0, 1.7, D / 2 + .15, l.name, 3.4);
+    } else placeShop(kit, skip, 'shalva', [{ type: 'cafe', width: 7, he: 'שלוה', en: 'CAFE', sign: '#5c332c', ink: '#f6efe4', awning: '#8c4a3a', seating: 2 }], 8, 6, { floors: 1, wall: '#efe4d0', hint: S.rot }); }
+
+  const bank = placeShop(kit, skip, 'bank', [{ type: 'bank', width: 12, he: 'בנק הפועלים', sign: '#d4482a', ink: '#fff8f2', awning: null }], 14, 12, { stone: true, wall: '#e4dcc8' });
+  for (let i = 0; i < 4; i++) kit.B.lbox(bank.f, MAT.stone, 0, .06 + i * .07, bank.d / 2 + .28 + i * .28, 2.5, .1, .3, '#ddd4c4');
+  const pharmacy = placeShop(kit, skip, 'pharmacy', [{ type: 'pharmacy', width: 10, he: 'בית מרקחת', sign: '#f4f7f4', ink: '#1c6b3a', awning: null }], 12, 10, { wall: '#f4f6f4' });
+  kit.B.lbox(pharmacy.f, MAT.gloss, pharmacy.w / 2 - .7, 3.35, pharmacy.d / 2 + .08, .22, .95, .1, '#1f8a4c');
+  kit.B.lbox(pharmacy.f, MAT.gloss, pharmacy.w / 2 - .7, 3.35, pharmacy.d / 2 + .08, .95, .22, .1, '#1f8a4c');
+  const zol = placeShop(kit, skip, 'zol_stock', [{ type: 'discount', width: 8, he: 'זול סטוק', en: 'ZOL STOCK', sign: '#ffe14a', ink: '#c42118', awning: '#e23b2b' }], 9, 7, { floors: 1, wall: '#f6e7c0', hint: S.rot });
+  for (let i = 0; i < 3; i++) kit.solid(zol.f, MAT.wood, -zol.w / 2 + .75, .2 + i * .3, zol.d / 2 + .5, .68, .28, .52, ['#c9843a', '#a86b34', '#e0b56a'][i]);
+  const rani = placeShop(kit, skip, 'rani_organic', [{ type: 'organic', width: 10, he: 'רני אורגני', sign: '#2f7a3a', ink: '#f4f8ef', awning: '#3d8c48' }], 16, 11, { wall: '#e7f0e4' });
+  for (let i = 0; i < 3; i++) { const lx = rani.w / 2 - .85, lz = rani.d / 2 + .55 + (i - 1) * .65; kit.solid(rani.f, MAT.wood, lx, .2, lz, .6, .3, .48, '#b68448');
+    for (let j = 0; j < 4; j++) { const [x, z] = rani.f.at(lx - .16 + (j % 2) * .26, lz - .1 + Math.floor(j / 2) * .18); kit.B.place(PRIMS.sphere, MAT.matte, x, rani.f.y + .42, z, .09, .09, .09, 0, ['#d23c2b', '#e39a2e', '#6aaa3a', '#f2e27a'][j], false); } }
+  const bikes = placeShop(kit, skip, 'braaap', [{ type: 'bikes', width: 8, he: 'Braaap', en: 'אופניים', sign: '#1d1d1b', ink: '#f2f2f2', awning: null }], 8, 7, { hint: S.rot });
+  for (let i = 0; i < 3; i++) streetBike(kit, bikes.f, -bikes.w / 2 + 1.15 + i * 1.35, bikes.d / 2 + 1.05, ['#c73a2e', '#2e6ac7', '#1d1d1d'][i]);
+  const post = placeShop(kit, skip, 'bg_post', [{ type: 'office', width: 12, he: 'דואר', sign: '#1a4e96', ink: '#ffffff', awning: null }], 14, 12, { wall: '#f3f1ea' });
+  kit.solid(post.f, MAT.gloss, post.w / 2 - 1.15, .65, post.d / 2 + .7, .6, 1.2, .48, '#1a4e96');
+  kit.B.lbox(post.f, MAT.gloss, post.w / 2 - 1.15, 1.02, post.d / 2 + .98, .4, .07, .05, '#f4f6f8', false);
+  placeShop(kit, skip, 'bg_books', [{ type: 'books', width: 5, he: 'ספרים', sign: '#5c3d2e', ink: '#f6ecd8', awning: '#8a6a48' }, { type: 'flowers', width: 5, he: 'פרחים', sign: '#f3efe6', ink: '#a3416a', awning: '#6f8a4f' }], 10, 7, { wall: '#efe6d8', hint: S.rot });
+  const hair = placeShop(kit, skip, 'bg_hair', [{ type: 'office', width: 8, he: 'מספרה', sign: '#f7f4ee', ink: '#1d1d1b', awning: '#c8302a' }], 12, 10, { wall: '#f6f1ea' });
+  { const [hx, hz] = hair.f.at(-hair.w / 2 + .42, hair.d / 2 + .32);
+    for (let i = 0; i < 9; i++) kit.B.cyl(MAT.gloss, hx, hair.f.y + .85 + i * .16, hz, .11, .16, ['#c8302a', '#f4f4f0', '#2a4fa0'][i % 3]);
+    kit.B.cyl(MAT.metal, hx, hair.f.y + .68, hz, .14, .16, '#d0d0cc'); kit.B.cyl(MAT.metal, hx, hair.f.y + .85 + 9 * .16, hz, .15, .1, '#d0d0cc');
+    kit.lcollide(hair.f, -hair.w / 2 + .42, 1.5, hair.d / 2 + .32, .28, 2.2, .28); }
 
   // ——— Amali on its footprint ———
   const al = landmark('amali'), fp = footprintAt(al.x, al.z, 20);

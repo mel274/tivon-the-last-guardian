@@ -1,5 +1,5 @@
-/** Smooth roads on a lumpy ~30 m DEM. Every vehicle road's profile is sampled every 4 m, low-passed
- *  along its length (~35 m window) and grade-limited to 12 %; the ground within half the road's width
+/** Smooth roads on the DEM. Every vehicle road's profile is sampled every 4 m, low-passed
+ *  along its length (sigma 12 m) and grade-limited to 12 %; the ground within half the road's width
  *  plus 4 m is then levelled to that profile, tapering back to the DEM over 6 m. The result is a
  *  precomputed 2 m grid of height deltas (a typed array) that `surfaceHeight` samples bilinearly:
  *  the same road bed for every consumer (mesh, walking, roads, fences). The Zeid pads, Ben Gurion
@@ -21,8 +21,8 @@ export function distToPoly(x: number, z: number, p: P2[]) {
   return d;
 }
 
-// Softer profiles for driving: longer low-pass, gentler max grade, slightly wider verge blend.
-const CELL = 2, SLOPE = .09, SIGMA = 20, TAPER = 8, VERGE = 5;
+// The DEM's own bare-earth smooth is enough that real hills need not be flattened as hard.
+const CELL = 2, SLOPE = .12, SIGMA = 12, TAPER = 8, VERGE = 5;
 export const ROAD_GRADE = { ms: 0, nodes: 0, roads: 0 };
 let field: Float32Array | null = null, X0 = 0, Z0 = 0, NX = 0, NZ = 0;
 

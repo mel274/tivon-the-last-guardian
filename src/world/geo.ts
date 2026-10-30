@@ -2,7 +2,7 @@
  *  import it. WGS84 points are projected to local metres (east = +x, north = −z) about the
  *  Beit She'arim catacombs, which sit at the cave entrance (126, 86). Streets, paths, areas and
  *  building footprints come from OpenStreetMap (© OpenStreetMap contributors, ODbL) via
- *  docs/gis/build-world.mjs; elevation from AWS Terrain Tiles via docs/gis/build-dem.mjs. */
+ *  docs/gis/build-world.mjs; elevation from the GEM-15 bare-earth DTM (15 m) via docs/gis/build-dem-gem15.py. */
 import world from '../data/tivon-world.json';
 import dem from '../data/tivon-dem.json';
 import { LANDMARKS } from '../game/landmarks';

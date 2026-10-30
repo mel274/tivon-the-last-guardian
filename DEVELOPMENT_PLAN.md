@@ -61,7 +61,7 @@ Done in 0.4.0. The Zeid centre is the owner-approved plan, revision 4.2, includi
 
 1. **Cave entrance.** Done. The hill stays above the cave, and the walk test goes through the chambers.
 2. **Private houses with gardens.** Done. 1,835 houses, 1,832 plots, dressed from the street survey. Cadastral parcels (Survey of Israel / govmap) could still replace the generated plots later.
-3. **Elevation, options a + c.** Done. Roads are smoothed along their length and held to 12% grade. Each private house sits on a flat terrace with rubble walls. The DEM is Copernicus GLO-30; the comparison with the older Terrarium tiles is in [ASSET_SOURCES.md](ASSET_SOURCES.md).
+3. **Elevation, options a + c.** Done. Roads are smoothed along their length and held to 12% grade. Each private house sits on a flat terrace with rubble walls. The DEM is the GEM-15 bare-earth model (15 m); the credit is in [ASSET_SOURCES.md](ASSET_SOURCES.md).
 
 ## World-pass measurements (2026-10-26)
 

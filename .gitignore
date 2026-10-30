@@ -7,3 +7,12 @@ playwright-report/
 *.log
 .DS_Store
 .claude/worktrees/
+
+# Town outline for the elevation order, and one-off terrain comparisons
+docs/gis/tivon-boundary*
+docs/gis/_tivon-boundary.json
+docs/gis/_fetch_boundary.py
+docs/gis/_write_boundary.py
+docs/gis/compare-dem.mjs
+docs/gis/sample-alts.mjs
+docs/gis/ELEVATION_DECISION.md

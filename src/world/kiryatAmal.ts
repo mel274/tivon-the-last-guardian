@@ -74,6 +74,22 @@ function clockFace(c: CanvasRenderingContext2D, W: number, H: number) {
   for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; c.lineWidth = r * (i % 3 ? .03 : .06); c.beginPath(); c.moveTo(cx + Math.sin(a) * r * .68, cy - Math.cos(a) * r * .68); c.lineTo(cx + Math.sin(a) * r * .8, cy - Math.cos(a) * r * .8); c.stroke(); }
   for (const [a, l, w] of [[-.6, .45, .07], [2.1, .65, .045]] as Array<[number, number, number]>) { c.lineWidth = r * w; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.sin(a) * r * l, cy - Math.cos(a) * r * l); c.stroke(); }
 }
+/** Yellow ashlar for the bus-stair kiosk: running bond, warm stones, mortar joints. */
+function yellowStone(c: CanvasRenderingContext2D, W: number, H: number) {
+  const cols = 5, rows = 7, bw = W / cols, bh = H / rows;
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  c.fillStyle = '#c2a56a'; c.fillRect(0, 0, W, H);
+  for (let j = 0; j < rows; j++) {
+    const ox = (j & 1) * bw * .5;
+    for (let i = -1; i <= cols; i++) {
+      const a = Math.max(0, i * bw + ox + bw * .05), b = Math.min(W, i * bw + ox + bw * .95);
+      if (b - a < 2) continue;
+      const v = Math.floor(rnd() * 30);
+      c.fillStyle = `rgb(${206 + v},${158 + Math.floor(v * .45)},${48 + Math.floor(v * .18)})`;
+      c.fillRect(a, j * bh + bh * .08, b - a, bh * .82);
+    }
+  }
+}
 /** The barber's arched doorway: a stone surround round the open door (the opening is cleared). */
 function archDoor(c: CanvasRenderingContext2D, W: number, H: number) {
   const arch = (inset: number, bottom: number) => { const r = W / 2 - inset; c.beginPath(); c.moveTo(inset, bottom); c.lineTo(inset, W / 2); c.arc(W / 2, W / 2, r, Math.PI, 0); c.lineTo(W - inset, bottom); c.closePath(); };
@@ -152,6 +168,8 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   }
   clad(Mu, -HW - .03, MZ, .06, UD, ROOF); clad(Mu, HW + .03, MZ, .06, UD, ROOF);
   for (const x of [-7.7 + .03, -2.3 - .03]) clad(Mu, x, MZ, .06, UD, ROOF);
+  // North eaves, from Route 75: a red beam under the parapet on each shop block (not across Mandu's back door).
+  for (const [x0, x1] of [[-HW, -7.7], [-2.3, HW]]) B.lbox(Mu, MAT.plain, (x0 + x1) / 2, ROOF - .2, -HD - .14, x1 - x0, .16, .1, '#c23a2e', false);
 
   // ——— Mandu: narrow N–S bar strip from docs/mandu-plan (rev 3) + the owner's answers ———
   // Strip-local metres (Bf): x −2.7…2.7 east, z −half…+half (backyard door north, balcony glass south).
@@ -388,15 +406,29 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
     }
     // Bushes along the plaza's top edge on either side of the stair.
     for (let x = -199; x <= -168; x += 1.8) if (Math.abs(x - sx0) > 2.4) { const z = -849.3 + (x + 199) * .035; B.place(PRIMS.ico, MAT.foliage, x, U + .5, z, 1.1, .8, .9, x, '#4f7a43'); } }
-  { const f = new Frame(-171.4, -846.3, 0, U);
-    kit.solid(f, MAT.plasterRough, 0, 1.3, 0, 2.4, 2.6, 2.4, '#e8c84a'); B.lbox(f, MAT.plain, 0, .12, 0, 2.6, .24, 2.6, '#f2efe6');
-    B.place(PRIMS.roof, MAT.tiles, f.x, U + 3.15, f.z, 2.05, 1.1, 2.05, Math.PI / 4, '#b4563b');
-    B.lbox(f, MAT.plain, 0, 2.2, 1.21, .5, .5, .03, '#f4f4f0'); B.lbox(f, MAT.wood, .5, 1.05, 1.21, .8, 2, .03, '#e9e4d8');
-    B.lbox(f, MAT.gloss, -1.65, 1.05, .9, .42, .62, .32, '#f2c230'); B.lbox(f, MAT.metal, -1.65, .4, .9, .06, .8, .06, '#f2c230'); kit.lcollide(f, -1.65, .7, .9, .45, 1.4, .35); }
+  // Kiosk beside the stair, on the kerb: east of the well (x ≤ −174.3), south face inside the kerb (z ≤ −849.6). Walls collide; the stair and the plaza do not.
+  { const wellE = ZEID.busStair.x + 1.7, W = 2.2, D = 2.0, H = 2.4, t = .18;
+    const f = new Frame(wellE + .95 + W / 2, -849.6 - .2 - D / 2, 0, ZEID.road + .14);
+    const wall = (lx: number, lz: number, w: number, d: number) => kit.solid(f, MAT.stone, lx, H / 2, lz, w, H, d, '#e2c15a');
+    wall(0, -D / 2 + t / 2, W, t); wall(0, D / 2 - t / 2, W, t); wall(-W / 2 + t / 2, 0, t, D - t); wall(W / 2 - t / 2, 0, t, D - t);
+    kit.painted(f, 0, H / 2, -D / 2 - .03, W, H, yellowStone, Math.PI); kit.painted(f, 0, H / 2, D / 2 + .03, W, H, yellowStone);
+    kit.painted(f, -W / 2 - .03, H / 2, 0, D, H, yellowStone, Math.PI / 2); kit.painted(f, W / 2 + .03, H / 2, 0, D, H, yellowStone, -Math.PI / 2);
+    B.lbox(f, MAT.wood, .12, .95, D / 2 + .06, .72, 1.8, .05, '#6b4a2e'); B.lbox(f, MAT.wood, .12, 1.92, D / 2 + .05, 1.0, .1, .08, '#5c4028');
+    kit.painted(f, 0, 1.72, -D / 2 - .06, .64, .64, clockFace, Math.PI);
+    B.place(PRIMS.roof, MAT.tiles, f.x, f.y + H + .42, f.z, W + .7, 1.05, D + .62, Math.PI / 4, '#b4563b');
+    B.lbox(f, MAT.metal, W / 2 + .34, .42, .15, .05, .84, .05, '#f2c230'); B.lbox(f, MAT.gloss, W / 2 + .38, .95, .15, .36, .5, .26, '#f2c230');
+    kit.lcollide(f, W / 2 + .38, .68, .15, .4, 1.35, .3);
+    for (const [lx, lz, s, ry, col] of [[W / 2 + .12, .55, .5, .4, '#c4b49a'], [W / 2 + .48, -.05, .36, 1.1, '#a89880'], [W / 2 - .2, .85, .32, .7, '#d2c4ae']] as Array<[number, number, number, number, string]>) {
+      const [x, z] = f.at(lx, lz); B.place(PRIMS.ico, MAT.stone, x, f.y + s * .28, z, s, s * .55, s * .78, ry, col); kit.collide(x - s * .3, x + s * .3, z - s * .28, z + s * .28, f.y, f.y + s * .5);
+    }
+    { const [ox, oz] = f.at(W / 2 + 1.05, .55); B.cyl(MAT.plain, ox, f.y + .4, oz, .05, .8, '#4e5c32');
+      for (let j = 0; j < 5; j++) { const a = j * 1.25 + .3; B.place(PRIMS.ico, MAT.foliage, ox + Math.cos(a) * .28, f.y + .9 + (j % 3) * .2, oz + Math.sin(a) * .22, .52, .38, .48, a, j % 2 ? '#3e6b34' : '#5a8a48'); B.place(PRIMS.sphere, MAT.matte, ox + Math.cos(a + .5) * .3, f.y + 1.1 + (j % 2) * .14, oz + Math.sin(a + .5) * .26, .09, .07, .09, 0, '#d45b78', false); } } }
   { const f = new Frame(ZEID.busStop[0], ZEID.busStop[1], Math.PI, ZEID.road + .14);
     B.lbox(f, MAT.metal, 0, 2.5, 0, 4.4, .08, 1.6, '#3c4a44'); for (const s of [-2.1, 2.1]) B.lbox(f, MAT.metal, s, 1.25, -.6, .06, 2.5, .06, '#3c4a44');
     B.lbox(f, MAT.wood, 0, .45, -.4, 3.6, .06, .45, '#8a6a48');
     kit.sign(f, 2.4, 2.6, .5, .8, 1, 'צומת\nקריית טבעון', { bg: '#f2f2ee', fg: '#1c3f6b', weight: 700 });
+    kit.sign(f, 0, 3.85, -.55, 5.6, 1.45, 'מרכז זייד', { bg: '#f2c230', fg: '#1d1d1b', sub: 'ZEID CENTRE · KIRYAT AMAL', weight: 900 });
+    for (const s of [-2.35, 2.35]) B.lbox(f, MAT.metal, s, 3.2, -.55, .07, 1.15, .07, '#3c4a44');
     kit.person(f, -.8, -.4, { shirt: '#3d4f6b', pants: '#2f3b4f', seed: 560, seated: true, angle: 0 }); }
 
   // ——— Upper plaza: grey paving, red-brown along the falafel row and the drugstore porch ———
@@ -451,6 +483,7 @@ export function buildKiryatAmal(kit: Kit, skip: Set<string>) {
   // Falafel Chen's big board stands on the corner, facing both the lane and Alexander Zaid St.
   B.lbox(R, MAT.plain, -3.5, 4.5, 2.4, 6.9, 1.6, .08, '#e2d8c0'); kit.painted(R, -3.5, 4.5, 2.46, 6.8, 1.5, chenSign);
   B.lbox(R, MAT.plain, .25, 4.5, .8, .08, 1.6, 3.5, '#e2d8c0'); kit.painted(R, .31, 4.5, .8, 3.4, 1.5, chenSign, Math.PI / 2);
+  B.lbox(R, MAT.plain, .48, 6.15, .8, .06, .66, 2.45, '#e6d2a4'); kit.sign(R, .55, 6.15, .8, 2.35, .58, 'מרכז זייד', { bg: '#f2c230', fg: '#1d1d1b', sub: 'ZEID CENTRE · KIRYAT AMAL', weight: 900 }, Math.PI / 2);
   kit.painted(R, -8.1, 1.85, -.03, .6, .6, clockFace);
   kit.painted(R, -11.6, 1.2, .03, 1.3, 2.3, archDoor);
   kit.painted(R, -16.2, 3.17, .27, 3.9, .9, luliSign);
@@ -626,6 +659,9 @@ function groundFloor(kit: Kit, M: Frame, shop: ShopFn, attic: (f: Frame, lx: num
   // The roofed strip: paving, columns along the balcony edge, lights.
   B.lbox(M, MAT.paving, (ARC0 + HW) / 2, .03, (BAL + HD) / 2, HW - ARC0, .06, HD - BAL, '#d6ccb8', false);
   for (let x = ARC0 + 2.4; x < HW; x += 4.6) { B.lbox(M, MAT.plaster, x, (F - .3) / 2, HD - .2, .3, F - .3, .3, '#f2efe8'); kit.lcollide(M, x, (F - .3) / 2, HD - .2, .3, F - .3, .3); }
+  // Beige soffit and a red fascia under the stucco parapet, so the roofed strip reads as the lower storey.
+  B.lbox(M, MAT.plain, (ARC0 + HW) / 2, F - .22, (BAL + HD) / 2 - .15, HW - ARC0 - .6, .05, HD - BAL - .9, '#e6d3b0', false);
+  B.lbox(M, MAT.plain, (ARC0 + HW) / 2, F - .16, HD + .05, HW - ARC0, .2, .1, '#c23a2e', false);
   for (const x of [-4, 10]) { const [lx, lz] = M.at(x, (BAL + HD) / 2); kit.light(lx, M.y + F - .6, lz, '#f6e7c8', 7, 10); }
   // Zeid 1 — young people's centre, behind construction hoarding.
   const z1 = (ARC0 - 3.5) / 2;

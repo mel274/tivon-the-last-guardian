@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { landmark, footprintAt, orientedBox, nearestRoad, ROADS, BUILDINGS, POIS } from './geo';
+import { landmark, footprintAt, orientedBox, nearestRoad, pointInPolygon, ROADS, BUILDINGS, POIS } from './geo';
 import { surfaceHeight } from './terrain';
 import { Kit, MAT, NIGHT, Frame, PRIMS } from './kit';
 import { extrude, groundRange } from './scenery';
@@ -8,7 +8,8 @@ import { horseAndRider } from './horse';
 
 /** Landmarks recreated from photos and OSM footprints: the water tower lookout, the Library &
  *  Memorial Center with its rail monument, Yad LaBanim, the Alexander Zaid statue, the park
- *  entrance, and examinable plaques for the other places in src/game/landmarks.ts. */
+ *  entrance, the town pools, Heichal Shlomo, Rimonim school, the great oak and the lookouts.
+ *  Places another builder owns, and a few shops, stay examinable plaques. */
 export function buildLandmarks(kit: Kit, skip: Set<string>) {
   const B = kit.B;
   const tag = (id: string, x: number, z: number, _y?: number) => { const f = new Frame(x, z, 0); kit.anchor(f, `landmark_${id}`, 0, 1.8, 0, landmark(id).name, 4.2); };
@@ -39,12 +40,13 @@ export function buildLandmarks(kit: Kit, skip: Set<string>) {
       skip.add(lib.id); const g = groundRange(lib.points), box = extrude(kit, lib.points, g.lo - .5, g.lo + 7.5, '#d8d2c4', true, { roofColor: '#a8a397' });
       B.place(new THREE.CylinderGeometry(4.2, 4.2, 1, 24), MAT.plain, box.cx, g.lo + 8.6, box.cz, 1, 2.2, 1, 0, '#cfc9bb');
       const sky = new THREE.Mesh(new THREE.ConeGeometry(4.4, 1.8, 24, 1, true), NIGHT.shopWindow); sky.position.set(box.cx, g.lo + 10.6, box.cz); kit.root.add(sky);
-      const f = new Frame(box.cx, box.cz, box.rot, g.lo); const face = nearestRoad(box.cx, box.cz, ROADS.filter(r => r.name === 'המגדל'));
-      const rot = Math.atan2(face.px - box.cx, face.pz - box.cz), ef = new Frame(box.cx + Math.sin(rot) * (Math.min(box.w, box.d) / 2 + .3), box.cz + Math.cos(rot) * (Math.min(box.w, box.d) / 2 + .3), rot, g.lo);
+      const face = nearestRoad(box.cx, box.cz, ROADS.filter(r => r.name === 'המגדל'));
+      const rot = Math.atan2(face.px - box.cx, face.pz - box.cz), sx = Math.sin(rot), sz = Math.cos(rot);
+      let dist = .4; while (dist < 48 && pointInPolygon(box.cx + sx * dist, box.cz + sz * dist, lib.points)) dist += .4;
+      const ef = new Frame(box.cx + sx * (dist + .2), box.cz + sz * (dist + .2), rot, g.lo);
       kit.sign(ef, 0, 4.2, .15, 7, .8, 'ספרייה ומרכז ההנצחה', { bg: '#e8e2d4', fg: '#2d3c4a', sub: 'קריית טבעון · LIBRARY & MEMORIAL CENTER', weight: 700 });
       B.lbox(ef, MAT.metal, 0, 1.4, .1, 3.6, 2.8, .12, '#2b3235');
-      kit.anchor(ef, 'landmark_library', 2.5, 2, 1.5, landmark('library').name, 4.5);
-      void f;
+      kit.anchor(ef, 'landmark_library', 0, 1.8, 2.4, landmark('library').name, 4.5);
     }
     // Three old railway rails leaning together into a pyramid, rusted, on a low base; a flag beside it.
     const l = landmark('rail_monument'), y = surfaceHeight(l.x, l.z), rust = new THREE.MeshStandardMaterial({ color: '#7a3f22', roughness: .85, metalness: .35 });
@@ -110,8 +112,173 @@ export function buildLandmarks(kit: Kit, skip: Set<string>) {
     B.lbox(f, MAT.metal, 0, 6.3, 0, 17.4, .25, .25, '#7a7f7c');
     kit.sign(f, 0, 5.5, .15, 7, 1.4, 'חיפה · קריית טבעון · נצרת', { bg: '#1f6b3a', fg: '#ffffff', sub: 'ROUTE 75 · HAIFA · NAZARETH', weight: 700, border: true }); }
 
+  // Deck ring around a basin. Water is a thin sheet at deck-y + 0.05 with no collider; the coping walls collide.
+  const basin = (f: Frame, w: number, d: number, pw: number, pd: number, deck: string, floor: string, wall: string, wallH: number) => {
+    const mx = (w - pw) / 2, mz = (d - pd) / 2, yc = .05;
+    B.lbox(f, MAT.paving, 0, yc, -(pd + mz) / 2, w, .1, mz, deck, false);
+    B.lbox(f, MAT.paving, 0, yc, (pd + mz) / 2, w, .1, mz, deck, false);
+    B.lbox(f, MAT.paving, -(pw + mx) / 2, yc, 0, mx, .1, pd, deck, false);
+    B.lbox(f, MAT.paving, (pw + mx) / 2, yc, 0, mx, .1, pd, deck, false);
+    B.lbox(f, MAT.paving, 0, .01, 0, pw - .15, .04, pd - .15, floor, false);
+    const wt = .3, wy = yc + wallH / 2;
+    kit.solid(f, MAT.plaster, 0, wy, pd / 2, pw + wt, wallH, wt, wall);
+    kit.solid(f, MAT.plaster, 0, wy, -pd / 2, pw + wt, wallH, wt, wall);
+    kit.solid(f, MAT.plaster, pw / 2, wy, 0, wt, wallH, pd, wall);
+    kit.solid(f, MAT.plaster, -pw / 2, wy, 0, wt, wallH, pd, wall);
+  };
+  const waterSheet = (f: Frame, pw: number, pd: number, color: string) => {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(pw - .55, .03, pd - .55), new THREE.MeshStandardMaterial({ color, roughness: .06, metalness: .12, transparent: true, opacity: .88, depthWrite: false }));
+    mesh.position.set(f.x, f.y + .035, f.z); mesh.rotation.y = f.rot; kit.root.add(mesh);
+  };
+  const faceRoad = (x: number, z: number, rot: number) => { const road = nearestRoad(x, z); return Math.sin(rot) * (road.px - x) + Math.cos(rot) * (road.pz - z) < 0 ? rot + Math.PI : rot; };
+
+  // ——— Gali Tivon: sports pool on Alonim. The basin stays inside the OSM footprint when one is within 15 m. ———
+  { const l = landmark('gali_pool'), fp = footprintAt(l.x, l.z, 15);
+    let x = l.x, z = l.z, rot: number, w = 25, d = 16;
+    if (fp) {
+      skip.add(fp.id); const b = orientedBox(fp.points); x = b.cx; z = b.cz; rot = b.rot; w = b.w; d = b.d;
+      if (d > w) { rot += Math.PI / 2; const t = w; w = d; d = t; }
+    } else { const road = nearestRoad(x, z); rot = Math.atan2(road.px - x, road.pz - z); }
+    rot = faceRoad(x, z, rot);
+    const y = surfaceHeight(x, z), f = new Frame(x, z, rot, y);
+    const pw = Math.min(20, w - 8), pd = Math.min(9, d - 4.4), mx = (w - pw) / 2;
+    basin(f, w, d, pw, pd, '#d5d0c4', '#8f9c9a', '#cfc8ba', .48);
+    waterSheet(f, pw, pd, '#1a6aaf');
+    B.lbox(f, MAT.plain, 0, .07, 0, .08, .012, pd - 1.4, '#e7eef3', false);
+    const rw = Math.min(5.2, mx - .8), rx = -w / 2 + rw / 2 + .4, rd = Math.min(5.2, d - .8);
+    kit.solid(f, MAT.plaster, rx, 1.3, 0, rw, 2.6, rd, '#e4ded0');
+    B.lbox(f, MAT.plain, rx, 1.15, rd / 2 + .04, 1.05, 2.15, .06, '#3d4a52');
+    for (let i = 0; i < 3; i++) B.lbox(f, MAT.stone, w * .1, .16 + i * .2, d / 2 - .45 - i * .48, Math.min(8, pw * .4), .18, .62, '#c4beb2');
+    kit.lcollide(f, w * .1, .45, d / 2 - .9, Math.min(8, pw * .4), .9, 1.6);
+    kit.sign(f, rx, 2.2, rd / 2 + .1, 2.8, .6, 'גלי טבעון', { bg: '#0e4d8a', fg: '#f3f8ff', sub: 'GALI TIVON', weight: 800 });
+    kit.occ.markRect(f, 0, 0, w + 1, d + 1);
+    const [ax, az] = f.at(rx, rd / 2 + 1.4); tag('gali_pool', ax, az, y); }
+
+  // ——— Hannah Szenes pool: smaller, older, greener — not a second Gali. ———
+  { const l = landmark('szenes_pool'), fp = footprintAt(l.x, l.z, 15);
+    let rot: number;
+    if (fp) { skip.add(fp.id); const b = orientedBox(fp.points); rot = faceRoad(l.x, l.z, b.rot); kit.occ.markRect(new Frame(b.cx, b.cz, b.rot), 0, 0, b.w + 1, b.d + 1); }
+    else { const road = nearestRoad(l.x, l.z); rot = Math.atan2(road.px - l.x, road.pz - l.z); }
+    const y = surfaceHeight(l.x, l.z), f = new Frame(l.x, l.z, rot, y), w = 16, d = 8, pw = 9.2, pd = 4.4;
+    basin(f, w, d, pw, pd, '#b7b1a4', '#7d8a78', '#b3ab9c', .3);
+    waterSheet(f, pw, pd, '#2c6b56');
+    const hx = -w / 2 + 1.55;
+    kit.solid(f, MAT.plasterRough, hx, 1.15, 0, 3, 2.3, 3.2, '#cbbfa6');
+    B.lbox(f, MAT.wood, hx, 2.38, 0, 3.2, .12, 3.5, '#6b5340');
+    B.lbox(f, MAT.plain, hx, 1.15, 1.64, .7, .85, .06, '#243038');
+    for (const s of [-.16, .16]) B.lbox(f, MAT.metal, pw / 2 - .36, .32, s, .04, .7, .04, '#8a8f92');
+    for (let i = 0; i < 4; i++) B.lbox(f, MAT.metal, pw / 2 - .36, .08 + i * .16, 0, .04, .03, .38, '#8a8f92');
+    kit.sign(f, hx, 1.7, 1.75, 2.9, .48, 'בריכת חנה סנש', { bg: '#3d5c48', fg: '#f3f6ef', weight: 700 });
+    kit.occ.markRect(f, 0, 0, w + 1, d + 1);
+    const [ax, az] = f.at(hx, 2.6); tag('szenes_pool', ax, az, y); }
+
+  // ——— Heichal Shlomo: stone hall, three arched openings, a shallow dome, steps. ———
+  { const l = landmark('synagogue'), fp = footprintAt(l.x, l.z, 15);
+    let x = l.x, z = l.z, rot: number;
+    if (fp) { skip.add(fp.id); const b = orientedBox(fp.points); x = b.cx; z = b.cz; rot = faceRoad(x, z, b.rot); }
+    else { const road = nearestRoad(x, z); rot = Math.atan2(road.px - x, road.pz - z); }
+    const y = surfaceHeight(x, z), f = new Frame(x, z, rot, y), W = 14, D = 10, H = 5.5;
+    kit.solid(f, MAT.stone, 0, H / 2, -D / 2, W, H, .45, '#e4d7b8');
+    kit.solid(f, MAT.stone, -W / 2, H / 2, 0, .45, H, D, '#e4d7b8');
+    kit.solid(f, MAT.stone, W / 2, H / 2, 0, .45, H, D, '#e4d7b8');
+    kit.solid(f, MAT.stone, 0, H / 2, D / 2, W, H, .42, '#e4d7b8');
+    B.lbox(f, MAT.wood, -4.8, 1.2, D / 2 + .26, 1.25, 2.4, .08, '#5c4030');
+    B.lbox(f, MAT.stone, 0, H + .16, 0, W + .7, .28, D + .7, '#ddd0b4');
+    const [dx, dz] = f.at(0, -1.2);
+    B.place(PRIMS.cyl, MAT.stone, dx, y + H + .7, dz, 2.15, .85, 2.15, 0, '#e7dcc0');
+    B.place(PRIMS.sphere, MAT.stone, dx, y + H + 1.05, dz, 2.2, .95, 2.2, 0, '#f0e6cc');
+    for (const wx of [-1.5, 1.7, 4.8]) {
+      B.lbox(f, MAT.plain, wx, 2.85, D / 2 + .24, .78, 1.65, .08, '#1b2730');
+      B.lbox(f, MAT.plain, wx, 3.78, D / 2 + .24, .62, .38, .08, '#1b2730');
+      const [px, pz] = f.at(wx, D / 2 + .26);
+      B.place(PRIMS.cyl, MAT.plain, px, y + 3.72, pz, .36, .08, .36, rot, '#1b2730', true, Math.PI / 2);
+    }
+    for (let i = 0; i < 3; i++) { B.lbox(f, MAT.stone, -4.8, .09 + i * .16, D / 2 + 1.55 - i * .42, 2.8, .18, .46, '#e8dcc4'); kit.lground(f, -4.8, D / 2 + 1.55 - i * .42, 2.8, .46, .18 + i * .16); }
+    kit.sign(f, 1.6, 4.7, D / 2 + .28, 3.6, .55, 'היכל שלמה', { bg: '#e8dcc0', fg: '#3a3428', weight: 800 });
+    kit.occ.markRect(f, 0, .4, W + 3, D + 5);
+    const [ax, az] = f.at(-4.8, D / 2 + 2.2); tag('synagogue', ax, az, y); }
+
+  // ——— Rimonim: two classroom storeys, a fenced yard, low trees. ———
+  { const l = landmark('rimonim'), fp = footprintAt(l.x, l.z, 15);
+    let x = l.x, z = l.z, rot: number;
+    if (fp) { skip.add(fp.id); const b = orientedBox(fp.points); x = b.cx; z = b.cz; rot = faceRoad(x, z, b.rot); }
+    else { const road = nearestRoad(x, z); rot = Math.atan2(road.px - x, road.pz - z); }
+    const y = surfaceHeight(x, z), f = new Frame(x, z, rot, y), W = 22, D = 8;
+    kit.solid(f, MAT.plaster, 0, 3.2, 0, W, 6.4, D, '#f4f0e6');
+    B.lbox(f, MAT.plaster, 0, 3.2, D / 2 + .06, W + .2, .14, .1, '#e4ddd0');
+    B.lbox(f, MAT.plaster, 0, 6.55, 0, W + .8, .22, D + .6, '#d5cfc2');
+    for (let i = -3; i <= 3; i++) if (i !== 0) for (const wy of [1.55, 4.5]) {
+      const [px, pz] = f.at(i * 2.7, D / 2 + .08);
+      const pane = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.12), NIGHT.window); pane.position.set(px, y + wy, pz); pane.rotation.y = rot; kit.root.add(pane);
+    }
+    B.lbox(f, MAT.wood, 0, 1.15, D / 2 + .06, 1.35, 2.3, .08, '#5c4632');
+    kit.sign(f, 0, 5.55, D / 2 + .16, 3.4, .62, 'רימונים', { bg: '#1f6b3a', fg: '#f4fff6', weight: 800 });
+    const z0 = D / 2 + .4, z1 = z0 + 11, x0 = -10, x1 = 10, fence = '#4d5852';
+    B.lbox(f, MAT.paving, 0, .04, (z0 + z1) / 2, x1 - x0, .08, z1 - z0, '#d7d0be', false);
+    for (const h of [.42, .92]) {
+      B.lbox(f, MAT.metal, x0, h, (z0 + z1) / 2, .04, .04, z1 - z0, fence);
+      B.lbox(f, MAT.metal, x1, h, (z0 + z1) / 2, .04, .04, z1 - z0, fence);
+      B.lbox(f, MAT.metal, x0 + 4.5, h, z1, 9, .04, .04, fence);
+      B.lbox(f, MAT.metal, x1 - 4.5, h, z1, 9, .04, .04, fence);
+    }
+    kit.lcollide(f, x0, .6, (z0 + z1) / 2, .14, 1.15, z1 - z0);
+    kit.lcollide(f, x1, .6, (z0 + z1) / 2, .14, 1.15, z1 - z0);
+    kit.lcollide(f, x0 + 4.5, .6, z1, 9, 1.15, .14);
+    kit.lcollide(f, x1 - 4.5, .6, z1, 9, 1.15, .14);
+    for (const lx of [x0, -5, -1, 1, 5, x1]) { const [px, pz] = f.at(lx, z1); B.cyl(MAT.metal, px, y + .55, pz, .04, 1.1, fence); }
+    for (const lz of [z0, (z0 + z1) / 2]) for (const lx of [x0, x1]) { const [px, pz] = f.at(lx, lz); B.cyl(MAT.metal, px, y + .55, pz, .04, 1.1, fence); }
+    for (const [lx, lz] of [[-6.5, z0 + 3.2], [6.2, z0 + 6.5], [-5.5, z0 + 8.5]] as Array<[number, number]>) {
+      const [px, pz] = f.at(lx, lz);
+      B.cyl(MAT.wood, px, y + .85, pz, .07, 1.7, '#6b5844');
+      for (let j = 0; j < 4; j++) { const a = j * 1.5 + lx; B.place(PRIMS.ico, MAT.foliage, px + Math.cos(a) * .65, y + 1.7 + (j % 2) * .22, pz + Math.sin(a) * .65, .85, .58, .85, a, j % 2 ? '#4f7a43' : '#5c7f45'); }
+      kit.collide(px - .12, px + .12, pz - .12, pz + .12, y, y + 1.5);
+    }
+    kit.occ.markRect(f, 0, 5.2, 26, 22);
+    const [ax, az] = f.at(0, z1 + 1.2); tag('rimonim', ax, az, y); }
+
+  // ——— The great Tabor oak at Gan Ilan. Collide the trunk only. ———
+  { const l = landmark('great_oak'), y = surfaceHeight(l.x, l.z);
+    B.place(new THREE.CylinderGeometry(.9, 1.45, 1, 8), MAT.wood, l.x, y + .4, l.z, 1, .8, 1, 0, '#4a3b2c');
+    B.place(new THREE.CylinderGeometry(.5, .92, 1, 8), MAT.wood, l.x, y + 3.5, l.z, 1, 7, 1, 0, '#5a4632');
+    kit.collide(l.x - .9, l.x + .9, l.z - .9, l.z + .9, y, y + 5.2);
+    for (const [ox, oy, oz, s, c] of [[0, 8.1, 0, 3.3, '#4e6a38'], [2.8, 7.1, 1.1, 2.7, '#5c7844'], [-2.6, 7.3, .7, 2.8, '#466432'], [1.2, 6.7, -2.9, 2.6, '#56743c'], [-1.5, 7.5, -2.4, 2.5, '#3f5c30'], [3.3, 6.3, -1.5, 2.3, '#5a7640'], [-3.5, 6.5, -.9, 2.4, '#4a6836'], [.5, 9.2, .4, 2.1, '#62804a']] as Array<[number, number, number, number, string]>)
+      B.place(PRIMS.ico, MAT.foliage, l.x + ox, y + oy, l.z + oz, s, s * .7, s, ox + oy, c);
+    const mk = new Frame(l.x - 4.2, l.z + 1.6, .5, y);
+    kit.solid(mk, MAT.stone, 0, .32, 0, 1.7, .64, .5, '#ddd0b2');
+    kit.sign(mk, 0, .78, .28, 1.65, .4, 'האלון הגדול · גן אילן', { bg: '#cbbd9c', fg: '#2e281d', weight: 700 });
+    kit.occ.markDisc(l.x, l.z, 8);
+    const [ax, az] = mk.at(0, 1.3); tag('great_oak', ax, az, y); }
+
+  // ——— Lookouts: a 4 m railing arc, one bench, a plaque. No towers. ———
+  const lookout = (id: string, view: number, sub?: string) => {
+    const l = landmark(id), road = nearestRoad(l.x, l.z), vx = Math.sin(view), vz = Math.cos(view);
+    let nx = -road.dz, nz = road.dx; if (nx * vx + nz * vz < 0) { nx = -nx; nz = -nz; }
+    const off = Math.max(0, road.road.width / 2 + 1.8 - road.dist);
+    const x = l.x + nx * off, z = l.z + nz * off, y = surfaceHeight(x, z), f = new Frame(x, z, view, y);
+    B.lbox(f, MAT.paving, 0, .04, .85, 5.2, .08, 3.4, '#d9d1bf', false);
+    const R = 3.4, span = 4 / R, posts: Array<[number, number]> = [];
+    for (let i = 0; i <= 4; i++) { const a = -span / 2 + span * i / 4; posts.push([Math.sin(a) * R, Math.cos(a) * 2.2 - .6]); }
+    for (let i = 0; i < posts.length; i++) {
+      const [px, pz] = f.at(posts[i][0], posts[i][1]); B.cyl(MAT.metal, px, y + .55, pz, .035, 1.1, '#3c4240');
+      if (!posts[i + 1]) continue;
+      const [x0, z0] = f.at(posts[i][0], posts[i][1]), [x1, z1] = f.at(posts[i + 1][0], posts[i + 1][1]);
+      const len = Math.hypot(x1 - x0, z1 - z0), segRot = Math.atan2(-(z1 - z0), x1 - x0);
+      for (const h of [.45, .95]) B.box(MAT.metal, (x0 + x1) / 2, y + h, (z0 + z1) / 2, len, .04, .04, segRot, '#3c4240');
+      kit.lcollide(new Frame((x0 + x1) / 2, (z0 + z1) / 2, segRot, y), 0, .55, 0, len, 1.1, .12);
+    }
+    B.lbox(f, MAT.wood, 0, .45, .15, 1.6, .06, .42, '#8a6a48');
+    B.lbox(f, MAT.wood, 0, .74, -.06, 1.6, .4, .05, '#8a6a48');
+    kit.lcollide(f, 0, .42, .08, 1.6, .84, .5);
+    B.lbox(f, MAT.metal, 2.15, .5, .15, .06, 1, .06, '#444');
+    kit.sign(f, 2.15, 1.1, .15, 1.5, .46, l.name.he, { bg: '#efe6cf', fg: '#2d4235', border: true, weight: 700, sub }, Math.PI);
+    kit.occ.markDisc(x, z, 4.5);
+    const [ax, az] = f.at(0, -.7); tag(id, ax, az, y);
+  };
+  lookout('mitzpe_sharon', Math.PI / 2, 'עמק יזרעאל');
+  lookout('mitzpe_roni', -Math.PI / 2);
+
   // ——— Plaques for the remaining landmarks ———
-  for (const id of ['gali_pool', 'momos', 'rimonim', 'great_oak', 'mitzpe_sharon', 'mitzpe_roni', 'burger_saloon', 'adawi', 'paz', 'szenes_pool', 'post_zevulun', 'mda', 'founders_garden', 'synagogue', 'bank', 'shalva', 'bg_hair', 'bg_bakery', 'bg_falafel', 'pharmacy', 'zol_stock', 'rani_organic', 'braaap', 'bg_post', 'bg_books', 'ka_shawarma', 'ka_hair', 'ka_market']) {
+  for (const id of ['momos', 'burger_saloon', 'adawi', 'paz', 'post_zevulun', 'mda', 'ka_shawarma', 'ka_hair', 'ka_market']) {
     const l = landmark(id); const fp = footprintAt(l.x, l.z, 15);
     let x = l.x, z = l.z;
     if (fp) { const b = orientedBox(fp.points), r = nearestRoad(b.cx, b.cz); const dx = r.px - b.cx, dz = r.pz - b.cz, d = Math.hypot(dx, dz) || 1, out = Math.min(b.w, b.d) / 2 + 1.2; x = b.cx + dx / d * out; z = b.cz + dz / d * out; }

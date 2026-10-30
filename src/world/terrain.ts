@@ -6,7 +6,7 @@ import { distToPoly, roadDelta } from './roadGrade';
 import { conformTerrain, cutSegments } from './terrainCuts';
 import { CAVE_PLAN, CAVE_FACADE as FACE, CAVE_COURT as COURT } from './Caves';
 
-/** Real relief from the DEM (Copernicus GLO-30, ~30 m source resampled to ~6.7 m), smoothed along the roads (roadGrade.ts), with game
+/** Real relief from the DEM (GEM-15 bare-earth DTM, 15 m, resampled to ~6.7 m), smoothed along the roads (roadGrade.ts), with game
  *  y = 0 at the Beit She'arim catacomb courtyard. Flat pads are authored where the town is
  *  terraced (plazas, building platforms); the fictional cave plan stays under a covering hill. */
 const sstep = (e0: number, e1: number, x: number) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
