@@ -12,7 +12,9 @@ import type { WorldContext, Interactable } from '../world/types';
 import { PlayerController } from '../player/PlayerController';
 import { rayDistance } from '../world/collide';
 import { AudioSystem } from '../systems/AudioSystem';
-import { UI } from '../ui/UI';
+import { UI, type Waypoint } from '../ui/UI';
+import { findRoute, trimRoute, type GpsRoute } from '../world/gps';
+import { landmark } from '../world/geo';
 
 export class Game {
   scene = new THREE.Scene();
@@ -33,6 +35,7 @@ export class Game {
   private temp = new THREE.Vector3(); private direction = new THREE.Vector3();
   private skyDome!: Sky; private terrain?: THREE.Object3D; private shadowTick = 0;
   private viewDistance = 620; private maxPixelRatio = 1; private pixelRatio = 1; private perf = { t: 0, n: 0 }; private lightPos?: THREE.Vector3[]; private lightOrder: Array<{ light: THREE.Light; d: number }> = [];
+  private waypoint: Waypoint | null = null; private route: GpsRoute | null = null; private gpsTimer = 0;
   constructor() {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.renderer.domElement.id = 'game'; this.renderer.domElement.setAttribute('aria-label', 'Tivon 3D game world');
@@ -51,7 +54,7 @@ export class Game {
   private async boot() {
     const lang = (() => { try { return JSON.parse(localStorage.getItem('tivon.settings') || '{}').lang === 'en' ? 'en' : 'he'; } catch { return 'he'; } })();
     const screen = document.createElement('div'); screen.id = 'loading';
-    screen.innerHTML = '<h1>TIVON</h1><p class="loading-label"></p><div class="loading-bar"><i></i></div><small>Kiryat Tivon · 1:1</small>'; document.body.append(screen);
+    screen.innerHTML = '<h1>TIVON<span>GTA</span></h1><p class="loading-label"></p><div class="loading-bar"><i></i></div><small>KIRYAT TIVON · OPEN WORLD</small>'; document.body.append(screen);
     const total = 10; let n = 0;
     const step = async (he: string, en: string) => {
       n++; screen.querySelector('.loading-label')!.textContent = lang === 'en' ? en : he;
@@ -79,6 +82,7 @@ export class Game {
   }
   private menu() { this.ui.updateMinimap(0, 0, 0, false); this.playing = false; this.panel = 'menu'; this.player.clear(); document.exitPointerLock?.(); this.ui.menu(!!GameModel.load()); }
   private start(state?: GameState) {
+    this.waypoint = null; this.route = null;
     this.model = new GameModel(state);
     const p = this.model.state.position, inCaves = p.x > 98 && p.x < 166 && p.z > 74 && p.z < 275;
     // New journeys start outside Amali; saves from the old schematic map re-spawn in town.
@@ -101,10 +105,25 @@ export class Game {
     this.panel = kind; this.unlock(); this.model.state.position = this.player.snapshot();
     if (kind === 'inventory') this.ui.inventory(this.model.state);
     else if (kind === 'journal') this.ui.journal(this.model.state, this.model.objective(), this.model.state.phase === 2 ? this.model.catacombSteps() : null);
-    else if (kind === 'map') this.ui.map(this.model.state, this.model.state.phase === 2 ? this.model.catacombSteps() : null);
+    else if (kind === 'map') this.ui.map(this.model.state, this.model.state.phase === 2 ? this.model.catacombSteps() : null, this.waypoint, this.route);
     else if (kind === 'settings') this.ui.settings(this.settings);
     else if (kind === 'about') this.ui.about();
     else this.ui.pause();
+  }
+  private setGps(id: string) {
+    try {
+      const l = landmark(id);
+      this.waypoint = { id, x: l.x, z: l.z, name: l.name };
+      const p = this.player.snapshot();
+      this.route = findRoute(p.x, p.z, l.x, l.z);
+      this.ui.toast(this.ui.t(`ניווט ל־${this.ui.text(l.name)}`, `Route set: ${this.ui.text(l.name)}`));
+      if (this.panel === 'map') this.openPanel('map');
+    } catch { this.ui.toast(this.ui.t('לא ניתן לנווט ליעד זה.', 'Could not set a route to that place.')); }
+  }
+  private clearGps(silent = false) {
+    this.waypoint = null; this.route = null;
+    if (!silent) this.ui.toast(this.ui.t('הניווט בוטל.', 'GPS cleared.'));
+    if (this.panel === 'map') this.openPanel('map');
   }
   interact() {
     if (!this.target || !this.playing || this.panel) return;
@@ -121,6 +140,8 @@ export class Game {
     if (action === 'menu') { if (this.playing) this.save(); this.menu(); return; }
     if (action === 'language') { this.ui.setLanguage(this.ui.lang === 'he' ? 'en' : 'he'); this.persistSettings(); this.menu(); return; }
     if (action === 'save') { this.save(true); return; }
+    if (action === 'gpsClear') { this.clearGps(); return; }
+    if (action.startsWith('gps:')) { this.setGps(action.slice(4)); return; }
     if (['inventory','journal','map','settings','pause','about'].includes(action)) { this.openPanel(action); return; }
     if (action === 'applySettings') {
       const get = (id: string) => document.getElementById(`setting-${id}`) as HTMLInputElement;
@@ -305,7 +326,19 @@ export class Game {
       this.wasSurvived=s.encounter.survived;
     }
     this.previousBrew=s.brewing;
-    this.hudTimer+=dt;if(this.playing&&this.hudTimer>.12){this.hudTimer=0;const labels:Record<string,[string,string]>={town:['טבעון','KIRYAT TIVON'],bengurion:['כיכר בן גוריון','BEN GURION SQUARE'],kiryatamal:['קריית עמל · אלכסנדר זייד','KIRYAT AMAL · ALEXANDER ZAID'],south:['הדרך לבית שערים','THE ROAD TO BEIT SHE’ARIM'],overlook:['אור ראשון בעמק','SUNRISE OVER THE VALLEY'],amali:['עמלי','AMALI'],mandu:['מנדו · קומה ב׳','MANDU · UPSTAIRS'],shop:['בית התוכנה והמחשב','COMPUTER SHOP'],caves:[s.phase===2?'בית שערים · קירוב':'האולם הנסתר · בדיוני',s.phase===2?'BEIT SHE’ARIM · INTERPRETATION':'HIDDEN CHAMBERS · FICTION']};const l=labels[zone];this.ui.updateHUD(s,this.target?this.target.label[this.ui.lang]:null,this.ui.t(l[0],l[1]),this.fps,s.brewing,!!document.pointerLockElement,s.encounter.active?(1-s.encounter.timer/20)*100:0,s.phase===2?this.model.catacombSteps():null);this.ui.updateMinimap(this.camera.position.x,this.camera.position.z,this.player.yaw,zone!=='caves'&&!this.panel);}
+    if (this.playing && this.waypoint && this.route) {
+      this.gpsTimer += dt;
+      if (this.gpsTimer > .45) {
+        this.gpsTimer = 0;
+        const px = this.camera.position.x, pz = this.camera.position.z;
+        this.route = trimRoute(this.route, px, pz);
+        if (Math.hypot(px - this.waypoint.x, pz - this.waypoint.z) < 14) {
+          this.ui.toast(this.ui.t(`הגעתם: ${this.ui.text(this.waypoint.name)}`, `Arrived: ${this.ui.text(this.waypoint.name)}`));
+          this.clearGps(true);
+        }
+      }
+    }
+    this.hudTimer+=dt;if(this.playing&&this.hudTimer>.12){this.hudTimer=0;const labels:Record<string,[string,string]>={town:['טבעון','KIRYAT TIVON'],bengurion:['כיכר בן גוריון','BEN GURION SQUARE'],kiryatamal:['קריית עמל · אלכסנדר זייד','KIRYAT AMAL · ALEXANDER ZAID'],south:['הדרך לבית שערים','THE ROAD TO BEIT SHE’ARIM'],overlook:['אור ראשון בעמק','SUNRISE OVER THE VALLEY'],amali:['עמלי','AMALI'],mandu:['מנדו · קומה ב׳','MANDU · UPSTAIRS'],shop:['בית התוכנה והמחשב','COMPUTER SHOP'],caves:[s.phase===2?'בית שערים · קירוב':'האולם הנסתר · בדיוני',s.phase===2?'BEIT SHE’ARIM · INTERPRETATION':'HIDDEN CHAMBERS · FICTION']};const l=labels[zone];this.ui.updateHUD(s,this.target?this.target.label[this.ui.lang]:null,this.ui.t(l[0],l[1]),this.fps,s.brewing,!!document.pointerLockElement,s.encounter.active?(1-s.encounter.timer/20)*100:0,s.phase===2?this.model.catacombSteps():null,this.waypoint,this.route?.metres??0);this.ui.updateMinimap(this.camera.position.x,this.camera.position.z,this.player.yaw,zone!=='caves'&&!this.panel,this.route,this.waypoint);}
     this.shadowTick = (this.shadowTick + 1) % 2; this.renderer.shadowMap.needsUpdate = this.shadowTick === 0;
     this.renderer.render(this.scene,this.camera);
   }

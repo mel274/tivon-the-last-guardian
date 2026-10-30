@@ -570,7 +570,7 @@ export class GameModel {
       case 'finish':
         if (!this.flag('treasureFound')) break;
         this.mark('ending'); this.save();
-        return this.result('טבעון: השומר האחרון · תודה ששמרתם את הסיפור. תוכלו להמשיך לטייל ולחזור לעיירה.', 'Tivon: The Last Guardian · Thank you for keeping the story. You may keep exploring and return to town.');
+        return this.result('טבעון - GTA · תודה ששמרתם את הסיפור. תוכלו להמשיך לטייל ולחזור לעיירה.', 'Tivon - GTA · Thank you for keeping the story. You may keep exploring and return to town.');
     }
     return this.result('אין פעולה נוספת כרגע.', 'There is nothing more to do here right now.');
   }

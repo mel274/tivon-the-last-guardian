@@ -1,5 +1,8 @@
 import { items, type GameState, type Lang, type Text, type CatacombStep } from '../game/model';
 import { ROADS, WORLD, BUILDINGS, VEHICLE, landmark } from '../world/geo';
+import type { GpsRoute } from '../world/gps';
+
+export type Waypoint = { id?: string; x: number; z: number; name: Text };
 
 // Static town-map geometry in world metres (north up = −z), built once.
 let roadSvg = '';
@@ -51,14 +54,14 @@ export class UI {
   }
   menu(hasSave: boolean) {
     this.hud.hidden = true; this.layer.className = 'menu-layer';
-    this.layer.innerHTML = `<div class="menu-top"><a class="wordmark">T / G</a><div class="build-label">${this.t('אב־טיפוס משחק · 0.3','PLAYABLE PROTOTYPE · 0.3')}</div>${this.button(this.lang === 'he' ? 'ENGLISH ↗' : 'עברית ↗','language','language')}</div>
-      <main class="menu-main"><div class="eyebrow"><i></i>${this.t('קריית טבעון · ישראל','KIRYAT TIVON · ISRAEL')}</div><h1 dir="ltr">TIVON<span>THE LAST GUARDIAN</span></h1><div class="title-rule"></div><p class="menu-description">${this.t('לכל מקום יש זיכרון.<br>יש מקומות שלא שוכחים.','Every place holds a memory.<br>Some places never let go.')}</p><nav class="menu-actions">${this.button(`${this.t('להמשיך במסע','Continue journey')} <span>↗</span>`,'continue','primary',!hasSave)}${this.button(`${this.t('מסע חדש','Begin a new journey')} <span>→</span>`,'new',hasSave ? '' : 'primary')}${this.button(this.t('הגדרות','Settings'),'settings','quiet')}</nav><div class="menu-note">${this.t('הרפתקה בגוף ראשון בגבעות טבעון.<br>מרחב מקוצר ותפאורה בהשראת המקום; הסיפור בדיוני.','A first-person adventure through the hills of Tivon.<br>A compressed, interpretive world. A fictional story.')}</div></main>
-      <div class="scene-caption"><span>01 — ${this.t('אור אחרון','THE LAST LIGHT')}</span><p>${this.t('קפה. שיחה. משהו מתחת לפני השטח.','Coffee. Conversation. Something beneath the surface.')}</p></div><footer class="menu-footer"><span>${this.t('אוזניות מומלצות','BEST EXPERIENCED WITH HEADPHONES')}</span>${this.button(this.t('המקום והסיפור','The place & the story'),'about','about-link')}<span>W A S D &nbsp; / &nbsp; ${this.t('תנועה','MOVE')} &nbsp; · &nbsp; E &nbsp; / &nbsp; ${this.t('פעולה','INTERACT')}</span></footer>`;
+    this.layer.innerHTML = `<div class="menu-top"><a class="wordmark">TG</a><div class="build-label">${this.t('אב־טיפוס · 0.4','PROTOTYPE · 0.4')}</div>${this.button(this.lang === 'he' ? 'ENGLISH' : 'עברית','language','language')}</div>
+      <main class="menu-main"><div class="eyebrow">${this.t('קריית טבעון · ישראל','KIRYAT TIVON · ISRAEL')}</div><h1 dir="ltr">TIVON<span>GTA</span></h1><p class="menu-description">${this.t('עולם פתוח. רחובות אמיתיים. סיפור בדיוני.','Open world. Real streets. Fictional story.')}</p><nav class="menu-actions">${this.button(this.t('המשך','CONTINUE'),'continue','primary',!hasSave)}${this.button(this.t('משחק חדש','NEW GAME'),'new',hasSave ? '' : 'primary')}${this.button(this.t('הגדרות','SETTINGS'),'settings','quiet')}</nav><div class="menu-note">${this.t('הרפתקה בגוף ראשון בגבעות טבעון.<br>הסיפור בדיוני; הרחובות לפי OpenStreetMap.','A first-person adventure through the hills of Tivon.<br>Fictional story; streets from OpenStreetMap.')}</div></main>
+      <div class="scene-caption"><span>01 — ${this.t('אור אחרון','THE LAST LIGHT')}</span><p>${this.t('קפה. שיחה. משהו מתחת לפני השטח.','Coffee. Conversation. Something beneath the surface.')}</p></div><footer class="menu-footer"><span>${this.t('אוזניות מומלצות','BEST WITH HEADPHONES')}</span>${this.button(this.t('המקום והסיפור','ABOUT'),'about','about-link')}<span>WASD · ${this.t('תנועה','MOVE')} &nbsp; E · ${this.t('פעולה','ACTION')}</span></footer>`;
   }
   close() { this.layer.innerHTML = ''; this.layer.className = ''; this.hud.hidden = false; }
   panel(title: string, content: string, wide = false, surface = 'paper') {
     this.layer.className = 'panel-layer';
-    this.layer.innerHTML = `<section class="panel ${wide ? 'wide' : ''} surface-${surface}" role="dialog" aria-modal="true" aria-label="${escape(title)}"><header><div><span class="eyebrow">${this.t('טבעון / פנקס כיס','TIVON / POCKET NOTES')}</span><h2>${title}</h2></div>${this.button('×','close','close')}</header><div class="panel-body">${content}</div><div class="paper-footer"><span>T / G</span><span>${this.t('לחזור החוצה · ESC','BACK TO THE WORLD · ESC')}</span></div></section>`;
+    this.layer.innerHTML = `<section class="panel ${wide ? 'wide' : ''} surface-${surface}" role="dialog" aria-modal="true" aria-label="${escape(title)}"><header><div><span class="eyebrow">TIVON - GTA</span><h2>${title}</h2></div>${this.button('×','close','close')}</header><div class="panel-body">${content}</div><div class="paper-footer"><span>TG</span><span>${this.t('חזרה · ESC','BACK · ESC')}</span></div></section>`;
   }
   dialogue(d: {title:Text;text:Text;options:{label:Text;action:string;disabled?:boolean}[]}) {
     this.layer.className = 'dialogue-layer';
@@ -75,32 +78,44 @@ export class UI {
     const manduHint = s.flags.coffeeDrunk && !s.flags.manduClue ? `<aside class="journal-tip"><span>${this.t('תזכורת מהערב','A NOTE FOR TONIGHT')}</span><p>${s.intoxication >= 45 ? this.t('השיחה יכולה להיפתח עכשיו. חזרו למספר שליד הבר, הביטו בו ולחצו E. שאלו אותו על המערות.','The storyteller is ready to open up. Return to him beside the bar, face him and press E. Ask about the caves.') : this.t('במנדו, הברמן והמספר הם שני אנשים שונים. הזמינו שני משקאות מהברמן, ואז חזרו למספר לשיחה.','At Mandu, the bartender and storyteller are two different people. Order two drinks from the bartender, then return to the storyteller for a conversation.')}</p></aside>` : '';
     this.panel(this.t('יומן מסע','Field journal'),`<div class="chapter-label">${this.t('פרק','CHAPTER')} ${String(Math.min(s.phase,3)).padStart(2,'0')}</div><blockquote>${escape(this.text(objective))}</blockquote>${manduHint}${steps ? `<ul class="journal-steps">${steps.map(st => `<li class="${st.done ? 'done' : ''}"><b>${st.done ? '✓' : '○'}</b> ${escape(this.text(st.label))} <span>${escape(this.text(st.hint))}</span></li>`).join('')}</ul>` : ''}<div class="journal-records">${s.history.slice(-20).reverse().map(h=>`<p>${escape(this.text(h))}</p>`).join('')}</div><div class="reference-note">${this.t('המקומות וההיסטוריה מבוססים על מחקר. רשת המערות, הדמויות, התצרפים והאירועים העל־טבעיים נוצרו למשחק.','Places and historical context are researched. The cave network, characters, puzzles and supernatural events are invented for the game.')}</div>`);
   }
-  map(s: GameState, steps: CatacombStep[] | null = null) {
+  map(s: GameState, steps: CatacombStep[] | null = null, waypoint: Waypoint | null = null, route: GpsRoute | null = null) {
     const inCaves = s.position.z > 89.5 && s.position.z < 262 && s.position.x > 99 && s.position.x < 165 && s.position.y < 9;
     let map: string;
     if (!inCaves) {
-      const goal = !s.flags.coffeeDrunk ? 'amali' : !s.flags.manduClue ? 'mandu' : !s.flags.suppliesBought ? 'computer_shop' : !s.flags.cavesEntered ? 'park_gate' : '';
-      // Markers keep a constant on-screen size: each sits in a <g data-k> scaled on zoom.
+      const story = !s.flags.coffeeDrunk ? 'amali' : !s.flags.manduClue ? 'mandu' : !s.flags.suppliesBought ? 'computer_shop' : !s.flags.cavesEntered ? 'park_gate' : '';
+      const destId = waypoint?.id ?? '';
+      // Markers keep a constant on-screen size: each sits in a <g data-k> scaled on zoom. Click sets GPS.
       const marks = MAP_LANDMARKS.map(id => {
         const l = landmark(id), main = ['amali', 'mandu', 'computer_shop', 'park_gate', 'zeid_statue', 'get_phone', 'library'].includes(id);
-        return `<g transform="translate(${l.x.toFixed(1)} ${l.z.toFixed(1)})"><g data-k class="map-poi ${main ? 'main' : ''} ${id === goal ? 'goal' : ''}"><circle r="${main ? 7 : 4.5}"/>${id === goal ? '<circle r="17" class="goal-ring"/>' : ''}<text x="10" y="5">${escape(this.text(l.name).split(' · ')[0])}</text></g></g>`;
+        const active = id === destId, storyGoal = id === story && !destId;
+        return `<g class="map-poi-hit" data-action="gps:${escape(id)}" transform="translate(${l.x.toFixed(1)} ${l.z.toFixed(1)})"><circle r="22" class="map-hit"/><g data-k class="map-poi ${main ? 'main' : ''} ${active || storyGoal ? 'goal' : ''} ${active ? 'waypoint' : ''}"><circle r="${main ? 7 : 4.5}"/>${active || storyGoal ? '<circle r="17" class="goal-ring"/>' : ''}<text x="10" y="5">${escape(this.text(l.name).split(' · ')[0])}</text></g></g>`;
       }).join('');
       const blds = BUILDINGS.map(b => `<polygon points="${b.points.map(([x, z]) => `${x.toFixed(0)},${z.toFixed(0)}`).join(' ')}"/>`).join('');
-      const cyclamen = `<path d="M0 0 C-5 -3 -6 -10 -2.5 -13 C-1 -9 -.5 -5 0 0Z" fill="#d23a83"/><path d="M0 0 C5 -3 6 -10 2.5 -13 C1 -9 .5 -5 0 0Z" fill="#e0559a"/><path d="M0 0 C-1.6 -5 -1.6 -11 0 -15 C1.6 -11 1.6 -5 0 0Z" fill="#f07ab3"/><circle r="1.6" fill="#7a1747"/><path d="M0 1 C0 4 0 6 0 8" stroke="#3f6b3a" stroke-width="1.2"/>`;
+      const routeLine = route && route.points.length > 1
+        ? `<polyline class="map-gps" points="${route.points.map(([x, z]) => `${x.toFixed(1)},${z.toFixed(1)}`).join(' ')}"/>`
+        : '';
+      const wpMark = waypoint
+        ? `<g transform="translate(${waypoint.x.toFixed(1)} ${waypoint.z.toFixed(1)})"><g data-k class="map-wp"><path d="M0 -22 L8 0 L0 -6 L-8 0Z"/><circle r="22" class="goal-ring"/></g></g>`
+        : '';
       const deg = -s.position.yaw * 180 / Math.PI;
+      const distLabel = route ? (route.metres >= 1000 ? `${(route.metres / 1000).toFixed(1)} km` : `${Math.round(route.metres)} m`) : '';
       map = `<div class="map-wrap"><svg class="field-map town-map" role="img" aria-label="Map of Kiryat Tivon" data-x="${s.position.x.toFixed(1)}" data-z="${s.position.z.toFixed(1)}">
         <rect x="${WORLD.minX - 300}" y="${WORLD.minZ - 300}" width="${WORLD.maxX - WORLD.minX + 600}" height="${WORLD.maxZ - WORLD.minZ + 600}" class="map-bg"/>
         <g class="map-blds">${blds}</g>
         <g class="map-streets">${townRoads()}</g>
+        ${routeLine}
         ${marks}
+        ${wpMark}
         <g transform="translate(${s.position.x.toFixed(1)} ${s.position.z.toFixed(1)})"><g data-k class="map-me">
-          <circle r="40" class="map-me-pulse"/><circle r="17" class="map-me-disc"/>
-          <path d="M0 -33 L8 -19 L-8 -19Z" class="map-me-dir" transform="rotate(${deg.toFixed(1)})"/>
-          <g transform="scale(1.05) translate(0 5)">${cyclamen}</g>
-          <g class="map-me-label"><rect x="-38" y="20" width="76" height="17" rx="8.5"/><text y="32">${this.t('אתם כאן', 'YOU ARE HERE')}</text></g>
+          <circle r="36" class="map-me-pulse"/>
+          <path d="M0 -28 L14 18 L0 10 L-14 18Z" class="map-me-dir" transform="rotate(${deg.toFixed(1)})"/>
+          <g class="map-me-label"><rect x="-42" y="22" width="84" height="16" rx="2"/><text y="33">${this.t('אתם כאן', 'YOU ARE HERE')}</text></g>
         </g></g>
       </svg>
-      <div class="map-tools"><button type="button" data-zoom="in" aria-label="Zoom in">+</button><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="me" aria-label="Centre on me">◎</button></div></div>`;
+      <div class="map-tools"><button type="button" data-zoom="in" aria-label="Zoom in">+</button><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="me" aria-label="Centre on me">◎</button>${waypoint ? `<button type="button" data-action="gpsClear" class="gps-clear" aria-label="Clear GPS">✕</button>` : ''}</div>
+      <div class="map-gps-hint">${waypoint
+        ? `<strong>${escape(this.text(waypoint.name))}</strong><span>${distLabel}</span><em>${this.t('לחצו על יעד אחר לשינוי · ✕ לביטול', 'Click another pin to change · ✕ to clear')}</em>`
+        : this.t('לחצו על סימן במפה להגדרת ניווט GPS', 'Click a pin on the map to set a GPS route')}</div></div>`;
     } else {
       const X = (x: number) => (x - 126) * 4.5 + 260, Y = (z: number) => (z - 100) * 2.4 + 15;
       const rooms = [[126,105],[108,120],[144,120],[108,142],[126,142],[144,142],[126,159],...(s.flags.hiddenOpened ? [[126,178],[126,198],[126,226],[126,244]] : [])];
@@ -109,9 +124,9 @@ export class UI {
       const clueDots = steps ? spots.map(([id, x, z]) => { const st = steps.find(q => q.id === id); return `<g class="map-clue ${st?.done ? 'done' : ''}"><circle cx="${X(x)}" cy="${Y(z)}" r="9"/><text x="${X(x)}" y="${Y(z) + 3.5}">${glyph[id]}</text></g>`; }).join('') : '';
       map = `<svg viewBox="0 0 520 400" class="field-map" role="img" aria-label="Discovered cave schematic"><path d="M260 25V175M179 70H341M179 70V137H341V70M179 137H341${s.flags.hiddenOpened ? 'M260 175V370' : ''}" stroke="#b6ae94" stroke-width="8" fill="none"/>${rooms.map(([rx,rz])=>`<rect x="${(rx-126)*4.5+241}" y="${(rz-100)*2.4+2}" width="38" height="27" class="map-block"/>`).join('')}<g class="map-label"><text x="260" y="20">${this.t('כניסה','ENTRANCE')}</text><text x="80" y="64">${this.t('מערב · לוח I','WEST · PANEL I')}</text><text x="380" y="64">${this.t('מזרח · לוח II','EAST · PANEL II')}</text><text x="350" y="182">${this.t('חותמות ודלת','SEALS & DOOR')}</text>${s.flags.hiddenOpened ? `<text x="260" y="350">${this.t('האולם העמוק','DEEP CHAMBER')}</text>` : `<text x="260" y="240">${this.t('טרם נחקר','UNEXPLORED')}</text>`}</g>${clueDots}<circle cx="${X(s.position.x)}" cy="${Y(s.position.z)}" r="6" class="map-you"/></svg>`;
     }
-    const legend = inCaves ? `<span><i></i> ${this.t('המיקום שלך', 'You are here')}</span><span class="legend-clue">● ${this.t('רמז שטרם נמצא', 'Clue still to find')}</span><span class="legend-done">● ${this.t('הושלם', 'Done')}</span>`
-      : `<span><i></i> ${this.t('המיקום שלך', 'You are here')}</span><span class="legend-goal">◯ ${this.t('היעד הבא', 'Next destination')}</span><span>${this.t('רחובות ובניינים לפי OpenStreetMap, בקנה מידה 1:1', 'OpenStreetMap streets and buildings, 1:1')}</span>`;
-    this.panel(this.t(inCaves ? 'מפת המערות' : 'מפת טבעון', inCaves ? 'Cave map' : 'Map of Tivon'),`<p class="map-subtitle">${this.t(inCaves ? 'סכמה בדיונית של רשת המערות' : 'קנה מידה 1:1 · © OpenStreetMap contributors', inCaves ? 'FICTIONAL SCHEMATIC OF THE CAVE NETWORK' : 'REAL SCALE 1:1 · © OPENSTREETMAP CONTRIBUTORS')}</p>${map}<div class="map-legend">${legend}</div>`,true);
+      const legend = inCaves ? `<span><i></i> ${this.t('המיקום שלך', 'You are here')}</span><span class="legend-clue">● ${this.t('רמז שטרם נמצא', 'Clue still to find')}</span><span class="legend-done">● ${this.t('הושלם', 'Done')}</span>`
+      : `<span><i></i> ${this.t('המיקום שלך', 'You are here')}</span><span class="legend-goal">◈ ${this.t('יעד GPS', 'GPS destination')}</span><span class="legend-route">${this.t('מסלול סגול', 'Purple route')}</span><span>${this.t('רחובות OSM · 1:1', 'OSM streets · 1:1')}</span>`;
+    this.panel(this.t(inCaves ? 'מפת המערות' : 'מפה', inCaves ? 'Cave map' : 'MAP'),`<p class="map-subtitle">${this.t(inCaves ? 'סכמה בדיונית של רשת המערות' : 'קנה מידה 1:1 · © OpenStreetMap contributors', inCaves ? 'FICTIONAL SCHEMATIC OF THE CAVE NETWORK' : 'REAL SCALE 1:1 · © OPENSTREETMAP CONTRIBUTORS')}</p>${map}<div class="map-legend">${legend}</div>`,true);
     if (!inCaves) this.zoomableMap();
   }
   /** Wheel/pinch to zoom, drag to pan, +/− and centre-on-me buttons; markers keep their size. */
@@ -130,7 +145,10 @@ export class UI {
     apply(); requestAnimationFrame(apply);
     svg.addEventListener('wheel', e => { e.preventDefault(); span *= Math.pow(1.0015, e.deltaY); apply(); }, { passive: false });
     const pointers = new Map<number, { x: number; y: number }>(); let pinch = 0;
-    svg.addEventListener('pointerdown', e => { svg.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); });
+    svg.addEventListener('pointerdown', e => {
+      if ((e.target as Element).closest?.('[data-action]')) return;
+      svg.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    });
     svg.addEventListener('pointermove', e => {
       const prev = pointers.get(e.pointerId); if (!prev) return;
       const r = svg.getBoundingClientRect(), mPerPx = span / Math.min(r.width, r.height);
@@ -148,7 +166,7 @@ export class UI {
     }));
   }
   pause() {
-    this.panel(this.t('רגע לנשום','A moment to breathe'),`<div class="pause-options">${this.button(this.t('לחזור למסע','Resume journey'),'close','primary')}${this.button(this.t('שמירה ידנית','Save journey'),'save')}${this.button(this.t('טעינת שמירה','Load saved journey'),'load')}${this.button(this.t('הגדרות','Settings'),'settings')}${this.button(this.t('המקום והסיפור','The place & the story'),'about')}${this.button(this.t('תפריט ראשי','Main menu'),'menu','quiet')}</div>`);
+    this.panel(this.t('השהיה','PAUSED'),`<div class="pause-options">${this.button(this.t('המשך','RESUME'),'close','primary')}${this.button(this.t('שמירה','SAVE GAME'),'save')}${this.button(this.t('טעינה','LOAD GAME'),'load')}${this.button(this.t('הגדרות','SETTINGS'),'settings')}${this.button(this.t('אודות','ABOUT'),'about')}${this.button(this.t('תפריט ראשי','MAIN MENU'),'menu','quiet')}</div>`);
   }
   about() {
     this.panel(this.t('המקום והסיפור','The place & the story'),`<p class="about-intro">${this.t('טבעון היא מקום אמיתי. המסע הזה הוא סיפור שנכתב בשבילה.','Tivon is a real place. This journey is a story imagined for it.')}</p><dl class="provenance"><dt>${this.t('מבוסס על מקורות','RESEARCHED')}</dt><dd>${this.t('עמלי, מנדו, בית התוכנה והמחשב וגן לאומי בית שערים. זהות העסקים וכתובותיהם נבדקו במקורות המקושרים.','Amali, Mandu, Beit HaTochna VeHaMachshev and Beit She’arim National Park. Business identities and listed addresses were checked against the linked sources.')}</dd><dt>${this.t('פרשנות חזותית','INTERPRETIVE')}</dt><dd>${this.t('חזיתות הבניינים, חללי הפנים, הצמחייה ותוואי מערות המשחק הם קירובים. זו אינה סריקה צילומית של טבעון.','Building fronts, interiors, vegetation and the game’s cave layout are approximations. This is not a photographic scan of Tivon.')}</dd><dt>${this.t('בדיוני','FICTIONAL')}</dt><dd>${this.t('הדמויות, הדיאלוג, החידות, החפצים והאירועים העל־טבעיים נוצרו למשחק. הם אינם טענות על עסקים, עובדים או ממצאים ארכאולוגיים אמיתיים.','Characters, dialogue, puzzles, objects and supernatural events are invented. They are not claims about real businesses, employees or archaeological discoveries.')}</dd></dl><div class="source-links"><a href="https://www.amaliroast.com/about-us" target="_blank" rel="noopener noreferrer">${this.t('עמלי · אתר העסק','Amali · business website')} ↗</a><a href="https://tour.ktv.org.il/business/45/" target="_blank" rel="noopener noreferrer">${this.t('מנדו · תיירות טבעון','Mandu · Tivon tourism')} ↗</a><a href="https://whc.unesco.org/en/list/1471/" target="_blank" rel="noopener noreferrer">${this.t('בית שערים · אונסק״ו','Beit She’arim · UNESCO')} ↗</a></div><p class="reference-note">${this.t('כל הגאומטריה, הסימנים והצלילים בבנייה זו נוצרו עבור המשחק. מקורות ומגבלות נוספים נמצאים בקבצי הפרויקט.','Geometry, signage and synthesized sound in this build were created for the game. Further sources and limitations are recorded in the project files.')}</p>`);
@@ -156,8 +174,7 @@ export class UI {
   settings(settings: { quality: string; volume: number; sensitivity: number; reducedMotion: boolean; invertY: boolean }) {
     this.panel(this.t('הגדרות','Settings'),`<div class="settings"><label>${this.t('שפה','Language')}<select id="setting-language"><option value="he" ${this.lang==='he'?'selected':''}>עברית</option><option value="en" ${this.lang==='en'?'selected':''}>English</option></select></label><label>${this.t('איכות גרפיקה','Graphics quality')}<select id="setting-quality">${['low','medium','high'].map(q=>`<option ${settings.quality===q?'selected':''} value="${q}">${this.t(({low:'נמוכה',medium:'בינונית',high:'גבוהה'} as Record<string,string>)[q],q)}</option>`).join('')}</select></label><label>${this.t('עוצמת שמע','Sound volume')}<input id="setting-volume" type="range" min="0" max="1" step="0.05" value="${settings.volume}"/></label><label>${this.t('רגישות עכבר','Mouse sensitivity')}<input id="setting-sensitivity" type="range" min="0.3" max="2" step="0.1" value="${settings.sensitivity}"/></label><label>${this.t('הפחתת תנועות מצלמה','Reduce camera motion')}<input id="setting-motion" type="checkbox" ${settings.reducedMotion?'checked':''}/></label><label>${this.t('היפוך ציר אנכי','Invert vertical look')}<input id="setting-invert" type="checkbox" ${settings.invertY?'checked':''}/></label></div><div class="controls-grid"><p><kbd>WASD</kbd> ${this.t('תנועה','Move')} <kbd>← →</kbd> ${this.t('מבט','Look')}</p><p><kbd>SHIFT</kbd> ${this.t('ריצה','Sprint')} <kbd>SPACE</kbd> ${this.t('קפיצה','Jump')}</p><p><kbd>E</kbd> ${this.t('פעולה','Interact')} <kbd>F</kbd> ${this.t('פנס','Flashlight')}</p><p><kbd>I</kbd> ${this.t('תיק','Inventory')} <kbd>J</kbd> ${this.t('יומן','Journal')} <kbd>M</kbd> ${this.t('מפה','Map')}</p><p>${this.t('אפשר גם לגרור עם העכבר כדי להביט. לחיצה על המסך נועלת את הסמן.','Drag to look if pointer lock is unavailable. Click the scene to capture the mouse.')}</p></div>${this.button(this.t('שמירת הגדרות','Apply settings'),'applySettings','primary')}`);
   }
-  /** Always-on corner map: real streets and building outlines around the player, north up.
-   *  The player is an upright cyclamen (Tivon's flower); the map turns so forward is up. */
+  /** Always-on corner radar: dark GTA-style street map, heading-up with a white player blip. */
   private miniBase?: HTMLCanvasElement; private miniCanvas?: HTMLCanvasElement;
   private static readonly MINI_RES = 1.5; // metres per pixel of the pre-drawn map
   private buildMinimap() {
@@ -165,39 +182,56 @@ export class UI {
     const R = UI.MINI_RES, W = Math.ceil((WORLD.maxX - WORLD.minX + 400) / R), H = Math.ceil((WORLD.maxZ - WORLD.minZ + 400) / R);
     const base = document.createElement('canvas'); base.width = W; base.height = H; const g = base.getContext('2d');
     if (g) {
-      g.fillStyle = '#cfd2b4'; g.fillRect(0, 0, W, H);
+      g.fillStyle = '#0c1a14'; g.fillRect(0, 0, W, H);
       const X = (x: number) => (x - WORLD.minX + 200) / R, Z = (z: number) => (z - WORLD.minZ + 200) / R;
-      g.fillStyle = '#e6dcc8'; g.strokeStyle = '#a89c84'; g.lineWidth = .6;
+      g.fillStyle = '#1a2e24'; g.strokeStyle = '#243a30'; g.lineWidth = .5;
       for (const b of BUILDINGS) { g.beginPath(); b.points.forEach(([x, z], i) => i ? g.lineTo(X(x), Z(z)) : g.moveTo(X(x), Z(z))); g.closePath(); g.fill(); g.stroke(); }
       g.lineCap = g.lineJoin = 'round';
       for (const pass of ['path', 'road', 'trunk']) for (const r of ROADS) {
         const kind = VEHICLE.has(r.kind) ? (r.kind.startsWith('trunk') ? 'trunk' : 'road') : 'path'; if (kind !== pass) continue;
-        g.strokeStyle = kind === 'trunk' ? '#e7b97a' : kind === 'road' ? '#fbf8ef' : '#b49a74'; g.lineWidth = kind === 'path' ? 1.2 / R : r.width * 1.1 / R;
+        g.strokeStyle = kind === 'trunk' ? '#c9a84a' : kind === 'road' ? '#c8d4c4' : '#6a8574'; g.lineWidth = kind === 'path' ? 1.2 / R : r.width * 1.1 / R;
         g.setLineDash(kind === 'path' ? [2, 2] : []); g.beginPath(); r.points.forEach(([x, z], i) => i ? g.lineTo(X(x), Z(z)) : g.moveTo(X(x), Z(z))); g.stroke();
       }
       g.setLineDash([]);
     }
     this.miniBase = base;
-    const cyclamen = `<path d="M0 0 C-5 -3 -6 -10 -2.5 -13 C-1 -9 -.5 -5 0 0Z" fill="#d23a83"/><path d="M0 0 C5 -3 6 -10 2.5 -13 C1 -9 .5 -5 0 0Z" fill="#e0559a"/><path d="M0 0 C-1.6 -5 -1.6 -11 0 -15 C1.6 -11 1.6 -5 0 0Z" fill="#f07ab3"/><circle r="1.6" fill="#7a1747"/><path d="M0 1 C0 4 0 6 0 8" stroke="#3f6b3a" stroke-width="1.2" fill="none"/><path d="M-3.5 7 C-6 5 -5 2 -1.5 3.5Z M3.5 7 C6 5 5 2 1.5 3.5Z" fill="#4f7a43"/>`;
-    this.minimap.innerHTML = `<canvas width="180" height="180"></canvas><svg viewBox="0 0 180 180" aria-label="Minimap"><g transform="translate(90 94) scale(1.6)">${cyclamen}</g><text x="90" y="13" class="mm-n">N</text></svg>`;
+    this.minimap.innerHTML = `<canvas width="180" height="180"></canvas><svg viewBox="0 0 180 180" aria-label="Radar"><path class="mm-blip" d="M90 78 L99 102 L90 96 L81 102Z"/><text x="90" y="16" class="mm-n">N</text></svg>`;
     this.miniCanvas = this.minimap.querySelector('canvas')!; this.miniSvg = this.minimap.querySelector('svg')!;
   }
-  /** Heading-up: the pre-drawn map turns around the player so the cyclamen stands upright. */
-  updateMinimap(x: number, z: number, yaw: number, visible: boolean) {
+  /** Heading-up radar: the pre-drawn map turns so forward is up; the white blip stays fixed. */
+  updateMinimap(x: number, z: number, yaw: number, visible: boolean, route: GpsRoute | null = null, waypoint: Waypoint | null = null) {
     this.minimap.hidden = !visible; if (!visible || !this.miniCanvas || !this.miniBase) return;
     const g = this.miniCanvas.getContext('2d'); if (!g) return;
     const R = UI.MINI_RES, scale = 180 / 170 * R;
-    g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#cfd2b4'; g.fillRect(0, 0, 180, 180);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#0c1a14'; g.fillRect(0, 0, 180, 180);
     g.translate(90, 90); g.rotate(yaw); g.scale(scale, scale);
     g.drawImage(this.miniBase, -(x - WORLD.minX + 200) / R, -(z - WORLD.minZ + 200) / R);
+    if (route && route.points.length > 1) {
+      g.strokeStyle = '#c44dff'; g.lineWidth = 3.2 / scale; g.lineCap = 'round'; g.lineJoin = 'round';
+      g.beginPath();
+      for (let i = 0; i < route.points.length; i++) {
+        const px = (route.points[i][0] - WORLD.minX + 200) / R - (x - WORLD.minX + 200) / R;
+        const pz = (route.points[i][1] - WORLD.minZ + 200) / R - (z - WORLD.minZ + 200) / R;
+        if (i) g.lineTo(px, pz); else g.moveTo(px, pz);
+      }
+      g.stroke();
+    }
+    if (waypoint) {
+      const wx = (waypoint.x - WORLD.minX + 200) / R - (x - WORLD.minX + 200) / R;
+      const wz = (waypoint.z - WORLD.minZ + 200) / R - (z - WORLD.minZ + 200) / R;
+      g.fillStyle = '#c44dff'; g.beginPath(); g.arc(wx, wz, 5 / scale, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = '#fff'; g.lineWidth = 1.5 / scale; g.stroke();
+    }
     const n = this.miniSvg!.querySelector<SVGTextElement>('.mm-n')!;
     n.setAttribute('x', (90 + 76 * Math.sin(yaw)).toFixed(1)); n.setAttribute('y', (94 - 76 * Math.cos(yaw)).toFixed(1));
   }
   toast(text: string) { this.toastBox.textContent = text; this.toastBox.classList.add('visible'); window.clearTimeout(this.toastTimer); this.toastTimer = window.setTimeout(()=>this.toastBox.classList.remove('visible'),5000); }
-  updateHUD(s: GameState, prompt: string | null, zone: string, fps: number, brewing: number, locked: boolean, threat: number, steps: CatacombStep[] | null = null) {
+  updateHUD(s: GameState, prompt: string | null, zone: string, fps: number, brewing: number, locked: boolean, threat: number, steps: CatacombStep[] | null = null, waypoint: Waypoint | null = null, routeMetres = 0) {
     const wake = Math.round(s.wakefulness);
     const tipsy = s.intoxication >= 45 ? this.t('מעט שיכורים','Feeling tipsy') : this.t('ראש מעט קל','A little light-headed');
-    this.hud.innerHTML = `<div class="hud-top"><span class="location"><i></i>${zone}</span><div class="hud-tools">${this.button(`<span>${icon('bag')}</span><kbd>I</kbd>`,'inventory','tool')}${this.button(`<span>${icon('journal')}</span><kbd>J</kbd>`,'journal','tool')}${this.button(`<span>${icon('map_fragment')}</span><kbd>M</kbd>`,'map','tool')}${this.button('<span class="pause-symbol">Ⅱ</span>','pause','tool')}</div></div><div class="crosshair ${prompt ? 'has-target' : ''}"></div>${prompt ? `<div class="interact-prompt"><kbd>E</kbd> <span>${escape(prompt)}</span></div>` : ''}<div class="vitals ${wake<20?'fatigued':''}"><div class="vital"><span>${icon('eye')} ${this.t('ערנות','Wakefulness')}</span><div class="meter"><i style="width:${wake}%"></i></div><b>${wake}</b></div>${s.inventory.flashlight ? `<div class="vital"><span>${icon('batteries')} ${this.t('סוללה','Battery')}</span><div class="meter"><i style="width:${s.battery}%"></i></div><b>${Math.round(s.battery)}</b></div>` : ''}${s.intoxication>10 ? `<div class="intox">${tipsy}</div>` : ''}</div>${brewing>0 ? `<div class="brewing">${icon('coffee')}<span>${this.t('הקפה מתבשל…','Brewing coffee…')}<small>${Math.ceil(brewing)} ${this.t('שניות','seconds')}</small></span></div>` : ''}${!locked ? `<div class="capture-hint">${this.t('לחצו להביט סביב','Click to look around')}<span>WASD · ${this.t('הליכה','walk')} &nbsp; E · ${this.t('פעולה','interact')}</span></div>` : ''}${threat>0 ? `<div class="threat">${this.t('הקשיבו לפרסות. המשיכו לנוע.','Listen for hoofbeats. Keep moving.')}<div class="meter"><i style="width:${threat}%"></i></div></div>` : ''}${steps ? `<aside class="tracker"><h4>${this.t('דלת האבן החתומה','THE SEALED DOOR')}</h4>${steps.map((st, i) => `<p class="${st.done ? 'done' : ''} ${!st.done && steps.findIndex(q => !q.done) === i ? 'next' : ''}"><b>${st.done ? '✓' : '○'}</b>${escape(this.text(st.label))}</p>`).join('')}${(() => { const n = steps.find(q => !q.done); return n ? `<small>${escape(this.text(n.hint))}</small>` : ''; })()}</aside>` : ''}<span class="performance-counter" aria-hidden="true">${Math.round(fps)}</span>`;
+    const dist = routeMetres >= 1000 ? `${(routeMetres / 1000).toFixed(1)} km` : `${Math.round(routeMetres)} m`;
+    const gps = waypoint ? `<div class="gps-bar"><span class="gps-dot"></span><div><b>${escape(this.text(waypoint.name))}</b><small>${this.t('ניווט GPS','GPS ROUTE')}</small></div><strong>${dist}</strong>${this.button('✕','gpsClear','gps-x')}</div>` : '';
+    this.hud.innerHTML = `<div class="hud-top"><span class="location"><i></i>${zone}</span><div class="hud-tools">${this.button(`<span>${icon('bag')}</span><kbd>I</kbd>`,'inventory','tool')}${this.button(`<span>${icon('journal')}</span><kbd>J</kbd>`,'journal','tool')}${this.button(`<span>${icon('map_fragment')}</span><kbd>M</kbd>`,'map','tool')}${this.button('<span class="pause-symbol">Ⅱ</span>','pause','tool')}</div></div>${gps}<div class="crosshair ${prompt ? 'has-target' : ''}"></div>${prompt ? `<div class="interact-prompt"><kbd>E</kbd> <span>${escape(prompt)}</span></div>` : ''}<div class="vitals ${wake<20?'fatigued':''}"><div class="vital"><span>${icon('eye')} ${this.t('ערנות','Wakefulness')}</span><div class="meter"><i style="width:${wake}%"></i></div><b>${wake}</b></div>${s.inventory.flashlight ? `<div class="vital"><span>${icon('batteries')} ${this.t('סוללה','Battery')}</span><div class="meter"><i style="width:${s.battery}%"></i></div><b>${Math.round(s.battery)}</b></div>` : ''}${s.intoxication>10 ? `<div class="intox">${tipsy}</div>` : ''}</div>${brewing>0 ? `<div class="brewing">${icon('coffee')}<span>${this.t('הקפה מתבשל…','Brewing coffee…')}<small>${Math.ceil(brewing)} ${this.t('שניות','seconds')}</small></span></div>` : ''}${!locked ? `<div class="capture-hint">${this.t('לחצו להביט סביב','Click to look around')}<span>WASD · ${this.t('הליכה','walk')} &nbsp; E · ${this.t('פעולה','interact')}</span></div>` : ''}${threat>0 ? `<div class="threat">${this.t('הקשיבו לפרסות. המשיכו לנוע.','Listen for hoofbeats. Keep moving.')}<div class="meter"><i style="width:${threat}%"></i></div></div>` : ''}${steps ? `<aside class="tracker"><h4>${this.t('דלת האבן החתומה','THE SEALED DOOR')}</h4>${steps.map((st, i) => `<p class="${st.done ? 'done' : ''} ${!st.done && steps.findIndex(q => !q.done) === i ? 'next' : ''}"><b>${st.done ? '✓' : '○'}</b>${escape(this.text(st.label))}</p>`).join('')}${(() => { const n = steps.find(q => !q.done); return n ? `<small>${escape(this.text(n.hint))}</small>` : ''; })()}</aside>` : ''}<span class="performance-counter" aria-hidden="true">${Math.round(fps)}</span>`;
   }
   ending() {
     this.panel(this.t('העמק זוכר','The valley remembers'),`<div class="ending-mark">${icon('sunrise')}</div><p class="ending-prose">${this.t('האור הראשון עובר בין העצים. הפרש פונה אל האופק, והפעם אינו מביט לאחור. למטה, מישהו פותח בית קפה. כיסא נגרר על המדרכה. החיים נמשכים.','The first light moves between the trees. The rider turns toward the horizon, and this time he does not look back. Below, someone opens a café. A chair scrapes across the pavement. Life goes on.')}</p><blockquote>${this.t('לשמור על מקום — זה לתת לו לחיות.','To protect a place is to let it live.')}</blockquote><p>${this.t('סיימת את סיפור אב־הטיפוס. אפשר להמשיך לטייל בעמק.','You completed the prototype story. The valley remains open to explore.')}</p>${this.button(this.t('לחזור לטבעון','Return to Tivon'),'returnTown','primary')}`);
