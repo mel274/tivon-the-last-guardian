@@ -65,9 +65,11 @@ function canTarget(i: Interactable, x: number, z: number, feet: number): boolean
   const camera = new THREE.Vector3(x, feet + 1.7, z);
   const offset = target.clone().sub(camera), distance = offset.length();
   if (distance > (i.radius ?? 4.2) || distance < .2) return false;
+  // Cars use proximity enter (same as Game.findTarget) — their own collider must not count as occlusion.
+  if (i.id.startsWith('car_')) return distance <= 6;
   const ray = new THREE.Ray(camera, offset.normalize());
   return !world.colliders.some(c => {
-    if (c.gate) return false;
+    if (c.gate || c.vehicle) return false;
     const hit = rayDistance(c, ray);
     return hit !== null && hit < distance - .7;
   });
@@ -137,6 +139,8 @@ describe('generated world navigation', () => {
   it('gives every interaction target an unobstructed standing spot', () => {
     const inaccessible: string[] = [];
     for (const i of world.interactables) {
+      // Cars use proximity enter; covered by the driveable-cars test below.
+      if (i.id.startsWith('car_')) continue;
       const p = i.object.getWorldPosition(new THREE.Vector3()); let found = false;
       for (let x = Math.floor(p.x - 4); x <= Math.ceil(p.x + 4) && !found; x += .5) for (let z = Math.floor(p.z - 4); z <= Math.ceil(p.z + 4) && !found; z += .5) {
         const feet = player.groundAt(x, z, p.y - 1.2);
@@ -146,5 +150,20 @@ describe('generated world navigation', () => {
       if (!found) inaccessible.push(i.id);
     }
     expect(inaccessible).toEqual([]);
+  });
+  it('spawns driveable cars the player can enter from beside', () => {
+    expect(world.vehicles.length).toBeGreaterThan(20);
+    expect(world.vehicles.length).toBeLessThanOrEqual(141); // MAX_CARS + forced starter beside spawn
+    const stuck: string[] = [];
+    for (const v of world.vehicles) {
+      const p = v.group.position; let ok = false;
+      for (const side of [1, -1]) for (const dist of [2.4, 3.1, 3.8]) {
+        const ang = v.yaw + side * Math.PI / 2, x = p.x + Math.sin(ang) * dist, z = p.z + Math.cos(ang) * dist;
+        player.camera.position.y = player.groundAt(x, z) + 1.7;
+        if (!player.blocked(x, z, allOpen, .29, v.collider)) { ok = true; break; }
+      }
+      if (!ok) stuck.push(v.id);
+    }
+    expect(stuck).toEqual([]);
   });
 });

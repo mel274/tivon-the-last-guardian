@@ -199,8 +199,8 @@ button:focus-visible{outline-color:var(--gta-yellow)}
 .hud-tools .tool:hover{opacity:1;background:#ffffff14}
 .vitals{background:#00000099;border-inline-start:3px solid #ffffff44}
 .vital .meter i{background:var(--gta-yellow)}
-.interact-prompt{background:#000000d0;border-bottom:2px solid var(--gta-yellow);border-radius:0}
-.interact-prompt kbd{background:var(--gta-yellow);color:#111;border-radius:0}
+.interact-prompt{top:54%;padding:12px 18px 12px 12px;background:#000000e8;border:2px solid var(--gta-yellow);border-radius:0;font-size:16px;letter-spacing:.08em;text-transform:uppercase;font-family:Oswald,sans-serif;z-index:6}
+.interact-prompt kbd{width:32px;height:32px;background:var(--gta-yellow);color:#111;border-radius:0;font-size:16px;font-weight:700}
 .crosshair{background:#fff;box-shadow:0 0 0 1px #0008}
 
 .panel-layer{background:#000000aa;backdrop-filter:blur(6px)}

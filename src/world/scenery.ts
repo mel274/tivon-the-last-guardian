@@ -172,7 +172,7 @@ export function buildFootprints(kit: Kit, skip: Set<string>) {
     }
     count++;
   }
-  gardens.push(...dressPlots(kit, plots, h => styleFor(homes[h].street), (x, z, rot) => car(kit, x, z, rot, pick(CARS))));
+  gardens.push(...dressPlots(kit, plots, h => styleFor(homes[h].street), (x, z, rot) => { if (rnd() < .35) car(kit, x, z, rot, pick(CARS)); }));
   PLOT_STATS.dressMs = Math.round(PLOT_STATS.dressMs);
   if (import.meta.env?.DEV) console.info('[plots]', JSON.stringify({ ...PLOT_STATS, stages: plots.stages }));
   return { count, gardens };
@@ -201,21 +201,21 @@ function frontBoundary(kit: Kit, box: { cx: number; cz: number; w: number; d: nu
 function car(kit: Kit, x: number, z: number, rot: number, color: string) {
   spawnDriveableCar(kit, x, z, rot, color);
 }
-/** Cars parked along residential/local kerbs and in car parks — all enterable. */
+/** Cars parked along residential/local kerbs and in car parks — every visible car is enterable. */
 export function buildCars(kit: Kit) {
   seed = 777;
   for (const road of ROADS) {
     if (!VEHICLE.has(road.kind) || road.kind.startsWith('trunk') || road.kind === 'service') continue;
-    for (let i = 3; i < road.points.length - 3; i += 5) {
-      if (rnd() > .28) continue;
+    for (let i = 4; i < road.points.length - 4; i += 9) {
+      if (rnd() > .18) continue;
       const [ax, az] = road.points[i], [bx, bz] = road.points[i + 1], dx = bx - ax, dz = bz - az, l = Math.hypot(dx, dz) || 1, side = rnd() < .5 ? 1 : -1;
       car(kit, ax + dz / l * side * (road.width / 2 - 1.1), az - dx / l * side * (road.width / 2 - 1.1), Math.atan2(dx, dz), pick(CARS));
     }
   }
   for (const a of AREAS) if (a.kind === 'parking') {
     const box = orientedBox(a.points), f = new Frame(box.cx, box.cz, box.rot);
-    for (let u = -box.w / 2 + 2; u < box.w / 2 - 1.5; u += 2.6) for (const v of [-box.d / 2 + 3, box.d / 2 - 3]) {
-      const [x, z] = f.at(u, v); if (!pointInPolygon(x, z, a.points) || rnd() > .55) continue;
+    for (let u = -box.w / 2 + 2; u < box.w / 2 - 1.5; u += 3.4) for (const v of [-box.d / 2 + 3, box.d / 2 - 3]) {
+      const [x, z] = f.at(u, v); if (!pointInPolygon(x, z, a.points) || rnd() > .4) continue;
       car(kit, x, z, box.rot + (v < 0 ? 0 : Math.PI), pick(CARS));
     }
   }

@@ -137,7 +137,7 @@ export class Game {
     }
     // Prefer the aimed car, else the nearest free car within reach (GTA-style proximity enter).
     const aimed = this.target?.id.startsWith('car_') ? this.world.vehicles.find(v => v.id === this.target!.id && !v.occupied) : undefined;
-    const near = aimed ?? this.nearestCar(4.2);
+    const near = aimed ?? this.nearestCar(5.5);
     if (near) {
       this.player.enterCar(near);
       this.ui.toast(this.ui.t('WASD לנהיגה · Shift למהירות · E ליציאה', 'WASD to drive · Shift for speed · E to exit'));
@@ -157,9 +157,9 @@ export class Game {
     return best;
   }
   private carPrompt() {
-    if (this.player.driving) return this.ui.t('E · יציאה מהרכב', 'E · Exit vehicle');
-    const car = this.nearestCar(6);
-    if (car) return this.ui.t('E · לנהוג ברכב', 'E · Drive vehicle');
+    if (this.player.driving) return this.ui.t('יציאה מהרכב', 'Exit vehicle');
+    const car = this.nearestCar(7);
+    if (car) return this.ui.t('לנהוג ברכב', 'Drive vehicle');
     return this.target ? this.target.label[this.ui.lang] : null;
   }
   action(action: string) {
