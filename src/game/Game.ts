@@ -20,7 +20,7 @@ export class Game {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(66, innerWidth / innerHeight, .08, 1400);
   renderer: THREE.WebGLRenderer;
-  world: WorldContext = { scene: this.scene, colliders: [], interactables: [], npcs: [], grounds: [], groups: {}, lights: [] };
+  world: WorldContext = { scene: this.scene, colliders: [], interactables: [], npcs: [], grounds: [], groups: {}, lights: [], vehicles: [] };
   model = new GameModel(); player!: PlayerController;
   audio = new AudioSystem(); ui!: UI;
   playing = false; panel = 'menu'; currentInteraction = '';
@@ -80,7 +80,10 @@ export class Game {
     screen.remove();
     if (import.meta.env.DEV) { Object.assign(window, { __tivon: this }); import('./devViews').then(m => m.installDevViews(this)); }
   }
-  private menu() { this.ui.updateMinimap(0, 0, 0, false); this.playing = false; this.panel = 'menu'; this.player.clear(); document.exitPointerLock?.(); this.ui.menu(!!GameModel.load()); }
+  private menu() {
+    if (this.player?.driving) this.player.exitCar();
+    this.ui.updateMinimap(0, 0, 0, false); this.playing = false; this.panel = 'menu'; this.player.clear(); document.exitPointerLock?.(); this.ui.menu(!!GameModel.load());
+  }
   private start(state?: GameState) {
     this.waypoint = null; this.route = null;
     this.model = new GameModel(state);
@@ -92,7 +95,7 @@ export class Game {
     this.player.restore(this.model.state.position);
     this.playing = true; this.endingShown = !!state?.flags.ending; this.wasSurvived = !!state?.encounter.survived;
     this.audio.start(); this.closePanel();
-    this.ui.toast(this.ui.t('ברוכים הבאים לכיכר בן גוריון בטבעון. עמלי מולכם. J ליומן, M למפת העיירה.','Welcome to Ben Gurion Square, Tivon. Amali is right in front of you. J for journal, M for the town map.'));
+    this.ui.toast(this.ui.t('ברוכים הבאים לכיכר בן גוריון. עמלי מולכם. E לרכב · M למפה וניווט GPS.','Welcome to Ben Gurion Square. Amali is ahead. E for a car · M for the map and GPS.'));
   }
   private spawn() {
     const g = this.world.groups.spawn;
@@ -126,7 +129,21 @@ export class Game {
     if (this.panel === 'map') this.openPanel('map');
   }
   interact() {
-    if (!this.target || !this.playing || this.panel) return;
+    if (!this.playing || this.panel) return;
+    if (this.player.driving) {
+      this.player.exitCar();
+      this.ui.toast(this.ui.t('יצאתם מהרכב.', 'You left the car.'));
+      return;
+    }
+    if (!this.target) return;
+    if (this.target.id.startsWith('car_')) {
+      const car = this.world.vehicles.find(v => v.id === this.target!.id);
+      if (car) {
+        this.player.enterCar(car);
+        this.ui.toast(this.ui.t('WASD לנהיגה · Shift למהירות · E ליציאה', 'WASD to drive · Shift for speed · E to exit'));
+      }
+      return;
+    }
     this.currentInteraction = this.target.id; this.panel = 'dialogue'; this.unlock();
     this.ui.dialogue(this.model.interact(this.currentInteraction));
   }
@@ -220,9 +237,11 @@ export class Game {
   }
   private findTarget() {
     this.camera.getWorldDirection(this.direction); let best = 0; this.target = undefined;
+    if (this.player.driving) return;
     // Only colliders around the player can block a short interaction ray.
     const nearby = this.player.collidersNear(this.camera.position.x, this.camera.position.z, 6);
     for (const i of this.world.interactables) {
+      if (i.id.startsWith('car_') && this.world.vehicles.find(v => v.id === i.id)?.occupied) continue;
       const o = i.object.matrixWorld.elements; if (Math.abs(o[12] - this.camera.position.x) > 7 || Math.abs(o[14] - this.camera.position.z) > 7) continue;
       i.object.getWorldPosition(this.temp);
       // Characters use a group at their feet; focus on the upper body.
@@ -247,7 +266,7 @@ export class Game {
     return Math.abs(lx) < w / 2 && Math.abs(lz) < d / 2 && feet > minY && feet < maxY;
   }
   private zone() {
-    const p=this.camera.position, g=this.world.groups;
+    const car=this.player.car, p=car?{x:car.group.position.x,y:car.group.position.y+1.7,z:car.group.position.z}:this.camera.position, g=this.world.groups;
     if(p.z>=261&&p.x>110&&p.x<142)return 'overlook';
     if(p.y<5&&p.z>89.2&&p.z<262&&p.x>100&&p.x<162&&(p.z>96.8||Math.abs(p.x-126)<3.2))return 'caves'; // from the corridor mouth; the hill above stays ≥ 9 m
     if(this.inside('mandu',46,26,g.mandu.position.y-1.2,g.mandu.position.y+5.2))return 'mandu'; // loft floor ~2.3 m; raised strip ceiling
@@ -319,7 +338,7 @@ export class Game {
       npc.object.rotation.y+=Math.sin(this.total*.7+npc.phase)*dt*.12;npc.object.position.y=npc.origin.y+Math.sin(this.total*1.4+npc.phase)*.015;}
     if(this.playing&&!this.panel){
       for(let i=0;i<3;i++)this.player.tick(dt/3,s.flags,s.wakefulness,s.intoxication,this.settings.reducedMotion,this.total);
-      this.model.tick(dt,this.player.sprinting);this.audio.tick(dt,zone,this.player.moving,this.player.sprinting,s.phase);this.updateEncounter(dt);
+      this.model.tick(dt,this.player.sprinting);this.audio.tick(dt,zone,this.player.moving,this.player.sprinting,s.phase,this.player.driving?this.player.speedKmh:0);this.updateEncounter(dt);
       this.findTarget();this.saveTimer+=dt;if(this.saveTimer>12){this.saveTimer=0;this.save();}
       if(this.previousBrew>0&&s.brewing===0){this.audio.tone(1100,.2,.2);this.ui.toast(this.ui.t('הקפה מוכן ונמצא בתיק. I לשתייה.','Coffee is ready in your bag. Press I to drink.'));}
       if(!this.wasSurvived&&s.encounter.survived){this.ui.toast(this.ui.t('השומר נעצר. חפשו את שלושת הזיכרונות באולם.','The guardian falls still. Find the three memories around the chamber.'));this.save();}
@@ -330,15 +349,15 @@ export class Game {
       this.gpsTimer += dt;
       if (this.gpsTimer > .45) {
         this.gpsTimer = 0;
-        const px = this.camera.position.x, pz = this.camera.position.z;
+        const px = this.player.car?.group.position.x ?? this.camera.position.x, pz = this.player.car?.group.position.z ?? this.camera.position.z;
         this.route = trimRoute(this.route, px, pz);
-        if (Math.hypot(px - this.waypoint.x, pz - this.waypoint.z) < 14) {
+        if (Math.hypot(px - this.waypoint.x, pz - this.waypoint.z) < 18) {
           this.ui.toast(this.ui.t(`הגעתם: ${this.ui.text(this.waypoint.name)}`, `Arrived: ${this.ui.text(this.waypoint.name)}`));
           this.clearGps(true);
         }
       }
     }
-    this.hudTimer+=dt;if(this.playing&&this.hudTimer>.12){this.hudTimer=0;const labels:Record<string,[string,string]>={town:['טבעון','KIRYAT TIVON'],bengurion:['כיכר בן גוריון','BEN GURION SQUARE'],kiryatamal:['קריית עמל · אלכסנדר זייד','KIRYAT AMAL · ALEXANDER ZAID'],south:['הדרך לבית שערים','THE ROAD TO BEIT SHE’ARIM'],overlook:['אור ראשון בעמק','SUNRISE OVER THE VALLEY'],amali:['עמלי','AMALI'],mandu:['מנדו · קומה ב׳','MANDU · UPSTAIRS'],shop:['בית התוכנה והמחשב','COMPUTER SHOP'],caves:[s.phase===2?'בית שערים · קירוב':'האולם הנסתר · בדיוני',s.phase===2?'BEIT SHE’ARIM · INTERPRETATION':'HIDDEN CHAMBERS · FICTION']};const l=labels[zone];this.ui.updateHUD(s,this.target?this.target.label[this.ui.lang]:null,this.ui.t(l[0],l[1]),this.fps,s.brewing,!!document.pointerLockElement,s.encounter.active?(1-s.encounter.timer/20)*100:0,s.phase===2?this.model.catacombSteps():null,this.waypoint,this.route?.metres??0);this.ui.updateMinimap(this.camera.position.x,this.camera.position.z,this.player.yaw,zone!=='caves'&&!this.panel,this.route,this.waypoint);}
+    this.hudTimer+=dt;if(this.playing&&this.hudTimer>.12){this.hudTimer=0;const labels:Record<string,[string,string]>={town:['טבעון','KIRYAT TIVON'],bengurion:['כיכר בן גוריון','BEN GURION SQUARE'],kiryatamal:['קריית עמל · אלכסנדר זייד','KIRYAT AMAL · ALEXANDER ZAID'],south:['הדרך לבית שערים','THE ROAD TO BEIT SHE’ARIM'],overlook:['אור ראשון בעמק','SUNRISE OVER THE VALLEY'],amali:['עמלי','AMALI'],mandu:['מנדו · קומה ב׳','MANDU · UPSTAIRS'],shop:['בית התוכנה והמחשב','COMPUTER SHOP'],caves:[s.phase===2?'בית שערים · קירוב':'האולם הנסתר · בדיוני',s.phase===2?'BEIT SHE’ARIM · INTERPRETATION':'HIDDEN CHAMBERS · FICTION']};const l=labels[zone];const px=this.player.car?.group.position.x??this.camera.position.x,pz=this.player.car?.group.position.z??this.camera.position.z;this.ui.updateHUD(s,this.player.driving?this.ui.t('E · יציאה מהרכב','E · Exit vehicle'):(this.target?this.target.label[this.ui.lang]:null),this.ui.t(l[0],l[1]),this.fps,s.brewing,!!document.pointerLockElement,s.encounter.active?(1-s.encounter.timer/20)*100:0,s.phase===2?this.model.catacombSteps():null,this.waypoint,this.route?.metres??0,this.player.driving?this.player.speedKmh:0);this.ui.updateMinimap(px,pz,this.player.yaw,zone!=='caves'&&!this.panel,this.route,this.waypoint);}
     this.shadowTick = (this.shadowTick + 1) % 2; this.renderer.shadowMap.needsUpdate = this.shadowTick === 0;
     this.renderer.render(this.scene,this.camera);
   }

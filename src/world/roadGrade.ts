@@ -21,7 +21,8 @@ export function distToPoly(x: number, z: number, p: P2[]) {
   return d;
 }
 
-const CELL = 2, SLOPE = .12, SIGMA = 14, TAPER = 6, VERGE = 4;
+// Softer profiles for driving: longer low-pass, gentler max grade, slightly wider verge blend.
+const CELL = 2, SLOPE = .09, SIGMA = 20, TAPER = 8, VERGE = 5;
 export const ROAD_GRADE = { ms: 0, nodes: 0, roads: 0 };
 let field: Float32Array | null = null, X0 = 0, Z0 = 0, NX = 0, NZ = 0;
 

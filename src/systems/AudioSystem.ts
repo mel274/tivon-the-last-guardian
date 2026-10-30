@@ -24,8 +24,17 @@ export class AudioSystem {
     source.buffer = buffer; filter.type = 'lowpass'; filter.frequency.value = cutoff; gain.gain.value = level;
     source.connect(filter); filter.connect(gain); gain.connect(this.master); source.start();
   }
-  tick(dt: number, zone: string, moving: boolean, sprinting: boolean, phase: number) {
+  tick(dt: number, zone: string, moving: boolean, sprinting: boolean, phase: number, speedKmh = 0) {
     this.timer += dt; this.stepTimer += dt;
+    if (speedKmh > 2) {
+      if (this.stepTimer > .12) {
+        this.stepTimer = 0;
+        const f = 55 + speedKmh * 1.8;
+        this.tone(f, .14, .04 + Math.min(.08, speedKmh / 400), 'sawtooth', f * 1.05);
+        this.noise(.1, .04 + speedKmh / 800, 280 + speedKmh * 4);
+      }
+      return;
+    }
     if (moving && this.stepTimer > (sprinting ? .3 : .48)) { this.stepTimer = 0; this.noise(.1, .16, zone === 'caves' ? 1600 : 650); }
     if (this.timer < (zone === 'mandu' ? .45 : 2.4)) return;
     this.timer = 0;

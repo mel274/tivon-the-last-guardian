@@ -6,7 +6,7 @@ import { ZEID } from './layout';
 
 /** Every OSM way at 1:1: carriageways with kerbs and pavements, footpaths, steps, dirt tracks,
  *  paved pedestrian areas and car parks, plus lamps and street-name plates. */
-const LIFT: Record<string, number> = { trunk: .09, trunk_link: .085, motorway: .09, primary: .08, primary_link: .075, secondary: .075, secondary_link: .07, tertiary: .07, tertiary_link: .065, unclassified: .062, residential: .06, living_street: .058, service: .055, pedestrian: .07, footway: .05, steps: .06, cycleway: .05, path: .045, track: .045 };
+const LIFT: Record<string, number> = { trunk: .11, trunk_link: .1, motorway: .11, primary: .1, primary_link: .095, secondary: .09, secondary_link: .085, tertiary: .085, tertiary_link: .08, unclassified: .078, residential: .075, living_street: .072, service: .07, pedestrian: .08, footway: .055, steps: .06, cycleway: .055, path: .05, track: .05 };
 const inDistrict = (x: number, z: number, pad = 0) => Object.values(DISTRICTS).some(d => Math.hypot(x - d.x, z - d.z) < d.r + pad);
 
 class SegmentGrid {
@@ -37,17 +37,22 @@ function offsetLine(points: P2[], offset: number): P2[] {
     return [p[0] + dz / l * offset, p[1] - dx / l * offset];
   });
 }
-function ribbon(points: P2[], width: number, lift: number, color: THREE.Color, curbFace = 0, curbColors?: (i: number) => THREE.Color) {
+function ribbon(points: P2[], width: number, lift: number, color: THREE.Color, curbFace = 0, curbColors?: (i: number) => THREE.Color, flatCross = false) {
   const pos: number[] = [], col: number[] = [], idx: number[] = [];
   const left = offsetLine(points, width / 2), right = offsetLine(points, -width / 2);
+  // Flat cross-section: both edges share the centreline height so roads don't twist across their width.
   for (let i = 0; i < points.length; i++) {
-    for (const [x, z] of [left[i], right[i]]) { pos.push(x, surfaceHeight(x, z) + lift, z); col.push(color.r, color.g, color.b); }
+    const cy = flatCross ? surfaceHeight(points[i][0], points[i][1]) + lift : 0;
+    for (const [x, z] of [left[i], right[i]]) {
+      pos.push(x, flatCross ? cy : surfaceHeight(x, z) + lift, z);
+      col.push(color.r, color.g, color.b);
+    }
     if (i > 0) { const a = (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
   }
   if (curbFace > 0) {
     const base = pos.length / 3;
     for (let i = 0; i < points.length; i++) {
-      const [x, z] = right[i], y = surfaceHeight(x, z) + lift, c = curbColors ? curbColors(i) : color;
+      const [x, z] = right[i], y = (flatCross ? surfaceHeight(points[i][0], points[i][1]) : surfaceHeight(x, z)) + lift, c = curbColors ? curbColors(i) : color;
       pos.push(x, y, z, x, y - curbFace, z); col.push(c.r, c.g, c.b, c.r * .8, c.g * .8, c.b * .8);
       if (i > 0) { const a = base + (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 2, a + 1, a + 3); }
     }
@@ -97,7 +102,7 @@ export function buildStreets(kit: Kit) {
       if (road.kind === 'steps') for (let i = 1; i < road.points.length; i++) { const [ax, az] = road.points[i - 1], [bx, bz] = road.points[i]; const n = Math.ceil(Math.hypot(bx - ax, bz - az) / .45); for (let j = 0; j < n; j++) { const t = j / n, x = ax + (bx - ax) * t, z = az + (bz - az) * t; marks.push(ribbon([[x - (bx - ax) / n * .05, z - (bz - az) / n * .05], [x + (bx - ax) / n * .05, z + (bz - az) / n * .05]], road.width, lift + .01, new THREE.Color('#9d968a'))); } }
       continue;
     }
-    asphalt.push(ribbon(road.points, road.width, lift, grey.clone().multiplyScalar(.92 + (road.width % 1) * .1)));
+    asphalt.push(ribbon(road.points, road.width, lift, grey.clone().multiplyScalar(.92 + (road.width % 1) * .1), 0, undefined, true));
     if (road.kind === 'service') continue;
     // Pavements on both sides (one-way carriageways of Route 75 get one, on the outside).
     const walkW = road.kind === 'trunk' || road.kind === 'trunk_link' ? 1.6 : road.kind === 'residential' ? 1.6 : 2.2;
@@ -108,7 +113,7 @@ export function buildStreets(kit: Kit) {
       const flush = () => {
         if (run.length > 1) {
           const mid = run[Math.floor(run.length / 2)], painted = inDistrict(mid[0], mid[1], 10);
-          walks.push(ribbon(side === 1 ? run : [...run].reverse(), walkW, lift + .13, walkC, .14, i => painted ? (Math.floor(i * 2) % 2 ? white : red) : curbGrey));
+          walks.push(ribbon(side === 1 ? run : [...run].reverse(), walkW, lift + .13, walkC, .14, i => painted ? (Math.floor(i * 2) % 2 ? white : red) : curbGrey, true));
         }
         run = [];
       };

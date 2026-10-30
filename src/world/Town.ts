@@ -7,6 +7,7 @@ import { buildKiryatAmal, buildComputerShop } from './kiryatAmal';
 import { buildLandmarks } from './landmarksWorld';
 import { prepareTerraces, buildTerraceWalls } from './terraces';
 import { buildFootprints, buildCars, buildTrees, flushExtrusions } from './scenery';
+import { buildDriveableCars } from './vehicles';
 
 /** Kiryat Tivon at 1:1: every OSM street, path and building footprint on real elevation, with
  *  the old centre's pedestrian street, the Zeid centre, story venues and landmarks hand-built
@@ -48,6 +49,7 @@ export function* townStages(ctx: WorldContext): Generator<[string, string]> {
   buildTerraceWalls(kit);
   stage('terraceWalls');
   buildCars(kit);
+  buildDriveableCars(kit);
   stage('cars');
   yield ['עצים', 'Trees'];
   buildTrees(kit, gardens);

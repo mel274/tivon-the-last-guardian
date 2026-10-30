@@ -16,7 +16,7 @@ beforeAll(() => {
   const context = new Proxy({}, { get: () => noop, set: () => true });
   vi.stubGlobal('document', { createElement: () => ({ width: 0, height: 0, getContext: () => context }) });
   vi.stubGlobal('window', { addEventListener: noop });
-  world = { scene: new THREE.Scene(), colliders: [], interactables: [], npcs: [], grounds: [], groups: {}, lights: [] };
+  world = { scene: new THREE.Scene(), colliders: [], interactables: [], npcs: [], grounds: [], groups: {}, lights: [], vehicles: [] };
   buildTown(world); world.scene.updateMatrixWorld(true);
   player = new PlayerController(new THREE.PerspectiveCamera(), world);
 }, 60000);

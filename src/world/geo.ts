@@ -45,7 +45,7 @@ const densify = (pts: P2[], step = 4): P2[] => {
 };
 export const VEHICLE = new Set(['motorway', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'living_street']);
 export const ROADS: Road[] = (world.roads as Array<{ k: string; w: number; n: string; en: string; ow: number; br: number; sf: string; p: P2[] }>)
-  .map(r => ({ name: r.n, en: r.en, kind: r.k, width: r.w, oneway: !!r.ow, bridge: !!r.br, surface: r.sf, points: densify(r.p, VEHICLE.has(r.k) ? 4 : 3) }));
+  .map(r => ({ name: r.n, en: r.en, kind: r.k, width: r.w, oneway: !!r.ow, bridge: !!r.br, surface: r.sf, points: densify(r.p, VEHICLE.has(r.k) ? 3 : 2.5) }));
 export interface Area { kind: string; name: string; points: P2[] }
 export const AREAS: Area[] = (world.areas as Array<{ k: string; n?: string; p: P2[] }>).map(a => ({ kind: a.k, name: a.n ?? '', points: a.p }));
 export interface Footprint { id: string; points: P2[]; levels: number; height: number; name: string; type: string; tag: string; layer: number; street: string }

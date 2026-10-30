@@ -15,7 +15,7 @@ beforeAll(() => {
 });
 
 function build(name: string, w: number, d: number, doorLx: number, front: 'glass' | 'wall') {
-  const world: WorldContext = { scene: new THREE.Scene(), colliders: [], interactables: [], npcs: [], grounds: [], groups: {}, lights: [] };
+  const world: WorldContext = { scene: new THREE.Scene(), colliders: [], interactables: [], npcs: [], grounds: [], groups: {}, lights: [], vehicles: [] };
   const kit = new Kit(world, world.scene), set = INTERIORS[name];
   kit.ground(X - 30, X + 30, Z - 30, Z + 30, 0);
   walkInShop(kit, new Frame(X, Z, 0, 0), { w, d, door: { lx: doorLx }, sign: { he: set.he, en: set.en, ...set.sign }, keeper: set.noKeeper ? null : { id: name, label: { he: 'שיחה', en: 'Talk' } }, set, front });
